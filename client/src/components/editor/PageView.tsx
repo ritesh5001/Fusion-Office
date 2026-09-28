@@ -107,8 +107,8 @@ function PageSurface({ page, zoom }: { page: EditorPage; zoom: number }) {
       width: width * z,
       height: height * z,
       preserveObjectStacking: true,
-      selectionColor: "rgba(79,70,229,0.08)",
-      selectionBorderColor: "#4f46e5",
+      selectionColor: "rgba(47,84,235,0.08)",
+      selectionBorderColor: "#2f54eb",
       selectionLineWidth: 1,
       enableRetinaScaling: true,
       targetFindTolerance: 4,
@@ -354,7 +354,7 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
       });
     } else if (MARKUP_TOOLS.includes(tool)) {
       // Live text-snapped preview (async); show the drag box meanwhile.
-      preview = new FRect({ left: r.x, top: r.y, width: r.w, height: r.h, fill: "rgba(79,70,229,0.06)", stroke: "rgba(79,70,229,0.5)", strokeDashArray: [3, 3], strokeWidth: 1, strokeUniform: true });
+      preview = new FRect({ left: r.x, top: r.y, width: r.w, height: r.h, fill: "rgba(47,84,235,0.06)", stroke: "rgba(47,84,235,0.5)", strokeDashArray: [3, 3], strokeWidth: 1, strokeUniform: true });
       const token = drag.token;
       const page = getPage();
       void textRectsBetween(page, start, p).then((rects) => {

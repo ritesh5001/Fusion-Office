@@ -38,9 +38,9 @@ export const CSS_FONTS: Record<FontFamily, string> = {
 };
 
 const SELECTION_STYLE = {
-  borderColor: "#4f46e5",
+  borderColor: "#2f54eb",
   cornerColor: "#ffffff",
-  cornerStrokeColor: "#4f46e5",
+  cornerStrokeColor: "#2f54eb",
   cornerStyle: "circle" as const,
   cornerSize: 10,
   transparentCorners: false,
@@ -152,8 +152,8 @@ export async function createFabricObject(o: EditorObject): Promise<Tagged> {
         lineHeight: o.lineHeight,
         charSpacing: o.letterSpacing,
         splitByGrapheme: false,
-        editingBorderColor: "#4f46e5",
-        cursorColor: "#4f46e5",
+        editingBorderColor: "#2f54eb",
+        cursorColor: "#2f54eb",
         lockScalingFlip: true,
       });
       break;

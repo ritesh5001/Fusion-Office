@@ -3,12 +3,25 @@
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-signature: var(--font-signature-face), cursive;
-  --color-brand-50: #eef2ff;
-  --color-brand-100: #e0e7ff;
-  --color-brand-200: #c7d2fe;
-  --color-brand-500: #6366f1;
-  --color-brand-600: #4f46e5;
-  --color-brand-700: #4338ca;
+  --font-display: var(--font-display-face), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-face), ui-monospace, "SFMono-Regular", monospace;
+
+  /* Marketing site palette: cool paper, ink, one cobalt accent, two proof marks. */
+  --color-paper: #f4f5f6;
+  --color-paper-deep: #eceef1;
+  --color-ink: #10131a;
+  --color-ink-soft: #5b6170;
+  --color-rule: #dcdfe4;
+  --color-rule-strong: #b3b9c3;
+  --color-marker: #ffe066;
+  --color-pen: #d92d20;
+  /* Cobalt: the one accent. Used for primary actions, focus and selection. */
+  --color-brand-50: #eef3ff;
+  --color-brand-100: #dde6ff;
+  --color-brand-200: #bccbff;
+  --color-brand-500: #4a6cf7;
+  --color-brand-600: #2f54eb;
+  --color-brand-700: #2442c4;
   --color-canvas: #e9ebef;
 }
 
@@ -61,7 +74,162 @@ input[type="color"]::-moz-color-swatch {
 .animate-toast { animation: toast-in 160ms ease-out; }
 
 @keyframes hit-pulse {
-  0% { box-shadow: 0 0 0 0 rgb(79 70 229 / 0.55); }
-  100% { box-shadow: 0 0 0 10px rgb(79 70 229 / 0); }
+  0% { box-shadow: 0 0 0 0 rgb(47 84 235 / 0.55); }
+  100% { box-shadow: 0 0 0 10px rgb(47 84 235 / 0); }
 }
 .search-hit-active { animation: hit-pulse 900ms ease-out 2; }
+
+/* ─────────────────────────────────────────────────────────────────
+   Marketing site
+   Direction: "the proofed page". Swiss grid on cool paper; the one
+   signature is editing marks made on the page itself (highlighter
+   sweep, red pen circle, numbered proof notes).
+   ───────────────────────────────────────────────────────────────── */
+
+.landing {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+.landing ::selection {
+  background: var(--color-marker);
+  color: var(--color-ink);
+}
+
+.landing :focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* One fixed environment layer: a faint 12-column grid that drifts slowly. */
+.landing-env {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgb(16 19 26 / 0.035) 1px, transparent 1px),
+    radial-gradient(circle at 20% 0%, rgb(47 84 235 / 0.06), transparent 45%);
+  background-size: calc((min(100vw, 1280px) - 40px) / 12) 100%, 100% 100%;
+  background-position: 50% 0, 0 0;
+  mask-image: linear-gradient(to bottom, black, transparent 85%);
+  animation: env-drift 90s ease-in-out infinite alternate;
+}
+@keyframes env-drift {
+  to { background-position: calc(50% + 24px) 0, 0 0; }
+}
+
+/* Highlighter sweep behind a phrase. */
+.mark-sweep {
+  background-image: linear-gradient(transparent 12%, var(--color-marker) 12%, var(--color-marker) 88%, transparent 88%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  padding: 0 0.08em;
+  margin: 0 -0.08em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.js .mark-sweep {
+  background-size: 0% 100%;
+  animation: sweep 900ms cubic-bezier(0.65, 0, 0.35, 1) 700ms forwards;
+}
+@keyframes sweep {
+  to { background-size: 100% 100%; }
+}
+
+/* Red pen circle drawn around a word. */
+.pen-circle path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.js .pen-circle path {
+  stroke-dashoffset: 1;
+  animation: pen-draw 700ms cubic-bezier(0.55, 0, 0.3, 1) 1500ms forwards;
+}
+@keyframes pen-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Numbered proof notes pinned to the product screenshot. */
+.proof-pin {
+  animation: pin-in 420ms cubic-bezier(0.3, 1.4, 0.5, 1) both;
+  animation-delay: calc(1900ms + var(--i, 0) * 120ms);
+}
+@keyframes pin-in {
+  /* Only scale: centering uses the separate `translate` property (Tailwind v4). */
+  from { opacity: 0; scale: 0.4; }
+  to { opacity: 1; scale: 1; }
+}
+
+/* Scroll reveal (only when JS is running). */
+.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 700ms cubic-bezier(0.2, 0.7, 0.2, 1), transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+.js [data-reveal][data-shown] {
+  opacity: 1;
+  transform: none;
+}
+
+/* The hero screenshot settles flat as it scrolls into view (progressive enhancement). */
+@supports (animation-timeline: view()) {
+  .hero-shot {
+    animation: shot-settle linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 45%;
+    transform-origin: 50% 0%;
+  }
+  @keyframes shot-settle {
+    from { transform: perspective(1600px) rotateX(16deg) scale(0.94); }
+    to { transform: perspective(1600px) rotateX(0deg) scale(1); }
+  }
+}
+
+/* Redaction demo card: a bar slides over the account number, on repeat. */
+.redact-bar {
+  transform-origin: left center;
+  animation: redact 5.5s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+@keyframes redact {
+  0%, 12% { transform: scaleX(0); }
+  30%, 82% { transform: scaleX(1); }
+  96%, 100% { transform: scaleX(0); }
+}
+
+/* Suite index rows. */
+.suite-row .suite-arrow {
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 200ms ease-out, transform 200ms ease-out;
+}
+.suite-row:hover .suite-arrow,
+.suite-row:focus-visible .suite-arrow {
+  opacity: 1;
+  transform: none;
+}
+
+/* FAQ disclosure icon. */
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item[open] .faq-icon { transform: rotate(45deg); }
+
+@media (pointer: coarse) {
+  .landing .btn {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-env,
+  .redact-bar,
+  .proof-pin,
+  .hero-shot {
+    animation: none !important;
+  }
+  .redact-bar { transform: scaleX(1); }
+  .js .mark-sweep { animation: none; background-size: 100% 100%; }
+  .js .pen-circle path { animation: none; stroke-dashoffset: 0; }
+  .js [data-reveal] { opacity: 1; transform: none; transition: none; }
+}

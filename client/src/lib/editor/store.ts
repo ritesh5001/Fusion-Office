@@ -199,7 +199,7 @@ export const useEditor = create<EditorState>()((set, get) => ({
 
   addObject: (pageId, obj, opts) => {
     get().commit(
-      `Add ${OBJECT_LABELS[obj.type].toLowerCase()}`,
+      `Add ${obj.type === "image" && obj.isSignature ? "signature" : OBJECT_LABELS[obj.type].toLowerCase()}`,
       (pages) => mapPage(pages, pageId, (p) => ({ ...p, objects: [...p.objects, obj] })),
       opts?.edit ? `new:${obj.id}` : undefined,
     );
