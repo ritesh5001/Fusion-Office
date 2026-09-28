@@ -47,6 +47,10 @@ Legend: **B** = runs in the browser · **S** = server engine · **AI** = server 
 | Intelligence | Translate PDF (to Word + Markdown) | AI | Claude API | 2 |
 | Workflows | Chain tools and reuse them | B | tool processors | 1 |
 
+### Office editors
+
+Word (`/write`), Excel (`/sheets`) and PowerPoint (`/slides`) editors open and save real Office files in the browser. Readers and writers live in `client/src/lib/office/` and are round-trip tested in `client/tests/docx.test.mts`, `sheets.test.mts` and `slides.test.mts`. The server's `/api/convert/office?to=docx|xlsx|pptx` turns old formats (.doc, .xls, .ppt, OpenDocument) into the modern ones first, and `?to=pdf` makes the PDF exports.
+
 ### Image tools (all in the browser)
 
 | Tool | What it does |

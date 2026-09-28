@@ -67,6 +67,18 @@ Running the server tools locally: install LibreOffice (`brew install --cask libr
 
 **AI tools** use `claude-opus-5` with server-side fallbacks turned on (`fallbacks: "default"`, beta `server-side-fallback-2026-07-01`): if Claude's safety checks decline a request, the API re-runs it on Anthropic's recommended fallback model instead of failing. Remove those two fields in `server/src/lib/ai.ts` to turn that off.
 
+## Word, Excel and PowerPoint editors
+
+Three full-screen editors that open real Office files, edit them in the browser and save them back. Drafts autosave on the device (IndexedDB) and show under "Recent" on each start screen.
+
+| Editor | Route | Opens | Edits | Saves |
+| --- | --- | --- | --- | --- |
+| Word | `/write` | .docx; .doc, .odt, .rtf (converted on the server); .txt, .html | Page view (A4/Letter/Legal/A5, margins), headings, fonts, sizes, colours, highlight, bold/italic/underline/strike, super/subscript, alignment, nested bullet and numbered lists, tables (add/remove rows and columns, merge, cell colour), images (paste, drop, resize), links, page breaks, find and replace, word count, templates (letter, report, meeting notes) | .docx, PDF (server), .html, .txt, print |
+| Excel | `/sheets` | .xlsx; .xls, .ods (server); .csv, .tsv | Grid with frozen panes, 400+ formulas (formulajs plus IF/IFERROR/TEXT…), number formats (₹ with Indian grouping, %, dates), fonts, fill, borders, alignment, wrap, merge, sort, fill handle series, insert/delete rows and columns (formulas follow), several sheets, copy/paste with Excel and Sheets, find, sum/average/count of the selection, templates (budget, GST invoice) | .xlsx (written back into the original workbook, so conditional formatting, validation, images and print setup survive), CSV, PDF (server) |
+| PowerPoint | `/slides` | .pptx; .ppt, .odp (server) | Slide sorter (reorder, duplicate, hide), layouts, text boxes with rich text and bullets, 18 shapes, lines, pictures, tables, move/resize/rotate with snapping guides, arrange, backgrounds, speaker notes, slideshow (F5), 4 themes | .pptx, PDF (server), print |
+
+Files open with their theme, layouts and master artwork (PowerPoint), styles and numbering (Word) and styles, merges and widths (Excel). What can't be edited is reported when the file opens: charts and SmartArt show as placeholders and are left out on save; headers/footers, footnotes and comments in Word documents aren't kept; macros aren't kept.
+
 ## Architecture
 
 ```
@@ -88,6 +100,10 @@ client/src/
 │   ├── exporter.ts           Original PDF + edits → new PDF (pdf-lib)
 │   └── geometry.ts           View-space ⇄ PDF-space math (tested against pdf.js)
 ├── lib/storage/local.ts      IndexedDB autosave + recent files
+├── lib/office/               Word/Excel/PowerPoint: ooxml.ts (zip + XML parts), drafts.ts, convert.ts,
+│                             docx/ (read, write, TipTap schema), sheets/ (formulas, formats, xlsx, ops, store),
+│                             slides/ (pptx read/write, model, store)
+├── components/office/        OfficeShell (header, start screen, autosave), write/, sheets/, slides/
 ├── lib/image/                Image tools: geometry.ts (resize/crop/units), pixels.ts (adjustments, filters),
 │                             encode.ts (fit-under-KB search, DPI tags), canvas.ts (decode, edit pipeline, export)
 └── lib/cloudConfig.ts        Asks the server which cloud features are on
@@ -105,7 +121,7 @@ server/src/
 server/prisma/schema.prisma   Users, accounts, documents, versions
 ```
 
-**API** (all under `/api`): `GET /config`, `GET /health`, `/auth/*` (Auth.js), `GET|POST /documents`, `GET|PUT|DELETE /documents/:id`, `GET|POST /documents/:id/versions`, `POST /convert/office` (raw file body + `X-Filename`), `POST /convert/html`, `POST /ai/summarize`, `POST /ai/translate`.
+**API** (all under `/api`): `GET /config`, `GET /health`, `/auth/*` (Auth.js), `GET|POST /documents`, `GET|PUT|DELETE /documents/:id`, `GET|POST /documents/:id/versions`, `POST /convert/office?to=pdf|docx|xlsx|pptx` (raw file body + `X-Filename`), `POST /convert/html`, `POST /ai/summarize`, `POST /ai/translate`.
 
 **Key design decisions**
 
