@@ -301,10 +301,14 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
         });
         return;
       }
-      const obj = createText(p.x, p.y - toolOptions.fontSize * 0.7, {
+      // Default box is 260pt wide, shrunk (or shifted left) to stay on the page.
+      const pageW = viewSize(page).width;
+      const width = Math.min(260, Math.max(120, pageW - p.x - 12), pageW - 24);
+      const x = Math.max(12, Math.min(p.x, pageW - width - 12));
+      const obj = createText(x, p.y - toolOptions.fontSize * 0.7, {
         fontSize: toolOptions.fontSize,
         color: toolOptions.textColor,
-        width: Math.min(260, viewSize(page).width - p.x - 8) > 60 ? 260 : 120,
+        width,
       });
       st().addObject(page.id, obj, { edit: true });
       finishOneShot(tool);

@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { cloneObject, newId, rotateObjectWithPage, translateObject } from "./objects";
+import { OBJECT_LABELS, cloneObject, newId, rotateObjectWithPage, translateObject } from "./objects";
 import {
   viewSize,
   type DocumentState,
@@ -195,14 +195,14 @@ export const useEditor = create<EditorState>()((set, get) => ({
   },
 
   addObject: (pageId, obj, opts) => {
-    get().commit(`Add ${obj.type}`, (pages) => mapPage(pages, pageId, (p) => ({ ...p, objects: [...p.objects, obj] })));
+    get().commit(`Add ${OBJECT_LABELS[obj.type].toLowerCase()}`, (pages) => mapPage(pages, pageId, (p) => ({ ...p, objects: [...p.objects, obj] })));
     if (opts?.select !== false) set({ selection: { pageId, ids: [obj.id] }, currentPageId: pageId });
     if (opts?.edit) set({ pendingEditId: obj.id });
   },
 
   updateObject: (pageId, id, patch, coalesceKey) =>
     get().commit(
-      "Edit object",
+      "Edit properties",
       (pages) =>
         mapPage(pages, pageId, (p) => ({
           ...p,
