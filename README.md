@@ -37,7 +37,7 @@ Test helpers: `node client/scripts/make-sample-pdf.mjs sample.pdf` (test PDF wit
 | --- | --- |
 | Open | Drag & drop, file picker, paste, images → PDF page, recent files, blank document |
 | View | Page thumbnails, lazy page rendering, zoom (steps, ⌘/Ctrl+wheel, pinch), fit width / fit page, page navigation, full screen |
-| Edit | Text (font, size, bold/italic/underline, color, align, line height, letter spacing), images (flip, replace, opacity), rectangle / ellipse / triangle / line / arrow, pen and marker drawing, eraser |
+| Edit | Edit existing text in place (click a line, retype; originals removed on export), add text (font, size, bold/italic/underline, color, align, line height, letter spacing), images (flip, replace, opacity), rectangle / ellipse / triangle / line / arrow, pen and marker drawing, eraser |
 | Annotate | Highlight / underline / strikethrough **snapped to the real PDF text** (multi-line), sticky-note comments (exported as real PDF annotations) |
 | Sign | Draw, type (script fonts) or upload (with white-background removal), saved signatures |
 | Protect | **True redaction**: redacted pages are rasterized on export, so the text underneath is removed from the file. Whiteout for visual cover |
@@ -120,7 +120,7 @@ By default the browser calls `/api/*` on the site itself and Next proxies it to 
 
 ## Known limitations (v1)
 
-- **Existing PDF text can't be edited in place yet.** Text is added as new objects. Use whiteout plus new text to replace wording. True in-place editing is the Phase 7 work.
+- **Editing existing text** works line by line on PDFs with a text layer. The original glyphs are removed from the page's content stream on export (`client/src/lib/pdf/textRemoval.ts`); lines the engine can't measure safely (Type3 fonts, unusual encodings, text inside form XObjects) are covered with the sampled background colour instead. Replacement text uses the standard fonts matched by family and weight, not the document's embedded font, and is left-aligned at the original position.
 - **Export uses the standard PDF fonts** (Helvetica/Times/Courier, Latin characters). Characters outside that set are replaced (`₹` becomes `Rs.`). Embedding a Unicode font (e.g. Noto Sans via `@pdf-lib/fontkit`) fixes this.
 - Redacted pages become images on export, so their text is no longer selectable. That's the trade-off for real removal.
 - Password-protected PDFs, image cropping, form-field creation, find & replace, OCR and PDF/A are not built yet.

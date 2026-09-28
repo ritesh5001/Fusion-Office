@@ -119,9 +119,26 @@ function ObjectProperties({ pageId, obj }: { pageId: string; obj: EditorObject }
 
   return (
     <>
-      <Header title={label} subtitle={obj.type === "text" ? "Double-click the text on the page to edit it" : undefined} />
+      <Header
+        title={obj.type === "text" && obj.replaces ? "Edited PDF text" : label}
+        subtitle={obj.type === "text" ? "Double-click the text on the page to edit it" : undefined}
+      />
       {"cx" in obj && obj.type !== "comment" && <Geometry obj={obj} update={update} />}
       {(obj.type === "redact" || obj.type === "whiteout") && <RectGeometry rect={obj.rect} update={(rect) => update({ rect })} />}
+
+      {obj.type === "text" && obj.replaces && (
+        <Section title="Replaces original text">
+          <p className="rounded-md bg-slate-50 px-2.5 py-2 text-[12px] leading-relaxed text-slate-600 ring-1 ring-slate-200">
+            “{obj.replaces.original}”
+          </p>
+          <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+            On export the original words are removed from the file and this text takes their place. Clear the text to delete the line.
+          </p>
+          <Button size="sm" className="mt-2.5 w-full" onClick={() => useEditor.getState().deleteObjects(pageId, [obj.id])}>
+            Restore original
+          </Button>
+        </Section>
+      )}
 
       {obj.type === "text" && (
         <Section title="Text">

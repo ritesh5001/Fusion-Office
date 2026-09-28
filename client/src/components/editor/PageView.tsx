@@ -16,7 +16,8 @@ import {
 import { useEditor } from "@/lib/editor/store";
 import { viewSize, totalRotation, type EditorPage, type Rect, type ToolId } from "@/lib/editor/types";
 import { renderPage } from "@/lib/pdf/renderer";
-import { textRectsBetween } from "@/lib/pdf/text";
+import { getTextLines, textRectsBetween, type TextLine } from "@/lib/pdf/text";
+import { sampleTextColors } from "@/lib/pdf/colors";
 import { createLine, createShape, createText, newId } from "@/lib/editor/objects";
 import { findById, pathToLocalD, readFabricObject, syncCanvas, type Tagged } from "@/lib/editor/fabricAdapter";
 import { linePath } from "@/lib/pdf/geometry";
@@ -160,7 +161,9 @@ function PageSurface({ page, zoom }: { page: EditorPage; zoom: number }) {
   return (
     <>
       <canvas ref={pdfCanvasRef} className="pointer-events-none absolute inset-0 h-full w-full" />
+      <CoverLayer page={page} zoom={zoom} />
       <div ref={hostRef} className="page-host absolute inset-0" />
+      {tool === "edittext" && <TextLinesLayer page={page} zoom={zoom} />}
       {pageHits.length > 0 && (
         <div className="pointer-events-none absolute inset-0">
           {pageHits.flatMap(({ h, i }) =>
@@ -193,7 +196,9 @@ function afterSync(canvas: Canvas) {
       st.setPendingEdit(null);
       canvas.setActiveObject(fo);
       fo.enterEditing();
-      fo.selectAll();
+      if (fo.text) {
+        fo.selectionStart = fo.selectionEnd = fo.text.length;
+      } else fo.selectAll();
       canvas.requestRenderAll();
       return;
     }
@@ -509,7 +514,8 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
     const next = readFabricObject(t);
     if (next.type !== "text") return;
     const key = `new:${model.id}`; // merges with "Add text" if this is its first edit
-    if (!next.text.trim()) {
+    // Emptying a replacement means "delete this text from the PDF", so keep it.
+    if (!next.text.trim() && !model.replaces) {
       st().deleteObjects(getPage().id, [model.id], key);
     } else if (next.text !== model.text || Math.abs(next.height - model.height) > 0.5) {
       st().replaceObjects(getPage().id, [next], "Edit text", key);
@@ -543,4 +549,99 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
   return () => {
     canvas.off();
   };
+}
+
+// ─── Editing existing text ─────────────────────────────────────────────
+
+/** Hides original text that is being replaced (drawn under the Fabric layer). */
+function CoverLayer({ page, zoom }: { page: EditorPage; zoom: number }) {
+  const covers = page.objects.flatMap((o) => (o.type === "text" && o.replaces ? [{ id: o.id, ...o.replaces }] : []));
+  if (!covers.length) return null;
+  return (
+    <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+      {covers.map((c) => (
+        <div
+          key={c.id}
+          className="absolute"
+          style={{ left: c.rect.x * zoom, top: c.rect.y * zoom, width: c.rect.w * zoom, height: c.rect.h * zoom, background: c.background }}
+        />
+      ))}
+    </div>
+  );
+}
+
+const sameRect = (a: number[], b: number[]) => a.every((v, i) => Math.abs(v - b[i]) < 0.5);
+
+/** Outlines every line of existing text; clicking one turns it into editable text. */
+function TextLinesLayer({ page, zoom }: { page: EditorPage; zoom: number }) {
+  const [lines, setLines] = useState<TextLine[] | null>(null);
+  const [busy, setBusy] = useState<number | null>(null);
+  useEffect(() => {
+    let alive = true;
+    getTextLines(page)
+      .then((l) => alive && setLines(l))
+      .catch(() => alive && setLines([]));
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page.source, page.rotation, page.baseRotation]);
+
+  if (!lines) return null;
+  const replaced = page.objects.flatMap((o) => (o.type === "text" && o.replaces ? [o.replaces.userRect] : []));
+  const open = lines.map((l, i) => ({ l, i })).filter(({ l }) => !replaced.some((r) => sameRect(r, l.userRect)));
+
+  const edit = async (line: TextLine, i: number) => {
+    setBusy(i);
+    const colors = await sampleTextColors(page, line.rect);
+    const fs = line.fontSize;
+    // Wide enough that the original wording fits on one line in the fallback font.
+    const width = line.rect.w * 1.12 + fs * 0.8;
+    const height = fs * 1.13;
+    const top = line.baseline - fs * 0.879; // Fabric's first-line baseline offset
+    const obj = createText(line.x, top, {
+      text: line.text,
+      width,
+      height,
+      fontSize: fs,
+      fontFamily: line.fontFamily,
+      bold: line.bold,
+      italic: line.italic,
+      color: colors.text,
+      lineHeight: 1.16,
+      replaces: {
+        original: line.text,
+        userRect: line.userRect,
+        rect: { x: line.rect.x - 1, y: line.rect.y - 1, w: line.rect.w + 2, h: line.rect.h + 2 },
+        background: colors.background,
+      },
+    });
+    const st = useEditor.getState();
+    st.addObject(page.id, { ...obj, cy: top + height / 2 }, { edit: true });
+    st.setTool("select");
+    setBusy(null);
+  };
+
+  return (
+    <div className="absolute inset-0 z-10" onMouseDown={(e) => e.stopPropagation()}>
+      {open.length === 0 && (
+        <div className="absolute left-1/2 top-4 -translate-x-1/2 rounded-md bg-slate-900/85 px-3 py-1.5 text-[12px] text-white">
+          No editable text on this page. Scanned pages need OCR first.
+        </div>
+      )}
+      {open.map(({ l, i }) => (
+        <button
+          key={i}
+          type="button"
+          title={`Edit "${l.text}"`}
+          aria-label={`Edit text: ${l.text}`}
+          onClick={() => edit(l, i)}
+          className={`absolute cursor-text rounded-[2px] outline-1 outline-offset-1 transition-colors ${
+            busy === i ? "bg-brand-500/20 outline-brand-600" : "outline-brand-500/35 outline-dashed hover:bg-brand-500/10 hover:outline-solid hover:outline-brand-600"
+          }`}
+          style={{ left: l.rect.x * zoom, top: l.rect.y * zoom, width: l.rect.w * zoom, height: l.rect.h * zoom }}
+        />
+      ))}
+    </div>
+  );
 }

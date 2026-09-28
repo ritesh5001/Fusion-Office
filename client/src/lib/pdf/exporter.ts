@@ -37,6 +37,7 @@ import {
   type TextObject,
 } from "../editor/types";
 import { objectBounds } from "../editor/objects";
+import { removeTextInRects, type UserRect } from "./textRemoval";
 
 export interface ExportOptions {
   /** Export only these pages (in document order). Default: all. */
@@ -159,6 +160,9 @@ async function exportPage(ctx: ExportContext, page: EditorPage, opts: ExportOpti
   const { out } = ctx;
   const view = viewSize(page);
   const redactions = page.objects.filter((o) => o.type === "redact").map((o) => (o as { rect: Rect }).rect);
+  const replacements = page.objects.flatMap((o) => (o.type === "text" && o.replaces ? [o.replaces] : []));
+  // Replaced text that could not be removed from the content stream gets covered.
+  let covers: { rect: Rect; background: string }[] = [];
 
   let pdfPage: PDFPage;
   let matrix: Matrix;
@@ -171,9 +175,14 @@ async function exportPage(ctx: ExportContext, page: EditorPage, opts: ExportOpti
     const canvas = document.createElement("canvas");
     await renderPage(page, canvas, scale, { pixelRatio: 1 }).promise;
     const c2d = canvas.getContext("2d")!;
-    c2d.fillStyle = "#000000";
     const sx = canvas.width / view.width;
     const sy = canvas.height / view.height;
+    // Replaced lines are painted over in the raster (it has no text layer to edit).
+    for (const rp of replacements) {
+      c2d.fillStyle = rp.background;
+      c2d.fillRect(rp.rect.x * sx, rp.rect.y * sy, rp.rect.w * sx, rp.rect.h * sy);
+    }
+    c2d.fillStyle = "#000000";
     for (const r of redactions) c2d.fillRect(r.x * sx - 1, r.y * sy - 1, r.w * sx + 2, r.h * sy + 2);
     const jpg = await new Promise<Blob>((res, rej) =>
       canvas.toBlob((b) => (b ? res(b) : rej(new Error("Rasterization failed"))), "image/jpeg", 0.92),
@@ -189,6 +198,19 @@ async function exportPage(ctx: ExportContext, page: EditorPage, opts: ExportOpti
       pdfPage = out.addPage(copied);
       pdfPage.setRotation(degrees(totalRotation(page)));
       box = pdfPage.getCropBox();
+      if (replacements.length) {
+        // Delete the original glyphs so the old words are really gone.
+        const pad = 0.5;
+        const rects = replacements.map((r) => [r.userRect[0] - pad, r.userRect[1] - pad, r.userRect[2] + pad, r.userRect[3] + pad] as UserRect);
+        let result: ReturnType<typeof removeTextInRects>;
+        try {
+          result = removeTextInRects(pdfPage, rects);
+        } catch (err) {
+          console.warn("[export] text removal failed, covering instead", err);
+          result = { removed: rects.map(() => 0), unsafe: rects.map(() => true) };
+        }
+        covers = replacements.filter((_, i) => result.removed[i] === 0 || result.unsafe[i]);
+      }
     } else {
       pdfPage = out.addPage([page.width, page.height]);
       pdfPage.setRotation(degrees(totalRotation(page)));
@@ -209,6 +231,9 @@ async function exportPage(ctx: ExportContext, page: EditorPage, opts: ExportOpti
   };
 
   pdfPage.pushOperators(pushGraphicsState(), concatTransformationMatrix(...matrix));
+  for (const c of covers) {
+    pdfPage.drawRectangle({ x: c.rect.x, y: view.height - c.rect.y - c.rect.h, width: c.rect.w, height: c.rect.h, color: color(c.background) });
+  }
   for (const obj of page.objects) {
     if (covered(obj)) continue;
     if (obj.type === "comment" && !opts.flatten) continue; // added as annotation below

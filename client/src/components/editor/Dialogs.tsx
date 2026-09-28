@@ -523,7 +523,7 @@ function ShortcutsDialog({ open, onClose }: { open: boolean; onClose: () => void
     ["Arrows", "Nudge 1pt (Shift: 10pt)"],
     ["Esc", "Deselect / back to Select"],
     [`${MOD}+ / ${MOD}− / ${MOD}0`, "Zoom in / out / 100%"],
-    ["V T I S", "Select · Text · Image · Signature"],
+    ["V G T I S", "Select · Edit text · Add text · Image · Signature"],
     ["R O L A", "Rectangle · Ellipse · Line · Arrow"],
     ["P M E", "Pen · Marker · Eraser"],
     ["H U K C", "Highlight · Underline · Strike · Comment"],

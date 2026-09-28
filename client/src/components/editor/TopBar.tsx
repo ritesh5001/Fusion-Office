@@ -104,6 +104,7 @@ export function TopBar({ onToggleSidebar, onTogglePanel }: { onToggleSidebar: ()
             { label: "Duplicate", shortcut: `${MOD}D`, disabled: !hasSelection, onSelect: () => st().duplicateSelection() },
             { label: "Delete", shortcut: "Del", disabled: !hasSelection, onSelect: () => st().deleteSelection() },
             "divider",
+            { label: "Edit PDF text", shortcut: "G", onSelect: () => activateTool("edittext") },
             { label: "Select all on page", shortcut: `${MOD}A`, onSelect: () => selectAllOnPage() },
             { label: "Find…", shortcut: `${MOD}F`, onSelect: () => st().setSearch({ searchOpen: true }) },
           ]}

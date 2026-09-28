@@ -354,7 +354,7 @@ const FAQ = [
   },
   {
     q: "Can I change the text that is already in the PDF?",
-    a: "Not yet. Today you can add new text anywhere and use Whiteout to cover old wording. Editing the original text in place is the next big piece we are building.",
+    a: "Yes. Pick Edit text, click any line and type. Fusion Office matches the size, weight and colour, and on export the original words are removed from the file, not hidden under a box. Scanned pages have no text to edit until OCR arrives.",
   },
   {
     q: "Does redaction really remove the text?",

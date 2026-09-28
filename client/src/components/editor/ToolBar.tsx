@@ -17,6 +17,7 @@ import {
   Signature,
   Square,
   Strikethrough,
+  TextCursorInput,
   Triangle,
   Type,
   Underline,
@@ -41,6 +42,7 @@ interface ToolDef {
 const GROUPS: ToolDef[][] = [
   [{ id: "select", label: "Select", key: "V", icon: <MousePointer2 className={I} /> }],
   [
+    { id: "edittext", label: "Edit existing text", key: "G", icon: <TextCursorInput className={I} /> },
     { id: "text", label: "Add text", key: "T", icon: <Type className={I} /> },
     { id: "image", label: "Add image", key: "I", icon: <ImagePlus className={I} /> },
     { id: "signature", label: "Signature", key: "S", icon: <Signature className={I} /> },
@@ -91,6 +93,7 @@ export async function activateTool(id: ToolId) {
 }
 
 const HINTS: Partial<Record<ToolId, string>> = {
+  edittext: "Click any line of text in the PDF to change it",
   text: "Click on the page to add text",
   rect: "Drag to draw · click for default size",
   ellipse: "Drag to draw · click for default size",

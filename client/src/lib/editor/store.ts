@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { OBJECT_LABELS, cloneObject, newId, rotateObjectWithPage, translateObject } from "./objects";
+import { OBJECT_LABELS, cloneObject, detachReplacement, newId, rotateObjectWithPage, translateObject } from "./objects";
 import {
   viewSize,
   type DocumentState,
@@ -199,7 +199,9 @@ export const useEditor = create<EditorState>()((set, get) => ({
 
   addObject: (pageId, obj, opts) => {
     get().commit(
-      `Add ${obj.type === "image" && obj.isSignature ? "signature" : OBJECT_LABELS[obj.type].toLowerCase()}`,
+      obj.type === "text" && obj.replaces
+        ? "Edit PDF text"
+        : `Add ${obj.type === "image" && obj.isSignature ? "signature" : OBJECT_LABELS[obj.type].toLowerCase()}`,
       (pages) => mapPage(pages, pageId, (p) => ({ ...p, objects: [...p.objects, obj] })),
       opts?.edit ? `new:${obj.id}` : undefined,
     );
@@ -394,7 +396,8 @@ export const useEditor = create<EditorState>()((set, get) => ({
     const { clipboard, currentPageId, selection } = get();
     const target = pageId ?? selection?.pageId ?? currentPageId;
     if (!clipboard.length || !target) return;
-    const copies = clipboard.map((o) => cloneObject(o, 12));
+    // A pasted copy is new text; only the original keeps hiding the PDF text.
+    const copies = clipboard.map((o) => detachReplacement(cloneObject(o, 12)));
     get().commit("Paste", (pages) => mapPage(pages, target, (p) => ({ ...p, objects: [...p.objects, ...copies] })));
     // Next paste lands further along, like desktop editors.
     set({ clipboard: clipboard.map((o) => { const c = structuredClone(o); translateObject(c, 12, 12); return c; }) });
@@ -407,7 +410,7 @@ export const useEditor = create<EditorState>()((set, get) => ({
     const page = doc.pages.find((p) => p.id === selection.pageId);
     if (!page) return;
     const ids = new Set(selection.ids);
-    const copies = page.objects.filter((o) => ids.has(o.id)).map((o) => cloneObject(o, 12));
+    const copies = page.objects.filter((o) => ids.has(o.id)).map((o) => detachReplacement(cloneObject(o, 12)));
     get().commit("Duplicate", (pages) => mapPage(pages, page.id, (p) => ({ ...p, objects: [...p.objects, ...copies] })));
     set({ selection: { pageId: page.id, ids: copies.map((c) => c.id) } });
   },

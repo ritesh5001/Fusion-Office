@@ -1,7 +1,7 @@
 import type { PageViewport } from "pdfjs-dist";
 import type { TextItem } from "pdfjs-dist/types/src/display/api";
 import { getPdfDocument } from "./sources";
-import { totalRotation, type EditorPage, type Rect } from "../editor/types";
+import { totalRotation, type EditorPage, type FontFamily, type Rect } from "../editor/types";
 
 /** A run of text on the page with its geometry in PDF user space. */
 interface RawItem {
@@ -214,4 +214,171 @@ export async function searchPages(
     onProgress?.([...hits]);
   }
   return hits;
+}
+
+// ─── Editable lines (for "Edit existing text") ───────────────────────
+
+export interface TextLine {
+  text: string;
+  /** View-space box around the line's glyphs. */
+  rect: Rect;
+  /** Same box in the source page's PDF user space [x0, y0, x1, y1]. */
+  userRect: [number, number, number, number];
+  /** View-space baseline of the first glyph. */
+  x: number;
+  baseline: number;
+  fontSize: number;
+  fontFamily: FontFamily;
+  bold: boolean;
+  italic: boolean;
+}
+
+interface StyledItem {
+  str: string;
+  transform: number[];
+  width: number;
+  fontName: string;
+}
+
+const lineCache = new Map<string, Promise<TextLine[]>>();
+
+function styleOf(realName: string, generic: string, flags: { bold?: boolean; black?: boolean; italic?: boolean }) {
+  const name = realName.replace(/^[A-Z]{6}\+/, ""); // strip subset prefix
+  const fontFamily: FontFamily = /courier|mono|consol/i.test(name) || generic === "monospace"
+    ? "Courier"
+    : /times|roman|serif|georgia|garamond|cambria|book|minion|palatino/i.test(name) && !/sans/i.test(name)
+      ? "Times"
+      : generic === "serif" && !/sans|arial|helvet/i.test(name)
+        ? "Times"
+        : "Helvetica";
+  return {
+    fontFamily,
+    bold: !!flags.bold || !!flags.black || /bold|black|heavy|semibold|demi/i.test(name),
+    italic: !!flags.italic || /italic|oblique/i.test(name),
+  };
+}
+
+/** Lines of existing text on a page, with style hints, for in-place editing. */
+export async function getTextLines(page: EditorPage): Promise<TextLine[]> {
+  if (page.source.kind !== "pdf") return [];
+  const { sourceId, pageIndex } = page.source;
+  const key = `${sourceId}:${pageIndex}:${totalRotation(page)}`;
+  let p = lineCache.get(key);
+  if (!p) {
+    p = (async () => {
+      const pdf = await getPdfDocument(sourceId);
+      const pdfPage = await pdf.getPage(pageIndex + 1);
+      const vp = pdfPage.getViewport({ scale: 1, rotation: totalRotation(page) });
+      const content = await pdfPage.getTextContent();
+      // Load fonts so their real names (e.g. "TimesNewRomanPS-BoldMT") are known.
+      await pdfPage.getOperatorList().catch(() => null);
+      const fontStyle = new Map<string, ReturnType<typeof styleOf>>();
+      const styleFor = (fontName: string) => {
+        let st = fontStyle.get(fontName);
+        if (!st) {
+          let real = "";
+          let flags = {};
+          try {
+            const f = pdfPage.commonObjs.get(fontName) as { name?: string; bold?: boolean; black?: boolean; italic?: boolean } | undefined;
+            real = f?.name ?? "";
+            flags = f ?? {};
+          } catch {
+            /* font not loaded; fall back to generic family */
+          }
+          st = styleOf(real, content.styles[fontName]?.fontFamily ?? "sans-serif", flags);
+          fontStyle.set(fontName, st);
+        }
+        return st;
+      };
+
+      type Seg = { item: StyledItem; x0: number; x1: number; base: number; size: number; user: [number, number, number, number] };
+      const segs: Seg[] = [];
+      for (const raw of content.items) {
+        if (!("str" in raw)) continue;
+        const item = raw as unknown as StyledItem;
+        // pdf.js bridges gaps with whitespace-only items (sometimes 100+ pt wide);
+        // skip them so the real distance between words decides line grouping.
+        if (!item.str.trim()) continue;
+        const [a, b, c, d, e, f] = item.transform;
+        const size = Math.hypot(c, d);
+        if (size < 1) continue;
+        const len = Math.hypot(a, b) || 1;
+        const [dx, dy] = [a / len, b / len];
+        const ux = (c / Math.hypot(c, d)) * size;
+        const uy = (d / Math.hypot(c, d)) * size;
+        // Only text that reads left-to-right on screen can be edited.
+        const [sx, sy] = vp.convertToViewportPoint(e, f);
+        const [tx, ty] = vp.convertToViewportPoint(e + dx, f + dy);
+        if (Math.abs(ty - sy) > 0.05 || tx <= sx) continue;
+        const corners = [
+          [e - ux * 0.25, f - uy * 0.25],
+          [e + dx * item.width - ux * 0.25, f + dy * item.width - uy * 0.25],
+          [e + ux * 0.95, f + uy * 0.95],
+          [e + dx * item.width + ux * 0.95, f + dy * item.width + uy * 0.95],
+        ];
+        const xs = corners.map((p) => p[0]);
+        const ys = corners.map((p) => p[1]);
+        segs.push({
+          item,
+          x0: sx,
+          x1: sx + item.width * (vp.scale ?? 1),
+          base: sy,
+          size,
+          user: [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)],
+        });
+      }
+      segs.sort((p, q) => (Math.abs(p.base - q.base) < p.size * 0.3 ? p.x0 - q.x0 : p.base - q.base));
+
+      const lines: TextLine[] = [];
+      let cur: Seg[] = [];
+      const flush = () => {
+        const visible = cur.filter((s) => s.item.str.trim());
+        if (visible.length) {
+          let text = "";
+          cur.forEach((s, i) => {
+            if (i > 0) {
+              const gap = s.x0 - cur[i - 1].x1;
+              if (gap > s.size * 0.18 && !text.endsWith(" ") && !s.item.str.startsWith(" ")) text += " ";
+            }
+            text += s.item.str;
+          });
+          const first = visible[0];
+          const size = first.size;
+          const x0 = Math.min(...visible.map((s) => s.x0));
+          const x1 = Math.max(...visible.map((s) => s.x1));
+          const user: [number, number, number, number] = [
+            Math.min(...visible.map((s) => s.user[0])),
+            Math.min(...visible.map((s) => s.user[1])),
+            Math.max(...visible.map((s) => s.user[2])),
+            Math.max(...visible.map((s) => s.user[3])),
+          ];
+          lines.push({
+            text: text.trim(),
+            rect: { x: x0, y: first.base - size * 0.95, w: x1 - x0, h: size * 1.2 },
+            userRect: user,
+            x: x0,
+            baseline: first.base,
+            fontSize: Math.round(size * 10) / 10,
+            ...styleFor(first.item.fontName),
+          });
+        }
+        cur = [];
+      };
+      for (const s of segs) {
+        const prev = cur[cur.length - 1];
+        const sameLine =
+          prev &&
+          Math.abs(prev.base - s.base) < s.size * 0.3 &&
+          Math.abs(prev.size - s.size) < Math.max(prev.size, s.size) * 0.2 &&
+          s.x0 - prev.x1 < s.size * 1.1;
+        if (!sameLine) flush();
+        cur.push(s);
+      }
+      flush();
+      return lines;
+    })();
+    lineCache.set(key, p);
+    p.catch(() => lineCache.delete(key));
+  }
+  return p;
 }

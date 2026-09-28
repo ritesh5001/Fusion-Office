@@ -170,9 +170,19 @@ export function rotateObjectWithPage(obj: EditorObject, delta: number, w: number
     default: {
       [o.cx, o.cy] = pt(o.cx, o.cy);
       o.angle = (((o.angle + d) % 360) + 360) % 360;
+      if (o.type === "text" && o.replaces) o.replaces.rect = rect(o.replaces.rect);
       return o;
     }
   }
+}
+
+/** A copy that no longer claims to replace original text (for paste/duplicate). */
+export function detachReplacement<T extends EditorObject>(obj: T): T {
+  if (obj.type === "text" && obj.replaces) {
+    const { replaces: _r, ...rest } = obj;
+    return rest as T;
+  }
+  return obj;
 }
 
 /** Axis-aligned bounds, used for "select all" and search scrolling. */

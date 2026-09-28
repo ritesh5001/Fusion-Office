@@ -13,6 +13,7 @@
 
 export type ToolId =
   | "select"
+  | "edittext"
   | "text"
   | "image"
   | "rect"
@@ -59,6 +60,19 @@ export interface TextObject extends Positioned {
   lineHeight: number;
   /** 1/1000 em, same unit as Fabric's charSpacing */
   letterSpacing: number;
+  /** Set when this text replaces a line that already exists in the PDF. */
+  replaces?: ReplacedText;
+}
+
+/** The original text a replacement stands in for. */
+export interface ReplacedText {
+  original: string;
+  /** Area of the original glyphs in the source page's PDF user space [x0, y0, x1, y1]. */
+  userRect: [number, number, number, number];
+  /** Same area in view space; follows page rotation. */
+  rect: Rect;
+  /** Colour behind the original text, used to hide it while editing. */
+  background: string;
 }
 
 export interface ImageObject extends Positioned {
