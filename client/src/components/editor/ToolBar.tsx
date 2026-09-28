@@ -127,7 +127,11 @@ export function ToolBar() {
       ))}
       <Divider />
       <ToolOptions />
-      <div className="ml-auto hidden shrink-0 pl-3 pr-1 text-[12px] text-slate-400 xl:block">{HINTS[tool]}</div>
+      <div className="ml-auto hidden shrink-0 pl-3 pr-1 text-[12px] text-slate-400 xl:block">
+        {HINTS[tool]}
+        {/* Tools stay on until another tool is picked. */}
+        {tool !== "select" && <span className="text-slate-300"> · Esc to stop</span>}
+      </div>
     </div>
   );
 }

@@ -24,8 +24,6 @@ import { linePath } from "@/lib/pdf/geometry";
 
 const DRAG_TOOLS: ToolId[] = ["rect", "ellipse", "triangle", "line", "arrow", "redact", "whiteout", "highlight", "underline", "strikeout"];
 const MARKUP_TOOLS: ToolId[] = ["highlight", "underline", "strikeout"];
-/** Tools that return to Select after one use. */
-const ONE_SHOT: ToolId[] = ["rect", "ellipse", "triangle", "line", "arrow", "text", "comment"];
 
 const hexA = (hex: string, a: number) => {
   const h = hex.replace("#", "");
@@ -243,15 +241,17 @@ function applyTool(canvas: Canvas) {
     canvas.freeDrawingBrush = brush;
   }
   const select = tool === "select";
+  // Both text tools let you click an existing text box to type in it.
+  const textTool = tool === "text" || tool === "edittext";
   canvas.selection = select;
-  canvas.skipTargetFind = !(select || tool === "eraser" || tool === "text");
-  canvas.defaultCursor = select ? "default" : tool === "text" ? "text" : tool === "eraser" ? "cell" : "crosshair";
+  canvas.skipTargetFind = !(select || tool === "eraser" || textTool);
+  canvas.defaultCursor = select || tool === "edittext" ? "default" : tool === "text" ? "text" : tool === "eraser" ? "cell" : "crosshair";
   for (const obj of canvas.getObjects() as Tagged[]) {
     const isText = obj.__model?.type === "text";
     const erasable = obj.__model?.type === "path" || obj.__model?.type === "markup";
     obj.selectable = select;
-    obj.evented = select || (tool === "eraser" && erasable) || (tool === "text" && isText);
-    obj.hoverCursor = select ? "move" : tool === "eraser" ? "pointer" : tool === "text" ? "text" : "crosshair";
+    obj.evented = select || (tool === "eraser" && erasable) || (textTool && isText);
+    obj.hoverCursor = select ? "move" : tool === "eraser" ? "pointer" : textTool ? "text" : "crosshair";
   }
   if (!select) {
     const active = canvas.getActiveObject();
@@ -268,15 +268,13 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
   let drag: { tool: ToolId; start: { x: number; y: number }; preview?: FabricObject; token: number } | null = null;
   let erasing: Set<string> | null = null;
   let markupToken = 0;
+  // When text editing last ended; a click that ends an edit shouldn't also start a new box.
+  let lastEditExit = 0;
 
   const point = (opt: TPointerEventInfo<TPointerEvent>) => {
     const p = (opt as unknown as { scenePoint?: { x: number; y: number } }).scenePoint ?? canvas.getScenePoint(opt.e);
     const { width, height } = viewSize(getPage());
     return { x: Math.min(Math.max(p.x, 0), width), y: Math.min(Math.max(p.y, 0), height) };
-  };
-
-  const finishOneShot = (tool: ToolId) => {
-    if (ONE_SHOT.includes(tool)) st().setTool("select");
   };
 
   const eraseTarget = (target: FabricObject | undefined) => {
@@ -293,11 +291,16 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
     if (st().currentPageId !== page.id) st().setCurrentPage(page.id);
     const p = point(opt);
 
-    if (tool === "text") {
+    // Tools stay active until another tool is picked, so text clicks are:
+    // on a text box → edit it; outside the box being edited → finish that
+    // edit; otherwise (Text tool) → start a new box.
+    if (tool === "text" || tool === "edittext") {
       const target = opt.target as Tagged | undefined;
       const targetId = target?.editorId;
+      const active = canvas.getActiveObject();
+      const editing = active instanceof Textbox && active.isEditing ? active : null;
       if (target instanceof Textbox && targetId) {
-        st().setTool("select");
+        if (editing === target) return; // Fabric moves the caret inside the box
         st().setSelection({ pageId: page.id, ids: [targetId] });
         setTimeout(() => {
           canvas.setActiveObject(target);
@@ -306,6 +309,16 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
         });
         return;
       }
+      if (editing || Date.now() - lastEditExit < 300) {
+        if (editing) {
+          editing.exitEditing();
+          canvas.discardActiveObject();
+          canvas.requestRenderAll();
+        }
+        return;
+      }
+      // Edit text starts from the dashed line outlines, not empty space.
+      if (tool === "edittext") return;
       // Default box is 260pt wide, shrunk (or shifted left) to stay on the page.
       const pageW = viewSize(page).width;
       const width = Math.min(260, Math.max(120, pageW - p.x - 12), pageW - 24);
@@ -316,13 +329,11 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
         width,
       });
       st().addObject(page.id, obj, { edit: true });
-      finishOneShot(tool);
       return;
     }
 
     if (tool === "comment") {
       st().addObject(page.id, { id: newId(), type: "comment", cx: p.x, cy: p.y, text: "", color: "#fde047", createdAt: Date.now() });
-      finishOneShot(tool);
       return;
     }
 
@@ -458,7 +469,6 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
       const rect = tiny ? { x: start.x - 60, y: start.y - 40, w: 120, h: 80 } : r;
       st().addObject(page.id, createShape(tool as "rect" | "ellipse" | "triangle", rect, style));
     }
-    finishOneShot(tool);
   };
 
   const onPathCreated = (opt: { path: Path }) => {
@@ -508,6 +518,7 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
   };
 
   const onEditingExited = (opt: { target: FabricObject }) => {
+    lastEditExit = Date.now();
     const t = opt.target as Tagged;
     const model = t.__model;
     if (!model || model.type !== "text") return;
@@ -616,14 +627,15 @@ function TextLinesLayer({ page, zoom }: { page: EditorPage; zoom: number }) {
         background: colors.background,
       },
     });
-    const st = useEditor.getState();
-    st.addObject(page.id, { ...obj, cy: top + height / 2 }, { edit: true });
-    st.setTool("select");
+    // The Edit text tool stays active, so the next line is one click away.
+    useEditor.getState().addObject(page.id, { ...obj, cy: top + height / 2 }, { edit: true });
     setBusy(null);
   };
 
   return (
-    <div className="absolute inset-0 z-10" onMouseDown={(e) => e.stopPropagation()}>
+    // Only the line outlines catch clicks; everything else (like text being
+    // edited) stays reachable underneath.
+    <div className="pointer-events-none absolute inset-0 z-10">
       {open.length === 0 && (
         <div className="absolute left-1/2 top-4 -translate-x-1/2 rounded-md bg-slate-900/85 px-3 py-1.5 text-[12px] text-white">
           No editable text on this page. Scanned pages need OCR first.
@@ -636,7 +648,7 @@ function TextLinesLayer({ page, zoom }: { page: EditorPage; zoom: number }) {
           title={`Edit "${l.text}"`}
           aria-label={`Edit text: ${l.text}`}
           onClick={() => edit(l, i)}
-          className={`absolute cursor-text rounded-[2px] outline-1 outline-offset-1 transition-colors ${
+          className={`pointer-events-auto absolute cursor-text rounded-[2px] outline-1 outline-offset-1 transition-colors ${
             busy === i ? "bg-brand-500/20 outline-brand-600" : "outline-brand-500/35 outline-dashed hover:bg-brand-500/10 hover:outline-solid hover:outline-brand-600"
           }`}
           style={{ left: l.rect.x * zoom, top: l.rect.y * zoom, width: l.rect.w * zoom, height: l.rect.h * zoom }}
