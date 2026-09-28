@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-signature: var(--font-signature-face), cursive;
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d2fe;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+  --color-canvas: #e9ebef;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: #ffffff;
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Fabric wraps its canvases in .canvas-container; keep it on top of the PDF. */
+.page-host .canvas-container {
+  position: absolute !important;
+  inset: 0;
+}
+
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #c3c7cf transparent;
+}
+
+input[type="color"] {
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type="color"]::-webkit-color-swatch {
+  border: 1px solid rgb(0 0 0 / 0.15);
+  border-radius: 6px;
+}
+input[type="color"]::-moz-color-swatch {
+  border: 1px solid rgb(0 0 0 / 0.15);
+  border-radius: 6px;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-toast { animation: toast-in 160ms ease-out; }
+
+@keyframes hit-pulse {
+  0% { box-shadow: 0 0 0 0 rgb(79 70 229 / 0.55); }
+  100% { box-shadow: 0 0 0 10px rgb(79 70 229 / 0); }
+}
+.search-hit-active { animation: hit-pulse 900ms ease-out 2; }
