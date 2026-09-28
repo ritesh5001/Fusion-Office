@@ -268,6 +268,7 @@ type Status = "Available" | "Next" | "Planned";
 const SUITE: { name: string; text: string; status: Status; href?: string }[] = [
   { name: "Fusion PDF", text: "Edit, annotate, sign, redact and organize PDFs.", status: "Available", href: "/editor" },
   { name: "PDF tools", text: "30 tools: merge, split, compress, watermark, protect, redact, compare…", status: "Available", href: "/tools" },
+  { name: "Image studio", text: "Edit photos with crop, filters and text. Compress to any size in KB, resize by % or cm, convert.", status: "Available", href: "/tools/image-editor" },
   { name: "OCR", text: "Turn scanned pages into searchable text, on your device.", status: "Available", href: "/tools/ocr-pdf" },
   { name: "Converter", text: "PDF to and from Word, Excel, PowerPoint, images and web pages.", status: "Available", href: "/tools" },
   { name: "Fusion AI", text: "Summaries and translations today; questions with page references next.", status: "Available", href: "/tools/summarize-pdf" },

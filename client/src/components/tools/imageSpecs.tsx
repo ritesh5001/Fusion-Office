@@ -1,12 +1,11 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { formatBytes } from "@/lib/tools/files";
 import { FORMAT_INFO, formatFor, outputName, parseSize, type Format } from "@/lib/image/encode";
-import { fromPixels, resizeDims, type Fit, type ResizeSpec, type Unit } from "@/lib/image/geometry";
-import type { Decoded, Exported, ExportOptions, Transform } from "@/lib/image/canvas";
+import { fromPixels, resizeDims, toPixels, type Fit, type ResizeSpec, type Unit } from "@/lib/image/geometry";
+import type { Decoded, Exported, Transform } from "@/lib/image/canvas";
 import type { LoadedFile, ProgressFn, ToolSpec } from "./ToolRunner";
-import { ColorField, Label, NumberField, Segmented, Slider, TextInput, Toggle } from "./controls";
+import { ColorField, NumberField, Segmented, Slider, TextInput, Toggle } from "./controls";
 import { cn } from "../ui/primitives";
 
 // Image code loads only when a tool runs.
@@ -72,7 +71,7 @@ const FORMAT_OPTIONS = (keepLabel = "Same as original") => [
 ];
 
 /** Target file size input with quick picks. */
-function TargetSize({ value, onChange, label = "Target size" }: { value: string; onChange: (v: string) => void; label?: string }) {
+export function TargetSize({ value, onChange, label = "Target size" }: { value: string; onChange: (v: string) => void; label?: string }) {
   const bytes = parseSize(value);
   return (
     <div className="space-y-2">
@@ -192,13 +191,21 @@ const PIXEL_PRESETS = [
   { label: "Story 1080 × 1920", width: 1080, height: 1920 },
 ];
 
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/** An image side (px) expressed in the unit of a resize mode. */
+const current = (px: number, mode: ResizeOpts["mode"], unit: ResizeOpts["unit"], dpi: number) => (mode === "pixels" ? px : round2(fromPixels(px, unit, dpi)));
+
+/** Convert a length between cm, mm and inches (via inches: 1 "pixel" per inch). */
+const convertUnit = (v: number, from: ResizeOpts["unit"], to: ResizeOpts["unit"]) => (v ? round2(fromPixels(toPixels(v, from, 1_000_000) / 1_000_000, to, 1)) : v);
+
 function resizeSpec(o: ResizeOpts): ResizeSpec {
   if (o.mode === "percent") return { mode: "percent", percent: o.percent };
   if (o.mode === "pixels") return { mode: "pixels", width: o.width, height: o.height, keepRatio: o.keepRatio };
   return { mode: "print", width: o.width, height: o.height, unit: o.unit, dpi: o.dpi, keepRatio: o.keepRatio };
 }
 
-function Chips<T>({ items, label, onPick }: { items: T[]; label: (t: T) => string; onPick: (t: T) => void }) {
+export function Chips<T>({ items, label, onPick }: { items: T[]; label: (t: T) => string; onPick: (t: T) => void }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {items.map((t) => (
@@ -231,12 +238,8 @@ const resizeImage: ToolSpec<ResizeOpts> = {
           label="Resize by"
           value={o.mode}
           onChange={(mode) =>
-            set({
-              mode,
-              // Start from the image's current size in the new unit.
-              width: first && mode !== "percent" ? Math.round(fromPixels(first.width!, mode === "pixels" ? "px" : o.unit, o.dpi) * (mode === "pixels" ? 1 : 100)) / (mode === "pixels" ? 1 : 100) : o.width,
-              height: first && mode !== "percent" ? Math.round(fromPixels(first.height!, mode === "pixels" ? "px" : o.unit, o.dpi) * (mode === "pixels" ? 1 : 100)) / (mode === "pixels" ? 1 : 100) : o.height,
-            })
+            // Start from the image's current size, in the new mode's unit.
+            set(first && mode !== "percent" ? { mode, width: current(first.width!, mode, o.unit, o.dpi), height: current(first.height!, mode, o.unit, o.dpi) } : { mode })
           }
           options={[
             { value: "percent", label: "Percent" },
@@ -254,7 +257,12 @@ const resizeImage: ToolSpec<ResizeOpts> = {
             {o.mode === "print" && (
               <>
                 <Chips items={PRINT_PRESETS} label={(p) => p.label} onPick={(p) => set({ width: p.width, height: p.height, unit: p.unit, keepRatio: false, fit: "fill" })} />
-                <Segmented label="Unit" value={o.unit} onChange={(unit) => set({ unit })} options={[{ value: "cm", label: "cm" }, { value: "mm", label: "mm" }, { value: "in", label: "inch" }]} />
+                <Segmented
+                  label="Unit"
+                  value={o.unit}
+                  onChange={(unit) => set({ unit, width: convertUnit(o.width, o.unit, unit), height: convertUnit(o.height, o.unit, unit) })}
+                  options={[{ value: "cm", label: "cm" }, { value: "mm", label: "mm" }, { value: "in", label: "inch" }]}
+                />
               </>
             )}
             {o.mode === "pixels" && <Chips items={PIXEL_PRESETS} label={(p) => p.label} onPick={(p) => set({ width: p.width, height: p.height, keepRatio: false })} />}
@@ -301,10 +309,11 @@ const resizeImage: ToolSpec<ResizeOpts> = {
     const { render, exportCanvas, EMPTY_EDIT } = await canvasLib();
     return eachImage(files, progress, async (img, f) => {
       const format = resolveFormat(f, o.format);
+      // With proportions kept the size already matches the image's shape; an
+      // exact box (proportions off) uses the chosen fit.
       const size = resizeDims(img, resizeSpec(o));
-      // Exact print/pixel boxes use the chosen fit; otherwise proportions are kept.
       const exact = o.mode !== "percent" && !o.keepRatio;
-      const canvas = render(img, EMPTY_EDIT, { size: exact ? { width: resizeDims(img, { ...resizeSpec(o), keepRatio: false } as ResizeSpec).width, height: resizeDims(img, { ...resizeSpec(o), keepRatio: false } as ResizeSpec).height } : size, fit: exact ? o.fit : "stretch", background: o.background });
+      const canvas = render(img, EMPTY_EDIT, { size, fit: exact ? o.fit : "stretch", background: o.background });
       const maxBytes = o.limit ? parseSize(o.target) : null;
       const r = await exportCanvas(canvas, outputName(f.name, format, "resized"), { format, quality: 0.9, maxBytes, dpi: o.mode === "print" ? o.dpi : null, background: o.background });
       const note = !r.fits
@@ -328,7 +337,16 @@ const convertImage: ToolSpec<ConvertOpts> = {
   defaults: { format: "jpeg", quality: 90, background: "#ffffff" },
   Options: ({ options: o, set }) => (
     <>
-      <Segmented label="Convert to" value={o.format} onChange={(format) => set({ format })} options={FORMAT_OPTIONS().slice(1)} />
+      <Segmented
+        label="Convert to"
+        value={o.format}
+        onChange={(format) => set({ format })}
+        options={[
+          { value: "jpeg", label: "JPG", hint: "Photos, smallest" },
+          { value: "png", label: "PNG", hint: "Sharp graphics, transparency" },
+          { value: "webp", label: "WEBP", hint: "Small, modern" },
+        ]}
+      />
       {FORMAT_INFO[o.format].lossy && <Slider label="Quality" value={o.quality} onChange={(quality) => set({ quality })} min={30} max={100} format={(v) => `${v}%`} />}
       {o.format === "jpeg" && <ColorField label="Fill transparent areas with" value={o.background} onChange={(background) => set({ background })} />}
     </>
@@ -379,12 +397,9 @@ const rotateImage: ToolSpec<RotateOpts> = {
   },
 };
 
-export const IMAGE_SPECS: Record<string, ToolSpec<never>> = {
-  "compress-image": compressImage as ToolSpec<never>,
-  "resize-image": resizeImage as ToolSpec<never>,
-  "convert-image": convertImage as ToolSpec<never>,
-  "rotate-image": rotateImage as ToolSpec<never>,
+export const IMAGE_SPECS = {
+  "compress-image": compressImage,
+  "resize-image": resizeImage,
+  "convert-image": convertImage,
+  "rotate-image": rotateImage,
 };
-
-export type { ExportOptions, ReactNode };
-export { Label };

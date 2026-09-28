@@ -10,6 +10,7 @@ import { AccountLinks } from "../home/AccountLinks";
 const LINKS = [
   { href: "/tools", label: "All tools" },
   { href: "/#editor", label: "Editor" },
+  { href: "/tools/image-editor", label: "Image editor" },
   { href: "/#privacy", label: "Privacy" },
   { href: "/#suite", label: "Roadmap" },
   { href: "/#faq", label: "FAQ" },

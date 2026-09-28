@@ -47,8 +47,20 @@ Legend: **B** = runs in the browser · **S** = server engine · **AI** = server 
 | Intelligence | Translate PDF (to Word + Markdown) | AI | Claude API | 2 |
 | Workflows | Chain tools and reuse them | B | tool processors | 1 |
 
-Not in scope for the web app now (roadmap): desktop and mobile apps, an image
-suite (iLoveIMG), signature *requests* to other people (Fusion Sign),
+### Image tools (all in the browser)
+
+| Tool | What it does |
+| --- | --- |
+| Image editor | Crop (free, square, 4:5, 3:4, 4:3, 3:2, 16:9, 9:16, passport 35×45), rotate, flip, straighten; exposure, brightness, contrast, highlights, shadows, saturation, warmth, vignette, sharpen, blur; 10 filters; text layers; undo/redo; resize and save as JPG/PNG/WEBP with an optional KB limit |
+| Compress image | By quality level, or to a target size (e.g. 50 KB): best quality that fits, shrinking dimensions only if needed |
+| Resize image | By percent (10%, 25%…), pixels, or print size in cm/mm/in at a DPI (written into the file); crop-to-fill, borders or stretch; optional KB limit |
+| Crop image | The editor's crop step on its own |
+| Convert image | To JPG, PNG or WEBP (HEIC where the browser can decode it, GIF, BMP, AVIF, SVG in) |
+| Rotate image | Quarter turns and mirroring, many files at once |
+
+Code: `client/src/lib/image/` (pure math in `geometry.ts`, `pixels.ts`, `encode.ts`, tested in `client/tests/image.test.mts`; canvas pipeline in `canvas.ts`).
+
+Not in scope for the web app now (roadmap): desktop and mobile apps, signature *requests* to other people (Fusion Sign),
 business/teams plans.
 
 ## Architecture

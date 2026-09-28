@@ -50,9 +50,9 @@ Test helpers: `node client/scripts/make-sample-pdf.mjs sample.pdf` (test PDF wit
 
 Keyboard shortcuts are listed in the editor under **Help → Keyboard shortcuts** (or press `?`).
 
-## PDF tools (`/tools`)
+## PDF and image tools (`/tools`)
 
-31 single-purpose tools, the full iLovePDF-style catalogue, share one upload → options → result flow. Most run **entirely in the browser**, so the file never leaves the device. Plan and details: [docs/TOOLS_PLAN.md](docs/TOOLS_PLAN.md).
+37 single-purpose tools (the iLovePDF-style PDF catalogue plus image tools) share one upload → options → result flow. Most run **entirely in the browser**, so the file never leaves the device. Plan and details: [docs/TOOLS_PLAN.md](docs/TOOLS_PLAN.md).
 
 | Runs | Tools |
 | --- | --- |
@@ -60,6 +60,7 @@ Keyboard shortcuts are listed in the editor under **Help → Keyboard shortcuts*
 | On the server | Word / PowerPoint / Excel → PDF (LibreOffice), HTML → PDF (headless Chromium) |
 | AI (server + Claude) | AI Summarizer, Translate PDF (Word + Markdown output). Needs `ANTHROPIC_API_KEY` |
 | In the editor | Edit PDF, Sign PDF |
+| Images (in the browser) | **Image editor** (crop with shapes incl. passport 35×45, rotate, flip, straighten, 10 adjustments, 10 filters, text with fonts/colours/outline/box, undo/redo, resize and save with a KB limit), Compress image (by quality or to a target like 50 KB), Resize image (by %, pixels, print size in cm/mm/in with DPI, optional KB limit), Crop image, Convert image (JPG/PNG/WEBP, incl. HEIC where the browser can open it, GIF, BMP, SVG), Rotate image |
 | Coming soon | PDF → PDF/A (Ghostscript) |
 
 Running the server tools locally: install LibreOffice (`brew install --cask libreoffice`) so `soffice` is on your PATH; Chrome is found automatically. Without them those tools say they aren't available.
@@ -87,6 +88,8 @@ client/src/
 │   ├── exporter.ts           Original PDF + edits → new PDF (pdf-lib)
 │   └── geometry.ts           View-space ⇄ PDF-space math (tested against pdf.js)
 ├── lib/storage/local.ts      IndexedDB autosave + recent files
+├── lib/image/                Image tools: geometry.ts (resize/crop/units), pixels.ts (adjustments, filters),
+│                             encode.ts (fit-under-KB search, DPI tags), canvas.ts (decode, edit pipeline, export)
 └── lib/cloudConfig.ts        Asks the server which cloud features are on
 
 server/src/

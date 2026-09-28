@@ -11,6 +11,7 @@ const security = () => import("@/lib/tools/processors/security");
 import { apiFetch } from "@/lib/api";
 import type { LoadedFile, ToolResult, ToolSpec } from "./ToolRunner";
 import { ColorField, NumberField, PagesField, PositionPicker, Segmented, Slider, TextInput, Toggle } from "./controls";
+import { IMAGE_SPECS } from "./imageSpecs";
 
 const pdfOut = (name: string, bytes: Uint8Array): ToolFile => ({ name, bytes, type: PDF });
 
@@ -588,6 +589,7 @@ export const SPECS: Record<string, ToolSpec<never>> = {
   "redact-pdf": redact,
   "summarize-pdf": summarize,
   "translate-pdf": translate,
+  ...IMAGE_SPECS,
 } as unknown as Record<string, ToolSpec<never>>;
 
 export type { ToolResult };

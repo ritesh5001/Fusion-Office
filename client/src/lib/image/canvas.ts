@@ -78,6 +78,16 @@ export function resample(source: CanvasImageSource, src: { sx: number; sy: numbe
   return out;
 }
 
+export const copyCanvas = (c: HTMLCanvasElement) => resample(c, { sx: 0, sy: 0, sw: c.width, sh: c.height }, c.width, c.height);
+
+/** A downscaled copy of an image for fast previews (the original is kept for export). */
+export function previewOf(img: Decoded, maxSide: number): Decoded {
+  const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+  if (scale === 1) return { ...img, close: () => {} };
+  const c = resample(img.source, { sx: 0, sy: 0, sw: img.width, sh: img.height }, img.width * scale, img.height * scale);
+  return { source: c, width: c.width, height: c.height, close: () => {} };
+}
+
 // ─── Edit state ─────────────────────────────────────────────────────
 
 export interface Transform {

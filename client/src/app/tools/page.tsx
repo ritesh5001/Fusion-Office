@@ -5,8 +5,8 @@ import { ToolsHub } from "@/components/tools/ToolsHub";
 import { TOOLS } from "@/lib/tools/registry";
 
 export const metadata: Metadata = {
-  title: "PDF tools",
-  description: "Merge, split, compress, convert, edit, sign, protect and redact PDFs. Most tools run privately in your browser.",
+  title: "PDF and image tools",
+  description: "Merge, split, compress, convert, edit, sign, protect and redact PDFs, plus an image editor and tools to compress, resize, crop and convert images. Most tools run privately in your browser.",
 };
 
 export default function ToolsPage() {
@@ -20,10 +20,10 @@ export default function ToolsPage() {
           <header className="text-center">
             <p className="font-mono text-[12px] uppercase tracking-[0.14em] text-ink-soft">{TOOLS.length} tools · {inBrowser} run on your device</p>
             <h1 className="mx-auto mt-5 max-w-[18ch] text-balance font-display text-[clamp(2.4rem,6vw,4.75rem)] font-semibold leading-[0.98] tracking-[-0.04em]">
-              Every PDF tool, in one place.
+              Every PDF and image tool, in one place.
             </h1>
             <p className="mx-auto mt-5 max-w-[56ch] text-[17px] leading-relaxed text-ink-soft">
-              Merge, split, compress, convert, sign, protect and more. Tools marked Server or AI say so up front; everything else never leaves your computer.
+              Merge, split, convert, sign and protect PDFs. Edit, compress, resize and crop images. Tools marked Server or AI say so up front; everything else never leaves your computer.
             </p>
           </header>
           <div className="mt-12">
