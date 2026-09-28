@@ -76,8 +76,8 @@ export interface EditorState {
   commit: (label: string, fn: (pages: EditorPage[]) => EditorPage[], coalesceKey?: string) => void;
   addObject: (pageId: string, obj: EditorObject, opts?: { select?: boolean; edit?: boolean }) => void;
   updateObject: (pageId: string, id: string, patch: Partial<EditorObject>, coalesceKey?: string) => void;
-  replaceObjects: (pageId: string, objects: EditorObject[], label?: string) => void;
-  deleteObjects: (pageId: string, ids: string[]) => void;
+  replaceObjects: (pageId: string, objects: EditorObject[], label?: string, coalesceKey?: string) => void;
+  deleteObjects: (pageId: string, ids: string[], coalesceKey?: string) => void;
   reorderObjects: (pageId: string, ids: string[], where: "forward" | "backward" | "front" | "back") => void;
   undo: () => void;
   redo: () => void;
@@ -184,7 +184,10 @@ export const useEditor = create<EditorState>()((set, get) => ({
     const next = fn(doc.pages);
     if (next === doc.pages) return;
     const now = Date.now();
-    const coalesce = coalesceKey && lastCommit.key === coalesceKey && now - lastCommit.at < 1200;
+    // "new:<id>" keys merge an object's creation with its first edit (e.g. typing
+    // into a new text box) no matter how long the edit took.
+    const coalesce =
+      !!coalesceKey && lastCommit.key === coalesceKey && (coalesceKey.startsWith("new:") || now - lastCommit.at < 1200);
     set({
       doc: { ...doc, pages: next },
       past: coalesce ? past : [...past, { pages: doc.pages, label }].slice(-HISTORY_LIMIT),
@@ -195,7 +198,11 @@ export const useEditor = create<EditorState>()((set, get) => ({
   },
 
   addObject: (pageId, obj, opts) => {
-    get().commit(`Add ${OBJECT_LABELS[obj.type].toLowerCase()}`, (pages) => mapPage(pages, pageId, (p) => ({ ...p, objects: [...p.objects, obj] })));
+    get().commit(
+      `Add ${OBJECT_LABELS[obj.type].toLowerCase()}`,
+      (pages) => mapPage(pages, pageId, (p) => ({ ...p, objects: [...p.objects, obj] })),
+      opts?.edit ? `new:${obj.id}` : undefined,
+    );
     if (opts?.select !== false) set({ selection: { pageId, ids: [obj.id] }, currentPageId: pageId });
     if (opts?.edit) set({ pendingEditId: obj.id });
   },
@@ -211,18 +218,22 @@ export const useEditor = create<EditorState>()((set, get) => ({
       coalesceKey,
     ),
 
-  replaceObjects: (pageId, objects, label = "Transform") => {
+  replaceObjects: (pageId, objects, label = "Transform", coalesceKey) => {
     const byId = new Map(objects.map((o) => [o.id, o]));
-    get().commit(label, (pages) =>
-      mapPage(pages, pageId, (p) => ({ ...p, objects: p.objects.map((o) => byId.get(o.id) ?? o) })),
+    get().commit(
+      label,
+      (pages) => mapPage(pages, pageId, (p) => ({ ...p, objects: p.objects.map((o) => byId.get(o.id) ?? o) })),
+      coalesceKey,
     );
   },
 
-  deleteObjects: (pageId, ids) => {
+  deleteObjects: (pageId, ids, coalesceKey) => {
     if (!ids.length) return;
     const set_ = new Set(ids);
-    get().commit(ids.length > 1 ? `Delete ${ids.length} objects` : "Delete object", (pages) =>
-      mapPage(pages, pageId, (p) => ({ ...p, objects: p.objects.filter((o) => !set_.has(o.id)) })),
+    get().commit(
+      ids.length > 1 ? `Delete ${ids.length} objects` : "Delete object",
+      (pages) => mapPage(pages, pageId, (p) => ({ ...p, objects: p.objects.filter((o) => !set_.has(o.id)) })),
+      coalesceKey,
     );
     const sel = get().selection;
     if (sel?.pageId === pageId) set({ selection: null });

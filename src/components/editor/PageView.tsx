@@ -488,6 +488,10 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
     const t = opt.target;
     if (!t) return;
     const objs = (t instanceof ActiveSelection ? t.getObjects() : [t]) as Tagged[];
+    // Fabric also fires "modified" when text editing ends; that change is
+    // committed by onEditingExited, so don't record it twice.
+    const tm = (t as Tagged).__model;
+    if (t instanceof Textbox && tm?.type === "text" && (t.text ?? "") !== tm.text) return;
     const models = objs.filter((o) => o.__model).map((o) => {
       const m = readFabricObject(o);
       // Keep the live object for everything except text, which is rebuilt so
@@ -504,10 +508,11 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
     if (!model || model.type !== "text") return;
     const next = readFabricObject(t);
     if (next.type !== "text") return;
+    const key = `new:${model.id}`; // merges with "Add text" if this is its first edit
     if (!next.text.trim()) {
-      st().deleteObjects(getPage().id, [model.id]);
+      st().deleteObjects(getPage().id, [model.id], key);
     } else if (next.text !== model.text || Math.abs(next.height - model.height) > 0.5) {
-      st().replaceObjects(getPage().id, [next], "Edit text");
+      st().replaceObjects(getPage().id, [next], "Edit text", key);
     }
   };
 
