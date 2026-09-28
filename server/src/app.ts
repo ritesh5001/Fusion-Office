@@ -1,8 +1,8 @@
 import express from "express";
-import cors from "cors";
 import { authEnabled, authHandler, cloudEnabled, currentUser } from "./auth.js";
 import { documents } from "./routes/documents.js";
 import { errorHandler } from "./lib/http.js";
+import { corsPolicy, originGuard, securityHeaders } from "./lib/security.js";
 
 /**
  * @auth/express builds OAuth callback URLs from the raw Host header. Behind the
@@ -26,9 +26,10 @@ export function createApp() {
   // (cookie names differ between http and https).
   app.use(usePublicHost);
 
-  // Only needed when the client calls the server cross-origin (no proxy).
-  const origins = (process.env.CLIENT_ORIGIN ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-  if (origins.length) app.use(cors({ origin: origins, credentials: true }));
+  app.use(securityHeaders);
+  // CORS for browsers calling the API directly (NEXT_PUBLIC_API_URL). Through
+  // the client's /api proxy requests are same-origin and CORS never applies.
+  app.use(corsPolicy());
 
   // Auth.js parses its own request bodies. Mount on the plain prefix: it derives
   // its base path from Express's mount path, so a wildcard route would break it.
@@ -55,7 +56,7 @@ export function createApp() {
     }
   });
 
-  app.use("/api/documents", documents);
+  app.use("/api/documents", originGuard(), documents);
 
   app.use("/api", (_req, res) => {
     res.status(404).json({ error: "Not found" });

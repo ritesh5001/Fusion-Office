@@ -8,6 +8,7 @@ import { openFromState } from "@/lib/editor/actions";
 import { toast } from "@/lib/editor/events";
 import type { DocumentState } from "@/lib/editor/types";
 import { signInUrl } from "@/lib/cloudConfig";
+import { apiFetch } from "@/lib/api";
 
 export interface CloudInfo {
   enabled: boolean;
@@ -23,7 +24,7 @@ interface UploadTicket {
 }
 
 async function api<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, { ...init, headers: { "content-type": "application/json", ...init?.headers } });
+  const res = await apiFetch(url, { ...init, headers: { "content-type": "application/json", ...init?.headers } });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error((data as { error?: string }).error ?? `Request failed (${res.status})`);
   return data as T;

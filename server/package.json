@@ -12,7 +12,8 @@
     "test": "tsx --test tests/*.test.ts",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "storage:cors": "tsx scripts/apply-storage-cors.ts"
   },
   "dependencies": {
     "@auth/express": "^0.12.3",
@@ -22,7 +23,8 @@
     "@prisma/client": "^6.19.3",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "helmet": "^8.3.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

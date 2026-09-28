@@ -106,6 +106,18 @@ Without these settings, the cloud buttons are hidden and the documents API retur
 - **server/** runs anywhere Node runs (Render, Railway, Fly, a VPS): `npm run build -w server && npm run start -w server`. Set `AUTH_URL=https://<your-site>/api/auth` so OAuth callbacks use the public address.
 - Keep the server reachable only through the client proxy where possible. If the browser must call it directly, set `CLIENT_ORIGIN` on the server to enable CORS.
 
+## Security: CORS and headers
+
+| Layer | What is enforced | Where |
+| --- | --- | --- |
+| API CORS | Only allowlisted origins get CORS headers, with credentials. List = `CLIENT_ORIGIN` + origin of `AUTH_URL` + `localhost:3000` outside production | `server/src/lib/security.ts` |
+| CSRF | Any write to `/api/documents` with an `Origin` not on the list gets `403`. Auth.js routes use their own CSRF token | `originGuard` in the same file |
+| API headers | helmet: strict CSP (`default-src 'none'`), `nosniff`, `frame-ancestors 'none'`, HSTS, no `X-Powered-By` | `securityHeaders` |
+| Site headers | CSP, `X-Frame-Options: DENY`, `nosniff`, Referrer-Policy, Permissions-Policy, COOP, HSTS | `client/next.config.ts` |
+| Bucket CORS | `GET`/`PUT`/`HEAD` from the same origin list, for presigned uploads and downloads | `npm run storage:cors -w server` |
+
+By default the browser calls `/api/*` on the site itself and Next proxies it to the server, so CORS never comes into play. To call the server directly, set `NEXT_PUBLIC_API_URL` on the client and add the site to `CLIENT_ORIGIN` on the server. Both must share a parent domain (for example `app.example.com` and `api.example.com`) so the session cookie is sent. Set `NEXT_PUBLIC_STORAGE_ORIGIN` to lock the CSP's `connect-src` to your bucket.
+
 ## Known limitations (v1)
 
 - **Existing PDF text can't be edited in place yet.** Text is added as new objects. Use whiteout plus new text to replace wording. True in-place editing is the Phase 7 work.

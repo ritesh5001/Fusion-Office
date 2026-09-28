@@ -6,6 +6,7 @@ import { Cloud, Loader2 } from "lucide-react";
 import { signInUrl, signOutUrl, useCloudConfig } from "@/lib/cloudConfig";
 import { Logo } from "../Logo";
 import { DocumentList, type CloudDoc } from "./DocumentList";
+import { apiFetch } from "@/lib/api";
 
 export function Dashboard() {
   const config = useCloudConfig();
@@ -13,7 +14,7 @@ export function Dashboard() {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/documents");
+    const res = await apiFetch("/api/documents");
     const data = await res.json().catch(() => ({}));
     if (!res.ok) return setError(data.error ?? `Could not load documents (${res.status})`);
     setDocs(data.documents);

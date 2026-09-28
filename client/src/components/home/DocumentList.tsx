@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { FileText, History, Loader2, Trash2 } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 export interface CloudDoc {
   id: string;
@@ -21,21 +22,21 @@ export function DocumentList({ docs, onChange }: { docs: CloudDoc[]; onChange: (
     if (open === id) return setOpen(null);
     setOpen(id);
     setVersions([]);
-    const res = await fetch(`/api/documents/${id}/versions`);
+    const res = await apiFetch(`/api/documents/${id}/versions`);
     if (res.ok) setVersions((await res.json()).versions);
   };
 
   const restore = async (id: string, number: number) => {
     if (!confirm(`Restore version ${number}? The current state is kept as a new version.`)) return;
     setBusy(true);
-    await fetch(`/api/documents/${id}/versions`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ number }) });
+    await apiFetch(`/api/documents/${id}/versions`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ number }) });
     setBusy(false);
     window.location.href = `/editor?cloud=${id}`;
   };
 
   const remove = async (id: string, name: string) => {
     if (!confirm(`Delete “${name}” from the cloud? This can't be undone.`)) return;
-    await fetch(`/api/documents/${id}`, { method: "DELETE" });
+    await apiFetch(`/api/documents/${id}`, { method: "DELETE" });
     onChange();
   };
 

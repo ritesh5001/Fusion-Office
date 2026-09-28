@@ -16,7 +16,8 @@ export const viewport: Viewport = { themeColor: "#f4f5f6" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${signature.variable} ${display.variable} ${mono.variable}`}>
+    // suppressHydrationWarning: the inline script below adds the "js" class before hydration.
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${signature.variable} ${display.variable} ${mono.variable}`}>
       <head>
         {/* Scroll-reveal styles only apply when JS runs, so content never stays hidden. */}
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />

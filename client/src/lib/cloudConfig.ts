@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { API_BASE, apiFetch, apiUrl } from "./api";
 
 export interface CloudUser {
   name?: string | null;
@@ -23,7 +24,7 @@ let pending: Promise<CloudConfig> | null = null;
  */
 export function fetchCloudConfig(): Promise<CloudConfig> {
   if (!pending) {
-    pending = fetch("/api/config", { credentials: "same-origin" })
+    pending = apiFetch("/api/config")
       .then((r) => (r.ok ? (r.json() as Promise<CloudConfig>) : OFFLINE))
       .catch(() => OFFLINE);
   }
@@ -43,5 +44,7 @@ export function useCloudConfig(): CloudConfig & { loading: boolean } {
 }
 
 /** Auth.js pages served by the backend (through the /api proxy). */
-export const signInUrl = (callbackUrl: string) => `/api/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`;
-export const signOutUrl = () => `/api/auth/signout`;
+// Auth.js redirects back to callbackUrl, so make it absolute when the API lives elsewhere.
+const absolute = (path: string) => (API_BASE && typeof window !== "undefined" ? `${window.location.origin}${path}` : path);
+export const signInUrl = (callbackUrl: string) => apiUrl(`/api/auth/signin?callbackUrl=${encodeURIComponent(absolute(callbackUrl))}`);
+export const signOutUrl = () => apiUrl(`/api/auth/signout`);
