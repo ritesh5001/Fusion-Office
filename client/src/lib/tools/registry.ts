@@ -72,6 +72,7 @@ export const TOOLS: ToolDef[] = [
   { slug: "sign-pdf", name: "Sign PDF", description: "Draw, type or upload your signature.", category: "edit", icon: "Signature", accept: PDF, multiple: false, runs: "browser", href: "/editor", status: "ready" },
   { slug: "watermark-pdf", name: "Watermark", description: "Stamp text or an image over your pages.", category: "edit", icon: "Stamp", accept: PDF, multiple: true, runs: "browser", status: "ready", chainable: true },
   { slug: "page-numbers", name: "Page numbers", description: "Number pages in the position and style you choose.", category: "edit", icon: "ListOrdered", accept: PDF, multiple: true, runs: "browser", status: "ready", chainable: true },
+  { slug: "remove-watermark", name: "Remove watermark", description: "Find watermarks, stamps and repeated logos in a PDF and delete them for real, not cover them.", category: "edit", icon: "Eraser", accept: PDF, multiple: false, runs: "browser", status: "ready" },
   { slug: "crop-pdf", name: "Crop PDF", description: "Trim margins or keep just the area you select.", category: "edit", icon: "Crop", accept: PDF, multiple: false, runs: "browser", status: "ready" },
   { slug: "pdf-forms", name: "PDF Forms", description: "Find the fields in a form, fill them in, and flatten.", category: "edit", icon: "ClipboardList", accept: PDF, multiple: false, runs: "browser", status: "ready" },
   // Security
@@ -88,6 +89,7 @@ export const TOOLS: ToolDef[] = [
   { slug: "resize-image", name: "Resize image", description: "By percentage, by pixels, by print size in cm, or to a file size in KB.", category: "image", icon: "Scaling", accept: ANY_IMAGE, multiple: true, runs: "browser", status: "ready" },
   { slug: "crop-image", name: "Crop image", description: "Cut to any shape: square, 16:9, passport photo or free.", category: "image", icon: "Crop", accept: ANY_IMAGE, multiple: false, runs: "browser", status: "ready" },
   { slug: "convert-image", name: "Convert image", description: "Change images to JPG, PNG or WEBP, including HEIC, GIF, BMP and SVG.", category: "image", icon: "ArrowLeftRight", accept: ANY_IMAGE, multiple: true, runs: "browser", status: "ready" },
+  { slug: "remove-watermark-image", name: "Remove watermark from image", description: "Paint over a watermark, logo or date stamp and it's filled in from its surroundings.", category: "image", icon: "Brush", accept: ANY_IMAGE, multiple: false, runs: "browser", status: "ready" },
   { slug: "rotate-image", name: "Rotate image", description: "Turn or mirror many images at once.", category: "image", icon: "FlipHorizontal2", accept: ANY_IMAGE, multiple: true, runs: "browser", status: "ready" },
 ];
 

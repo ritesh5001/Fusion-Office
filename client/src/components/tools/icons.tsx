@@ -1,12 +1,12 @@
 import {
-  Archive, ArrowLeftRight, Camera, ClipboardList, Combine, Crop, EyeOff, FileCode, FileSpreadsheet, FileText, FlipHorizontal2, GitCompare,
+  Archive, ArrowLeftRight, Brush, Camera, ClipboardList, Combine, Crop, Eraser, EyeOff, FileCode, FileSpreadsheet, FileText, FlipHorizontal2, GitCompare,
   Globe, Image, ImageDown, ImagePlus, Languages, LayoutGrid, ListOrdered, Lock, Minimize2, PenLine, Presentation, RotateCw, Scaling,
   ScanText, Scissors, Signature, SlidersHorizontal, Sparkles, Stamp, Unlock, Workflow, Wrench, type LucideIcon,
 } from "lucide-react";
 import type { Category } from "@/lib/tools/registry";
 
 const ICONS: Record<string, LucideIcon> = {
-  Archive, ArrowLeftRight, Camera, ClipboardList, Combine, Crop, EyeOff, FileCode, FileSpreadsheet, FileText, FlipHorizontal2, GitCompare,
+  Archive, ArrowLeftRight, Brush, Camera, ClipboardList, Combine, Crop, Eraser, EyeOff, FileCode, FileSpreadsheet, FileText, FlipHorizontal2, GitCompare,
   Globe, Image, ImageDown, ImagePlus, Languages, LayoutGrid, ListOrdered, Lock, Minimize2, PenLine, Presentation, RotateCw, Scaling,
   ScanText, Scissors, Signature, SlidersHorizontal, Sparkles, Stamp, Unlock, Workflow, Wrench,
 };

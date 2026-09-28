@@ -13,6 +13,8 @@ const CUSTOM: Record<string, React.ComponentType> = {
   "compare-pdf": dynamic(() => import("./custom/CompareTool").then((m) => m.CompareTool), { ssr: false }),
   "scan-to-pdf": dynamic(() => import("./custom/ScanTool").then((m) => m.ScanTool), { ssr: false }),
   workflows: dynamic(() => import("./custom/WorkflowsTool").then((m) => m.WorkflowsTool), { ssr: false }),
+  "remove-watermark": dynamic(() => import("./custom/UnwatermarkTool").then((m) => m.UnwatermarkTool), { ssr: false }),
+  "remove-watermark-image": dynamic(() => import("./custom/ImageUnwatermarkTool").then((m) => m.ImageUnwatermarkTool), { ssr: false }),
   "image-editor": dynamic(() => import("./custom/ImageEditor").then((m) => m.ImageEditor), { ssr: false }),
   "crop-image": dynamic(() => import("./custom/ImageEditor").then((m) => () => <m.ImageEditor mode="crop" />), { ssr: false }),
 };

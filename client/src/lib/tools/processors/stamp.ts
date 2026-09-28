@@ -1,4 +1,4 @@
-import { StandardFonts, concatTransformationMatrix, degrees, popGraphicsState, pushGraphicsState, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+import { PDFName, PDFOperator, PDFOperatorNames, StandardFonts, concatTransformationMatrix, degrees, popGraphicsState, pushGraphicsState, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import { hexToRgb01, objectMatrix } from "../../pdf/geometry";
 import { loadPdf, pageView, save } from "./common";
 
@@ -51,6 +51,14 @@ export interface ImageWatermark {
   mosaic: boolean;
 }
 
+/**
+ * Tag what follows as a watermark (PDF "artifact"), the way Acrobat does, so
+ * screen readers skip it and it can be found and removed later.
+ */
+const beginWatermark = (page: PDFPage) =>
+  page.pushOperators(PDFOperator.of(PDFOperatorNames.BeginMarkedContentSequence, [PDFName.of("Artifact"), "<< /Type /Pagination /Subtype /Watermark >>"]));
+const endWatermark = (page: PDFPage) => page.pushOperators(PDFOperator.of(PDFOperatorNames.EndMarkedContent));
+
 export async function watermarkPdf(bytes: Uint8Array, mark: TextWatermark | ImageWatermark, pages?: number[]): Promise<Uint8Array> {
   const doc = await loadPdf(bytes);
   const targets = pages ?? doc.getPageIndices();
@@ -58,6 +66,7 @@ export async function watermarkPdf(bytes: Uint8Array, mark: TextWatermark | Imag
   const image = mark.kind === "image" ? await (mark.imageType === "png" ? doc.embedPng(mark.image) : doc.embedJpg(mark.image)) : null;
   for (const i of targets) {
     const page = doc.getPage(i);
+    beginWatermark(page);
     inView(page, (VH, VW) => {
       let w: number;
       let h: number;
@@ -86,6 +95,7 @@ export async function watermarkPdf(bytes: Uint8Array, mark: TextWatermark | Imag
         page.pushOperators(popGraphicsState());
       }
     });
+    endWatermark(page);
   }
   return save(doc);
 }
