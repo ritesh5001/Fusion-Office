@@ -2,7 +2,7 @@
  * The tool catalogue. One entry per tool; pages, the hub, navigation and
  * workflows all read from here.
  */
-export type Category = "organize" | "optimize" | "convert-to" | "convert-from" | "edit" | "security" | "intelligence";
+export type Category = "organize" | "optimize" | "convert-to" | "convert-from" | "edit" | "security" | "intelligence" | "image";
 export type Runs = "browser" | "server" | "ai";
 
 export interface ToolDef {
@@ -30,10 +30,13 @@ export const CATEGORIES: { id: Category; label: string }[] = [
   { id: "edit", label: "Edit" },
   { id: "security", label: "Security" },
   { id: "intelligence", label: "Intelligence" },
+  { id: "image", label: "Images" },
 ];
 
 const PDF = "application/pdf,.pdf";
 const IMAGES = "image/png,image/jpeg,image/webp";
+/** Anything the browser may decode, plus iPhone HEIC (opens where the browser supports it). */
+const ANY_IMAGE = "image/*,.heic,.heif,.avif";
 
 export const TOOLS: ToolDef[] = [
   // Organize
@@ -74,6 +77,13 @@ export const TOOLS: ToolDef[] = [
   { slug: "compare-pdf", name: "Compare PDF", description: "See every change between two versions, side by side.", category: "intelligence", icon: "GitCompare", accept: PDF, multiple: true, runs: "browser", status: "ready" },
   { slug: "summarize-pdf", name: "AI Summarizer", description: "Key points of a long document in seconds.", category: "intelligence", icon: "Sparkles", accept: PDF, multiple: false, runs: "ai", status: "ready" },
   { slug: "translate-pdf", name: "Translate PDF", description: "Translate a whole document into another language.", category: "intelligence", icon: "Languages", accept: PDF, multiple: false, runs: "ai", status: "ready" },
+  // Images
+  { slug: "image-editor", name: "Image editor", description: "Crop, straighten, adjust light and colour, add filters and text, then resize and save.", category: "image", icon: "SlidersHorizontal", accept: ANY_IMAGE, multiple: false, runs: "browser", status: "ready" },
+  { slug: "compress-image", name: "Compress image", description: "Make JPG, PNG and WEBP files smaller, or fit them under a size like 50 KB.", category: "image", icon: "ImageDown", accept: ANY_IMAGE, multiple: true, runs: "browser", status: "ready" },
+  { slug: "resize-image", name: "Resize image", description: "By percentage, by pixels, by print size in cm, or to a file size in KB.", category: "image", icon: "Scaling", accept: ANY_IMAGE, multiple: true, runs: "browser", status: "ready" },
+  { slug: "crop-image", name: "Crop image", description: "Cut to any shape: square, 16:9, passport photo or free.", category: "image", icon: "Crop", accept: ANY_IMAGE, multiple: false, runs: "browser", status: "ready" },
+  { slug: "convert-image", name: "Convert image", description: "Change images to JPG, PNG or WEBP, including HEIC, GIF, BMP and SVG.", category: "image", icon: "ArrowLeftRight", accept: ANY_IMAGE, multiple: true, runs: "browser", status: "ready" },
+  { slug: "rotate-image", name: "Rotate image", description: "Turn or mirror many images at once.", category: "image", icon: "FlipHorizontal2", accept: ANY_IMAGE, multiple: true, runs: "browser", status: "ready" },
 ];
 
 export const toolBySlug = (slug: string) => TOOLS.find((t) => t.slug === slug);

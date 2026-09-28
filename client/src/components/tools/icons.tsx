@@ -1,14 +1,14 @@
 import {
-  Archive, Camera, ClipboardList, Combine, Crop, EyeOff, FileCode, FileSpreadsheet, FileText, GitCompare, Globe, Image, ImagePlus,
-  Languages, LayoutGrid, ListOrdered, Lock, Minimize2, PenLine, Presentation, RotateCw, ScanText, Scissors, Signature, Sparkles,
-  Stamp, Unlock, Workflow, Wrench, type LucideIcon,
+  Archive, ArrowLeftRight, Camera, ClipboardList, Combine, Crop, EyeOff, FileCode, FileSpreadsheet, FileText, FlipHorizontal2, GitCompare,
+  Globe, Image, ImageDown, ImagePlus, Languages, LayoutGrid, ListOrdered, Lock, Minimize2, PenLine, Presentation, RotateCw, Scaling,
+  ScanText, Scissors, Signature, SlidersHorizontal, Sparkles, Stamp, Unlock, Workflow, Wrench, type LucideIcon,
 } from "lucide-react";
 import type { Category } from "@/lib/tools/registry";
 
 const ICONS: Record<string, LucideIcon> = {
-  Archive, Camera, ClipboardList, Combine, Crop, EyeOff, FileCode, FileSpreadsheet, FileText, GitCompare, Globe, Image, ImagePlus,
-  Languages, LayoutGrid, ListOrdered, Lock, Minimize2, PenLine, Presentation, RotateCw, ScanText, Scissors, Signature, Sparkles,
-  Stamp, Unlock, Workflow, Wrench,
+  Archive, ArrowLeftRight, Camera, ClipboardList, Combine, Crop, EyeOff, FileCode, FileSpreadsheet, FileText, FlipHorizontal2, GitCompare,
+  Globe, Image, ImageDown, ImagePlus, Languages, LayoutGrid, ListOrdered, Lock, Minimize2, PenLine, Presentation, RotateCw, Scaling,
+  ScanText, Scissors, Signature, SlidersHorizontal, Sparkles, Stamp, Unlock, Workflow, Wrench,
 };
 
 /** One muted accent per category, so the catalogue scans quickly. */
@@ -20,6 +20,7 @@ export const CATEGORY_TINT: Record<Category, string> = {
   edit: "bg-violet-50 text-violet-600",
   security: "bg-slate-100 text-slate-700",
   intelligence: "bg-rose-50 text-rose-600",
+  image: "bg-cyan-50 text-cyan-700",
 };
 
 export function ToolIcon({ name, className }: { name: string; className?: string }) {

@@ -1,9 +1,7 @@
 import type { RequestHandler } from "express";
 
-/**
- * Fixed-window, per-IP request limit kept in memory. Enough for a single
- * instance; the heavy routes (conversion, AI) are the ones that need it.
- */
+
+
 export function rateLimit({ windowMs, max, name }: { windowMs: number; max: number; name: string }): RequestHandler {
   const hits = new Map<string, { count: number; reset: number }>();
   const sweep = setInterval(() => {

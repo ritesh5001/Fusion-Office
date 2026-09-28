@@ -12,6 +12,9 @@ export interface LoadedFile extends ToolFile {
   id: string;
   pages?: number;
   thumb?: string;
+  /** Pixel size, for images. */
+  width?: number;
+  height?: number;
 }
 
 export interface ToolResult {
@@ -48,8 +51,13 @@ async function describe(file: ToolFile): Promise<LoadedFile> {
       base.pages = doc.numPages;
       base.thumb = canvas.toDataURL("image/jpeg", 0.7);
       await doc.destroy();
-    } else if (file.type.startsWith("image/")) {
+    } else if (file.type.startsWith("image/") || /\.(heic|heif|avif|svg|bmp|gif)$/i.test(file.name)) {
       base.thumb = URL.createObjectURL(new Blob([file.bytes as BlobPart], { type: file.type }));
+      const { decodeImage } = await import("@/lib/image/canvas");
+      const img = await decodeImage(file);
+      base.width = img.width;
+      base.height = img.height;
+      img.close();
     }
   } catch {
     /* thumbnail is optional (e.g. encrypted PDFs) */
@@ -152,6 +160,7 @@ export function ToolRunner<O>({ tool, spec }: { tool: ToolDef; spec: ToolSpec<O>
                           <p className="text-[12px] text-ink-soft">
                             {formatBytes(f.bytes.length)}
                             {f.pages ? ` · ${f.pages} page${f.pages === 1 ? "" : "s"}` : ""}
+                            {f.width ? ` · ${f.width} × ${f.height}` : ""}
                           </p>
                         </div>
                         {spec.reorderable && files.length > 1 && (
@@ -232,6 +241,22 @@ function IconBtn({ label, onClick, disabled, children }: { label: string; onClic
   );
 }
 
+function ImagePreview({ file }: { file: ToolFile }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    const u = URL.createObjectURL(new Blob([file.bytes as BlobPart], { type: file.type }));
+    setUrl(u);
+    return () => URL.revokeObjectURL(u);
+  }, [file]);
+  if (!url) return null;
+  return (
+    <div className="mx-auto mt-6 flex max-h-[420px] justify-center overflow-hidden rounded-xl bg-[repeating-conic-gradient(#f1efe9_0%_25%,#fff_0%_50%)] bg-[length:16px_16px] p-3 ring-1 ring-rule">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={url} alt="Result preview" className="max-h-[396px] max-w-full object-contain" />
+    </div>
+  );
+}
+
 function Results({ result, onReset, anchor }: { result: ToolResult; onReset: () => void; anchor: React.RefObject<HTMLDivElement | null> }) {
   const [copied, setCopied] = useState(false);
   const many = result.files.length > 1;
@@ -244,6 +269,7 @@ function Results({ result, onReset, anchor }: { result: ToolResult; onReset: () 
         </span>
         <h2 className="mt-4 font-display text-[26px] font-semibold tracking-[-0.02em]">Done</h2>
         {result.summary && <div className="mx-auto mt-2 max-w-[56ch] text-[15px] leading-relaxed text-ink-soft">{result.summary}</div>}
+        {!many && result.files[0]?.type.startsWith("image/") && <ImagePreview file={result.files[0]} />}
         {result.files.length > 0 && (
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <button
