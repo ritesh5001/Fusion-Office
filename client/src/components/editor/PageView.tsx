@@ -14,7 +14,7 @@ import {
   type TPointerEvent,
 } from "fabric";
 import { useEditor } from "@/lib/editor/store";
-import { viewSize, totalRotation, type EditorPage, type Rect, type ToolId } from "@/lib/editor/types";
+import { viewSize, totalRotation, type CharStyle, type EditorObject, type EditorPage, type Rect, type ToolId } from "@/lib/editor/types";
 import { renderPage } from "@/lib/pdf/renderer";
 import { getTextLines, textRectsBetween, type TextLine } from "@/lib/pdf/text";
 import { sampleTextColors } from "@/lib/pdf/colors";
@@ -193,10 +193,11 @@ function afterSync(canvas: Canvas) {
     if (fo instanceof Textbox) {
       st.setPendingEdit(null);
       canvas.setActiveObject(fo);
+      // Set the caret before entering editing: that is when Fabric copies it to the
+      // hidden textarea that receives the typing (otherwise keys land at the start).
+      fo.selectionStart = fo.text ? fo.text.length : 0;
+      fo.selectionEnd = fo.text.length;
       fo.enterEditing();
-      if (fo.text) {
-        fo.selectionStart = fo.selectionEnd = fo.text.length;
-      } else fo.selectAll();
       canvas.requestRenderAll();
       return;
     }
@@ -525,6 +526,15 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
     const next = readFabricObject(t);
     if (next.type !== "text") return;
     const key = `new:${model.id}`; // merges with "Add text" if this is its first edit
+    const before = untouched.get(model.id);
+    if (before !== undefined) {
+      untouched.delete(model.id);
+      // Clicked but not changed: put the original text back untouched.
+      if (model.replaces && sameLook(lookOf(next), before)) {
+        st().discardNew(getPage().id, model.id);
+        return;
+      }
+    }
     // Emptying a replacement means "delete this text from the PDF", so keep it.
     if (!next.text.trim() && !model.replaces) {
       st().deleteObjects(getPage().id, [model.id], key);
@@ -583,6 +593,23 @@ function CoverLayer({ page, zoom }: { page: EditorPage; zoom: number }) {
 
 const sameRect = (a: number[], b: number[]) => a.every((v, i) => Math.abs(v - b[i]) < 0.5);
 
+/**
+ * How a line looked when it was clicked. If editing ends with the text and
+ * look unchanged, the line goes back to being the original PDF text: clicking
+ * alone never rewrites anything.
+ */
+type Look = { key: string; box: number[] };
+const untouched = new Map<string, Look>();
+const lookOf = (o: EditorObject): Look =>
+  o.type === "text"
+    ? {
+        key: JSON.stringify([o.text.trim(), o.fontSize, o.fontFamily, o.bold, o.italic, o.underline, o.color, o.align, o.letterSpacing, o.opacity, o.angle, o.pdfFont, o.charStyles ?? null]),
+        box: [o.cx, o.cy, o.width],
+      }
+    : { key: "", box: [] };
+// Reading back from Fabric rounds positions, so compare them with a tolerance.
+const sameLook = (a: Look, b: Look) => a.key === b.key && a.box.every((v, i) => Math.abs(v - b.box[i]) < 0.1);
+
 /** Outlines every line of existing text; clicking one turns it into editable text. */
 function TextLinesLayer({ page, zoom }: { page: EditorPage; zoom: number }) {
   const [lines, setLines] = useState<TextLine[] | null>(null);
@@ -610,6 +637,13 @@ function TextLinesLayer({ page, zoom }: { page: EditorPage; zoom: number }) {
     const width = line.rect.w * 1.12 + fs * 0.8;
     const height = fs * 1.13;
     const top = line.baseline - fs * 0.879; // Fabric's first-line baseline offset
+    // Parts of the line in another font (a bold phrase, say) keep that font.
+    const main = { pdfFont: line.pdfFont, bold: line.bold, italic: line.italic };
+    const chars: Record<number, CharStyle> = {};
+    for (const r of line.runs) {
+      if (r.pdfFont === main.pdfFont) continue;
+      for (let k = r.start; k < r.end; k++) chars[k] = { pdfFont: r.pdfFont, bold: r.bold, italic: r.italic };
+    }
     const obj = createText(line.x, top, {
       text: line.text,
       width,
@@ -618,6 +652,8 @@ function TextLinesLayer({ page, zoom }: { page: EditorPage; zoom: number }) {
       fontFamily: line.fontFamily,
       bold: line.bold,
       italic: line.italic,
+      pdfFont: line.pdfFont,
+      charStyles: Object.keys(chars).length ? { 0: chars } : undefined,
       color: colors.text,
       lineHeight: 1.16,
       replaces: {
@@ -628,7 +664,9 @@ function TextLinesLayer({ page, zoom }: { page: EditorPage; zoom: number }) {
       },
     });
     // The Edit text tool stays active, so the next line is one click away.
-    useEditor.getState().addObject(page.id, { ...obj, cy: top + height / 2 }, { edit: true });
+    const placed = { ...obj, cy: top + height / 2 };
+    untouched.set(placed.id, lookOf(placed));
+    useEditor.getState().addObject(page.id, placed, { edit: true });
     setBusy(null);
   };
 

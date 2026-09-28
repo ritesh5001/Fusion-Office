@@ -271,6 +271,10 @@ export interface PatchOptions {
   seed?: number;
   /** Called with 0–1 as work progresses. */
   onProgress?: (f: number) => void;
+  /** EM iterations at the coarsest and at finer levels. */
+  iterations?: [number, number];
+  /** Finish by copying each pixel from its best patch (keeps grain) instead of blending. */
+  sharpFinish?: boolean;
 }
 
 interface Level {
@@ -475,7 +479,8 @@ export function patchInpaint(data: Uint8ClampedArray, width: number, height: num
       dist[k] = patchDist(tx, ty, sx, sy, Infinity);
     }
 
-    const iterations = li === levels.length - 1 ? 6 : 3;
+    const [coarseIt, fineIt] = opts.iterations ?? [6, 3];
+    const iterations = li === levels.length - 1 ? coarseIt : fineIt;
     const accR = new Float64Array(w * h);
     const accG = new Float64Array(w * h);
     const accB = new Float64Array(w * h);
@@ -548,6 +553,17 @@ export function patchInpaint(data: Uint8ClampedArray, width: number, height: num
           g[p] = accG[p] / accW[p];
           b[p] = accB[p] / accW[p];
         }
+      if (li === 0 && it === iterations - 1 && opts.sharpFinish) {
+        // Each hole pixel takes the centre of its own best patch: real grain, no blur.
+        for (let k = 0; k < T; k++) {
+          const t = targets[k];
+          if (!hole[t]) continue;
+          const src = newY[k] * w + newX[k];
+          r[t] = r[src];
+          g[t] = g[src];
+          b[t] = b[src];
+        }
+      }
       done += w * h;
       opts.onProgress?.(Math.min(1, done / totalWork));
     }

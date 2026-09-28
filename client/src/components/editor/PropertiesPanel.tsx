@@ -146,7 +146,7 @@ function ObjectProperties({ pageId, obj }: { pageId: string; obj: EditorObject }
             <Select<FontFamily>
               ariaLabel="Font"
               value={obj.fontFamily}
-              onChange={(fontFamily) => update({ fontFamily })}
+              onChange={(fontFamily) => update({ fontFamily, pdfFont: undefined, charStyles: undefined })}
               options={[
                 { value: "Helvetica", label: "Helvetica / Arial" },
                 { value: "Times", label: "Times" },
@@ -156,10 +156,10 @@ function ObjectProperties({ pageId, obj }: { pageId: string; obj: EditorObject }
             <NumberInput value={obj.fontSize} min={4} max={400} step={1} precision={obj.fontSize % 1 ? 1 : 0} suffix="pt" onChange={(fontSize) => update({ fontSize })} />
           </div>
           <div className="mt-2 flex items-center gap-1">
-            <IconButton size="sm" label="Bold" active={obj.bold} onClick={() => update({ bold: !obj.bold })}>
+            <IconButton size="sm" label="Bold" active={obj.bold} onClick={() => update({ bold: !obj.bold, pdfFont: undefined, charStyles: undefined })}>
               <Bold className="h-4 w-4" />
             </IconButton>
-            <IconButton size="sm" label="Italic" active={obj.italic} onClick={() => update({ italic: !obj.italic })}>
+            <IconButton size="sm" label="Italic" active={obj.italic} onClick={() => update({ italic: !obj.italic, pdfFont: undefined, charStyles: undefined })}>
               <Italic className="h-4 w-4" />
             </IconButton>
             <IconButton size="sm" label="Underline" active={obj.underline} onClick={() => update({ underline: !obj.underline })}>

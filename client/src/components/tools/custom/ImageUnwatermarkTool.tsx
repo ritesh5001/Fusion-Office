@@ -5,9 +5,10 @@ import { Brush, Download, Eraser, Eye, Loader2, Pipette, RotateCcw, Square, Undo
 import { downloadFile, formatBytes, toToolFile, type ToolFile } from "@/lib/tools/files";
 import { decodeImage, exportCanvas, newCanvas, resample } from "@/lib/image/canvas";
 import { formatFor, outputName } from "@/lib/image/encode";
-import { dilate, inpaint, maskCount, refineByColor } from "@/lib/image/inpaint";
+import { dilate, maskCount, refineByColor } from "@/lib/image/inpaint";
+import type { InpaintJob } from "@/lib/image/inpaint.worker";
 import { Dropzone } from "../Dropzone";
-import { Slider } from "../controls";
+import { Segmented, Slider } from "../controls";
 import { cn } from "../../ui/primitives";
 
 type Mode = "brush" | "box" | "erase" | "pick";
@@ -19,7 +20,8 @@ export function ImageUnwatermarkTool() {
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [mode, setMode] = useState<Mode>("brush");
   const [brush, setBrush] = useState(28);
-  const [tolerance, setTolerance] = useState(18);
+  const [tolerance, setTolerance] = useState(10);
+  const [method, setMethod] = useState<"patch" | "smooth">("patch");
   const [grow, setGrow] = useState(2);
   const [grain, setGrain] = useState(35);
   const [pick, setPick] = useState<[number, number, number] | null>(null);
@@ -229,10 +231,24 @@ export function ImageUnwatermarkTool() {
       const img = ctx.getImageData(0, 0, size.w, size.h);
       undo.current = [...undo.current.slice(-3), new ImageData(new Uint8ClampedArray(img.data), size.w, size.h)];
       const m = dilate(mask.current, size.w, size.h, grow);
-      // Bigger holes need a wider neighbourhood.
+      // Bigger holes need a wider neighbourhood (smooth fill).
       const radius = Math.max(4, Math.min(12, Math.round(Math.sqrt(maskCount(m) / Math.max(1, size.w * size.h)) * 60)));
-      inpaint(img.data, size.w, size.h, m, { radius, grain: grain / 100 });
-      ctx.putImageData(img, 0, 0);
+      const pixels = await new Promise<Uint8ClampedArray>((resolve, reject) => {
+        const worker = new Worker(new URL("../../../lib/image/inpaint.worker.ts", import.meta.url));
+        worker.onmessage = (ev: MessageEvent<{ progress?: number; pixels?: Uint8ClampedArray; error?: string }>) => {
+          if (ev.data.progress !== undefined) return setBusy(`Filling in… ${Math.round(ev.data.progress * 100)}%`);
+          worker.terminate();
+          if (ev.data.pixels) resolve(ev.data.pixels);
+          else reject(new Error(ev.data.error ?? "Filling failed."));
+        };
+        worker.onerror = (err) => {
+          worker.terminate();
+          reject(new Error(err.message || "Filling failed."));
+        };
+        const job: InpaintJob = { pixels: new Uint8ClampedArray(img.data), width: size.w, height: size.h, mask: m, method, radius, grain: grain / 100 };
+        worker.postMessage(job, [job.pixels.buffer, job.mask.buffer]);
+      });
+      ctx.putImageData(new ImageData(new Uint8ClampedArray(pixels), size.w, size.h), 0, 0);
       mask.current.fill(0);
       setMasked(0);
       setHistory((h) => h + 1);
@@ -367,11 +383,20 @@ export function ImageUnwatermarkTool() {
             </button>
           </div>
         )}
+        <Segmented
+          label="Fill"
+          value={method}
+          onChange={setMethod}
+          options={[
+            { value: "patch", label: "Smart", hint: "Copies nearby texture" },
+            { value: "smooth", label: "Smooth", hint: "Blends colours" },
+          ]}
+        />
         <details className="text-[13px]">
           <summary className="cursor-pointer text-ink-soft">Fine-tune</summary>
           <div className="mt-3 space-y-3">
             <Slider label="Cover edges" value={grow} onChange={setGrow} min={0} max={6} format={(v) => `${v}px`} />
-            <Slider label="Texture" value={grain} onChange={setGrain} min={0} max={100} format={(v) => `${v}%`} />
+            {method === "smooth" && <Slider label="Texture" value={grain} onChange={setGrain} min={0} max={100} format={(v) => `${v}%`} />}
           </div>
         </details>
         {error && <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-[13px] text-red-700">{error}</p>}

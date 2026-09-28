@@ -78,6 +78,8 @@ export interface EditorState {
   updateObject: (pageId: string, id: string, patch: Partial<EditorObject>, coalesceKey?: string) => void;
   replaceObjects: (pageId: string, objects: EditorObject[], label?: string, coalesceKey?: string) => void;
   deleteObjects: (pageId: string, ids: string[], coalesceKey?: string) => void;
+  /** Remove an object that was just added and never changed, leaving no trace in the history. */
+  discardNew: (pageId: string, id: string) => void;
   reorderObjects: (pageId: string, ids: string[], where: "forward" | "backward" | "front" | "back") => void;
   undo: () => void;
   redo: () => void;
@@ -239,6 +241,20 @@ export const useEditor = create<EditorState>()((set, get) => ({
     );
     const sel = get().selection;
     if (sel?.pageId === pageId) set({ selection: null });
+  },
+
+  discardNew: (pageId, id) => {
+    const { doc, past, lastCommit, revision, selection } = get();
+    if (!doc) return;
+    // Only when the object's creation is still the last step; otherwise delete normally.
+    if (lastCommit.key !== `new:${id}`) return get().deleteObjects(pageId, [id]);
+    set({
+      doc: { ...doc, pages: mapPage(doc.pages, pageId, (p) => ({ ...p, objects: p.objects.filter((o) => o.id !== id) })) },
+      past: past.slice(0, -1),
+      revision: revision + 1,
+      lastCommit: { at: 0 },
+      selection: selection?.ids.includes(id) ? null : selection,
+    });
   },
 
   reorderObjects: (pageId, ids, where) => {

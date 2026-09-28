@@ -35,6 +35,8 @@ export interface RemovalResult {
   removed: number[];
   /** Text we could not measure whose origin lies inside the rect. */
   unsafe: boolean[];
+  /** Font resource names of the removed glyphs, per rect, most used first. */
+  fonts?: string[][];
 }
 
 export type Mat = [number, number, number, number, number, number];
@@ -224,7 +226,7 @@ export function parseContent(bytes: Uint8Array): Op[] {
 
 // ─── Fonts ──────────────────────────────────────────────────────────
 
-interface FontInfo {
+export interface FontInfo {
   codeLength: 1 | 2;
   /** Glyph width in 1/1000 text-space units, or undefined if unknown. */
   width: (code: number) => number | undefined;
@@ -259,7 +261,7 @@ function winAnsiGlyphName(code: number): string | undefined {
 
 const num = (o: unknown): number | undefined => (o instanceof PDFNumber ? o.asNumber() : undefined);
 
-function fontInfoFor(doc: PDFDocument, fontDict: PDFDict): FontInfo | null {
+export function fontInfoFor(doc: PDFDocument, fontDict: PDFDict): FontInfo | null {
   const lookup = (d: PDFDict, key: string) => d.lookup(PDFName.of(key));
   const subtype = lookup(fontDict, "Subtype");
   const sub = subtype instanceof PDFName ? subtype.decodeText() : "";
@@ -325,7 +327,7 @@ function fontInfoFor(doc: PDFDocument, fontDict: PDFDict): FontInfo | null {
 
 // ─── Content access ─────────────────────────────────────────────────
 
-function streamBytes(stream: PDFStream): Uint8Array | null {
+export function streamBytes(stream: PDFStream): Uint8Array | null {
   if (stream instanceof PDFRawStream) return decodePDFRawStream(stream).decode();
   const maybe = stream as unknown as { getUnencodedContents?: () => Uint8Array };
   return maybe.getUnencodedContents ? maybe.getUnencodedContents() : null;
@@ -372,6 +374,7 @@ const hex = (bytes: number[]) => "<" + bytes.map((b) => b.toString(16).padStart(
  */
 export function removeTextInRects(page: PDFPage, rects: UserRect[]): RemovalResult {
   const result: RemovalResult = { removed: rects.map(() => 0), unsafe: rects.map(() => false) };
+  const fontUse = rects.map(() => new Map<string, number>());
   if (!rects.length) return result;
   const content = pageContent(page);
   if (!content) {
@@ -449,6 +452,7 @@ export function removeTextInRects(page: PDFPage, rects: UserRect[]): RemovalResu
         if (hit >= 0 && w > 0) {
           result.removed[hit]++;
           dropped++;
+          fontUse[hit].set(font, (fontUse[hit].get(font) ?? 0) + 1);
         }
         pieces.push({ kind: "glyph", bytes: Array.from(el.subarray(k, k + info.codeLength)), adv, drop: hit >= 0 });
         t += adv;
@@ -555,6 +559,7 @@ export function removeTextInRects(page: PDFPage, rects: UserRect[]): RemovalResu
     }
   }
 
+  result.fonts = fontUse.map((m) => [...m.entries()].sort((a, b) => b[1] - a[1]).map(([f]) => f.replace(/^\//, "")));
   if (!replacements.length) return result;
 
   // Splice the rewritten operators into the stream and store it.

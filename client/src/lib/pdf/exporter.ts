@@ -7,7 +7,14 @@ import {
   PDFImage,
   PDFPage,
   StandardFonts,
+  beginText,
   concatTransformationMatrix,
+  endText,
+  setCharacterSpacing,
+  setFillingColor,
+  setFontAndSize,
+  setTextMatrix,
+  showText,
   degrees,
   popGraphicsState,
   pushGraphicsState,
@@ -38,6 +45,7 @@ import {
 } from "../editor/types";
 import { objectBounds } from "../editor/objects";
 import { removeTextInRects, type UserRect } from "./textRemoval";
+import { encodeRun, encoderFor, type FontEncoder } from "./fontEncoder";
 
 export interface ExportOptions {
   /** Export only these pages (in document order). Default: all. */
@@ -66,6 +74,8 @@ const FONT_MAP: Record<FontFamily, [StandardFonts, StandardFonts, StandardFonts,
 };
 
 class ExportContext {
+  /** Fonts of the original PDF that edited lines can reuse, per text object id. */
+  reuse = new Map<string, FontEncoder[]>();
   private fonts = new Map<string, Promise<PDFFont>>();
   private images = new Map<string, Promise<PDFImage>>();
   private sources = new Map<string, Promise<PDFDocument>>();
@@ -160,7 +170,8 @@ async function exportPage(ctx: ExportContext, page: EditorPage, opts: ExportOpti
   const { out } = ctx;
   const view = viewSize(page);
   const redactions = page.objects.filter((o) => o.type === "redact").map((o) => (o as { rect: Rect }).rect);
-  const replacements = page.objects.flatMap((o) => (o.type === "text" && o.replaces ? [o.replaces] : []));
+  const replacing = page.objects.filter((o): o is TextObject => o.type === "text" && !!o.replaces);
+  const replacements = replacing.map((o) => o.replaces!);
   // Replaced text that could not be removed from the content stream gets covered.
   let covers: { rect: Rect; background: string }[] = [];
 
@@ -210,6 +221,11 @@ async function exportPage(ctx: ExportContext, page: EditorPage, opts: ExportOpti
           result = { removed: rects.map(() => 0), unsafe: rects.map(() => true) };
         }
         covers = replacements.filter((_, i) => result.removed[i] === 0 || result.unsafe[i]);
+        // The new wording is written with the fonts the old wording used, where possible.
+        replacing.forEach((o, i) => {
+          const encs = (result.fonts?.[i] ?? []).map((name) => encoderFor(out, pdfPage, name)).filter((e): e is FontEncoder => !!e);
+          if (encs.length) ctx.reuse.set(o.id, encs);
+        });
       }
     } else {
       pdfPage = out.addPage([page.width, page.height]);
@@ -375,43 +391,110 @@ async function drawObject(ctx: ExportContext, page: PDFPage, obj: EditorObject, 
   }
 }
 
+interface CharLook {
+  bold: boolean;
+  italic: boolean;
+}
+
+/**
+ * Draw a text box. Replaced PDF text is written with the document's own fonts
+ * (per letter, falling back to the standard font for letters the embedded font
+ * doesn't contain), keeping bold/italic parts of the line.
+ */
 async function drawText(ctx: ExportContext, page: PDFPage, obj: TextObject, vh: number) {
   if (!obj.text.trim()) return;
-  const font = await ctx.font(obj.fontFamily, obj.bold, obj.italic);
   const size = obj.fontSize;
   const spacing = (obj.letterSpacing / 1000) * size;
-  const measure = (s: string) => {
-    const clean = sanitize(font, s);
-    return font.widthOfTextAtSize(clean, size) + spacing * Math.max(0, [...clean].length - 1);
-  };
-  const lines = wrapText(obj.text, obj.width + 0.5, measure);
   const textColor = color(obj.color);
+  const encoders = obj.opacity >= 1 ? (ctx.reuse.get(obj.id) ?? []) : [];
+
+  // Style of every character of obj.text (char styles are per original line).
+  const looks: CharLook[] = [];
+  obj.text.split("\n").forEach((line, li) => {
+    const row = obj.charStyles?.[li] ?? {};
+    for (let k = 0; k < line.length; k++) looks.push({ bold: row[k]?.bold ?? obj.bold, italic: row[k]?.italic ?? obj.italic });
+    looks.push({ bold: obj.bold, italic: obj.italic }); // the newline
+  });
+  const std = {
+    rr: await ctx.font(obj.fontFamily, false, false),
+    br: await ctx.font(obj.fontFamily, true, false),
+    ri: await ctx.font(obj.fontFamily, false, true),
+    bi: await ctx.font(obj.fontFamily, true, true),
+  };
+  const stdFor = (l: CharLook) => (l.bold ? (l.italic ? std.bi : std.br) : l.italic ? std.ri : std.rr);
+  // The original font for a style: same weight and slant, else the line's main font for its main style.
+  const encFor = (l: CharLook) => encoders.find((e) => e.bold === l.bold && e.italic === l.italic) ?? (l.bold === obj.bold && l.italic === obj.italic ? encoders[0] : undefined);
+
+  type Face = { kind: "enc"; enc: FontEncoder } | { kind: "std"; font: PDFFont };
+  const faceOf = (ch: string, l: CharLook): Face => {
+    const enc = encFor(l);
+    return enc && enc.code(ch) !== undefined ? { kind: "enc", enc } : { kind: "std", font: stdFor(l) };
+  };
+  const charWidth = (ch: string, l: CharLook) => {
+    const f = faceOf(ch, l);
+    if (f.kind === "enc") return ((f.enc.width(f.enc.code(ch)!) ?? 0) / 1000) * size;
+    return f.font.widthOfTextAtSize(sanitize(f.font, ch), size);
+  };
+  const base: CharLook = { bold: obj.bold, italic: obj.italic };
+  const measure = (s: string) => [...s].reduce((w, ch) => w + charWidth(ch, base), 0) + spacing * Math.max(0, [...s].length - 1);
+  const lines = wrapText(obj.text, obj.width + 0.5, measure);
 
   withMatrix(page, objectMatrix(obj.cx, vh - obj.cy, obj.angle), () => {
+    let cursor = 0;
     lines.forEach((raw, i) => {
-      const line = sanitize(font, raw);
-      const lw = measure(raw);
-      const left =
-        -obj.width / 2 + (obj.align === "center" ? (obj.width - lw) / 2 : obj.align === "right" ? obj.width - lw : 0);
-      const y = obj.height / 2 - textBaseline(i, size, obj.lineHeight);
-      if (spacing === 0) {
-        page.drawText(line, { x: left, y, size, font, color: textColor, opacity: obj.opacity });
-      } else {
-        let x = left;
-        for (const ch of line) {
-          page.drawText(ch, { x, y, size, font, color: textColor, opacity: obj.opacity });
-          x += font.widthOfTextAtSize(ch, size) + spacing;
-        }
+      // Where this wrapped line starts in obj.text, to find each letter's style.
+      const at = obj.text.indexOf(raw, cursor);
+      const start = at >= 0 ? at : cursor;
+      cursor = start + raw.length;
+      const chars = [...raw];
+      const segs: { face: Face; text: string; width: number }[] = [];
+      let offset = start;
+      for (const ch of chars) {
+        const l = looks[offset] ?? base;
+        offset += ch.length;
+        const face = faceOf(ch, l);
+        const w = charWidth(ch, l);
+        const last = segs[segs.length - 1];
+        const same = last && (last.face.kind === "enc" && face.kind === "enc" ? last.face.enc === face.enc : last.face.kind === "std" && face.kind === "std" && last.face.font === face.font);
+        if (same) {
+          last.text += ch;
+          last.width += w;
+        } else segs.push({ face, text: ch, width: w });
       }
-      if (obj.underline && line.trim()) {
-        page.drawRectangle({
-          x: left,
-          y: y - size * 0.12,
-          width: lw,
-          height: Math.max(0.6, size / 15),
-          color: textColor,
-          opacity: obj.opacity,
-        });
+      const lw = segs.reduce((a, g) => a + g.width, 0) + spacing * Math.max(0, chars.length - 1);
+      const left = -obj.width / 2 + (obj.align === "center" ? (obj.width - lw) / 2 : obj.align === "right" ? obj.width - lw : 0);
+      const y = obj.height / 2 - textBaseline(i, size, obj.lineHeight);
+      let x = left;
+      for (const g of segs) {
+        const n = [...g.text].length;
+        if (g.face.kind === "enc") {
+          const run = encodeRun(g.face.enc, g.text, size, spacing);
+          if (run) {
+            page.pushOperators(
+              beginText(),
+              setFontAndSize(g.face.enc.resource, size),
+              setFillingColor(textColor),
+              setCharacterSpacing(spacing),
+              setTextMatrix(1, 0, 0, 1, x, y),
+              showText(PDFHexString.of(run.hex)),
+              endText(),
+            );
+          }
+        } else {
+          const font = g.face.font;
+          if (spacing === 0) page.drawText(sanitize(font, g.text), { x, y, size, font, color: textColor, opacity: obj.opacity });
+          else {
+            let cx = x;
+            for (const ch of g.text) {
+              page.drawText(sanitize(font, ch), { x: cx, y, size, font, color: textColor, opacity: obj.opacity });
+              cx += font.widthOfTextAtSize(sanitize(font, ch), size) + spacing;
+            }
+          }
+        }
+        x += g.width + spacing * n;
+      }
+      if (obj.underline && raw.trim()) {
+        page.drawRectangle({ x: left, y: y - size * 0.12, width: lw, height: Math.max(0.6, size / 15), color: textColor, opacity: obj.opacity });
       }
     });
   });

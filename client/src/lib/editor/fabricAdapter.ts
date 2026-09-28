@@ -37,6 +37,50 @@ export const CSS_FONTS: Record<FontFamily, string> = {
   Courier: '"Courier New", Courier, monospace',
 };
 
+/**
+ * CSS font for text: the PDF's own font face (loaded by pdf.js when the page
+ * rendered) first, the standard family as the fallback for missing letters.
+ */
+const cssFont = (pdfFont: string | undefined, family: FontFamily) => (pdfFont ? `"${pdfFont}", ${CSS_FONTS[family]}` : CSS_FONTS[family]);
+
+type FabricCharStyle = { fontFamily?: string; fontWeight?: string; fontStyle?: string; foFont?: string; foBold?: boolean; foItalic?: boolean };
+
+/** Model char styles → Fabric's. The PDF's bold face is already bold, so no synthetic bold on top. */
+function toFabricStyles(o: TextObject): Record<number, Record<number, FabricCharStyle>> {
+  const out: Record<number, Record<number, FabricCharStyle>> = {};
+  for (const [line, chars] of Object.entries(o.charStyles ?? {})) {
+    const row: Record<number, FabricCharStyle> = {};
+    for (const [ch, st] of Object.entries(chars)) {
+      const bold = st.bold ?? o.bold;
+      const italic = st.italic ?? o.italic;
+      row[Number(ch)] = {
+        fontFamily: cssFont(st.pdfFont ?? o.pdfFont, o.fontFamily),
+        fontWeight: st.pdfFont ?? o.pdfFont ? "normal" : bold ? "bold" : "normal",
+        fontStyle: st.pdfFont ?? o.pdfFont ? "normal" : italic ? "italic" : "normal",
+        foFont: st.pdfFont,
+        foBold: st.bold,
+        foItalic: st.italic,
+      };
+    }
+    out[Number(line)] = row;
+  }
+  return out;
+}
+
+/** Fabric's styles (after typing, which copies styles to new letters) → model char styles. */
+function fromFabricStyles(styles: unknown): TextObject["charStyles"] {
+  const out: NonNullable<TextObject["charStyles"]> = {};
+  let any = false;
+  for (const [line, chars] of Object.entries((styles ?? {}) as Record<string, Record<string, FabricCharStyle>>)) {
+    for (const [ch, st] of Object.entries(chars ?? {})) {
+      if (st.foFont === undefined && st.foBold === undefined && st.foItalic === undefined) continue;
+      (out[Number(line)] ??= {})[Number(ch)] = { pdfFont: st.foFont, bold: st.foBold, italic: st.foItalic };
+      any = true;
+    }
+  }
+  return any ? out : undefined;
+}
+
 const SELECTION_STYLE = {
   borderColor: "#2f54eb",
   cornerColor: "#ffffff",
@@ -143,9 +187,10 @@ export async function createFabricObject(o: EditorObject): Promise<Tagged> {
         ...positioned(o),
         width: o.width,
         fontSize: o.fontSize,
-        fontFamily: CSS_FONTS[o.fontFamily],
-        fontWeight: o.bold ? "bold" : "normal",
-        fontStyle: o.italic ? "italic" : "normal",
+        fontFamily: cssFont(o.pdfFont, o.fontFamily),
+        fontWeight: o.bold && !o.pdfFont ? "bold" : "normal",
+        fontStyle: o.italic && !o.pdfFont ? "italic" : "normal",
+        styles: toFabricStyles(o),
         underline: o.underline,
         fill: o.color,
         textAlign: o.align,
@@ -280,7 +325,9 @@ export function readFabricObject(fo: Tagged): EditorObject {
         width: round(tb.width * sx),
         height: round(tb.height * sy),
         fontSize: scaled ? round(model.fontSize * sy, 1) : model.fontSize,
+        charStyles: model.charStyles ? fromFabricStyles(tb.styles) : undefined,
       };
+      if (!out.charStyles) delete out.charStyles;
       return out;
     }
     case "image": {

@@ -103,5 +103,5 @@ test("reports text it cannot measure as unsafe instead of guessing", async () =>
   page.node.setFontDictionary(PDFName.of("T3"), ctx.register(t3));
   page.node.set(PDFName.of("Contents"), ctx.register(ctx.flateStream(new TextEncoder().encode("BT /T3 12 Tf 50 50 Td (abc) Tj ET"))));
   const res = removeTextInRects(doc.getPage(0), [[45, 45, 90, 70]]);
-  assert.deepEqual(res, { removed: [0], unsafe: [true] });
+  assert.deepEqual(res, { removed: [0], unsafe: [true], fonts: [[]] });
 });

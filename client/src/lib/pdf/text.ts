@@ -231,6 +231,10 @@ export interface TextLine {
   fontFamily: FontFamily;
   bold: boolean;
   italic: boolean;
+  /** pdf.js font face of the line's main font (usable as a CSS font-family). */
+  pdfFont: string;
+  /** Character ranges of `text` and the font each uses (a line can mix regular and bold). */
+  runs: { start: number; end: number; pdfFont: string; bold: boolean; italic: boolean }[];
 }
 
 interface StyledItem {
@@ -335,13 +339,35 @@ export async function getTextLines(page: EditorPage): Promise<TextLine[]> {
         const visible = cur.filter((s) => s.item.str.trim());
         if (visible.length) {
           let text = "";
+          const spans: { start: number; end: number; fontName: string }[] = [];
           cur.forEach((s, i) => {
             if (i > 0) {
               const gap = s.x0 - cur[i - 1].x1;
               if (gap > s.size * 0.18 && !text.endsWith(" ") && !s.item.str.startsWith(" ")) text += " ";
             }
+            spans.push({ start: text.length, end: text.length + s.item.str.length, fontName: s.item.fontName });
             text += s.item.str;
           });
+          // Offsets after trimming, with neighbouring spans of the same font merged.
+          const lead = text.length - text.trimStart().length;
+          const trimmed = text.trim();
+          const runs: TextLine["runs"] = [];
+          for (const sp of spans) {
+            const start = Math.max(0, sp.start - lead);
+            const end = Math.min(trimmed.length, sp.end - lead);
+            if (end <= start) continue;
+            const st = styleFor(sp.fontName);
+            const prev = runs[runs.length - 1];
+            if (prev && prev.pdfFont === sp.fontName) prev.end = end;
+            else {
+              // Spaces between spans belong to the previous run.
+              if (prev) prev.end = start;
+              runs.push({ start, end, pdfFont: sp.fontName, bold: st.bold, italic: st.italic });
+            }
+          }
+          // The line's main style is the one covering the most characters.
+          const main = [...runs].sort((a, b) => b.end - b.start - (a.end - a.start))[0];
+          const mainFont = main?.pdfFont ?? visible[0].item.fontName;
           const first = visible[0];
           const size = first.size;
           const x0 = Math.min(...visible.map((s) => s.x0));
@@ -353,13 +379,15 @@ export async function getTextLines(page: EditorPage): Promise<TextLine[]> {
             Math.max(...visible.map((s) => s.user[3])),
           ];
           lines.push({
-            text: text.trim(),
+            text: trimmed,
             rect: { x: x0, y: first.base - size * 0.95, w: x1 - x0, h: size * 1.2 },
             userRect: user,
             x: x0,
             baseline: first.base,
-            fontSize: Math.round(size * 10) / 10,
-            ...styleFor(first.item.fontName),
+            fontSize: Math.round(size * 100) / 100,
+            ...styleFor(mainFont),
+            pdfFont: mainFont,
+            runs,
           });
         }
         cur = [];

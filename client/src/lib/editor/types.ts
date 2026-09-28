@@ -62,6 +62,19 @@ export interface TextObject extends Positioned {
   letterSpacing: number;
   /** Set when this text replaces a line that already exists in the PDF. */
   replaces?: ReplacedText;
+  /**
+   * The PDF's own font (pdf.js font face) for replaced text, so it looks the
+   * same while editing. `fontFamily` is the fallback for missing letters.
+   */
+  pdfFont?: string;
+  /** Per-character styles for lines that mix fonts (Fabric's layout: line → character). */
+  charStyles?: Record<number, Record<number, CharStyle>>;
+}
+
+export interface CharStyle {
+  pdfFont?: string;
+  bold?: boolean;
+  italic?: boolean;
 }
 
 /** The original text a replacement stands in for. */
