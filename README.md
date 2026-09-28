@@ -2,22 +2,34 @@
 
 A document workspace. The first product is a **browser-based PDF editor**: upload a PDF, edit it visually, annotate, sign, redact and reorganize pages, then export a real PDF. Files are processed on the user's device. Nothing is uploaded unless the user saves to the cloud.
 
+## Project layout
+
+```
+fusion-office/
+├── client/    Frontend: Next.js + React + Tailwind. The PDF editor (PDF.js, pdf-lib, Fabric.js, Zustand)
+└── server/    Backend: Node.js + Express + TypeScript. API, Auth.js, Prisma/PostgreSQL, S3/R2
+```
+
+The two are separate npm workspaces. The browser only talks to the client. The client proxies `/api/*` to the server (`SERVER_URL`, default `http://localhost:4000`), so sign-in cookies stay same-origin and no CORS setup is needed.
+
 ## Quick start
 
 ```bash
-npm install          # also copies the PDF.js worker to /public and generates Prisma client
-npm run dev          # http://localhost:3000  →  /editor
+npm install          # installs both apps (copies the PDF.js worker, generates the Prisma client)
+npm run dev          # server on :4000 + client on :3000  →  http://localhost:3000/editor
 ```
 
-No `.env` is needed to use the editor. Documents autosave to the browser (IndexedDB) and show up under "Recent on this device".
+No `.env` is needed to use the editor. Documents autosave to the browser (IndexedDB) and show up under "Recent on this device". If the server isn't running, the editor still works; only cloud features are hidden.
 
-```bash
-npm test             # geometry + text-wrap tests (checked against pdf.js)
-npm run typecheck
-npm run build
-node scripts/make-sample-pdf.mjs sample.pdf    # test PDF (text, pre-rotated page)
-node scripts/inspect-pdf.mjs exported.pdf      # dump text / rotation / annotations
-```
+| Command (from the root) | What it does |
+| --- | --- |
+| `npm run dev` | Both apps in watch mode (`dev:client` / `dev:server` for one) |
+| `npm run build` / `npm start` | Production build / run both |
+| `npm test` | Server API tests + client geometry/text-wrap tests |
+| `npm run typecheck` | Type-check both apps |
+| `npm run db:push` | Create the database tables (server) |
+
+Test helpers: `node client/scripts/make-sample-pdf.mjs sample.pdf` (test PDF with a pre-rotated page) and `node client/scripts/inspect-pdf.mjs out.pdf` (dump text, rotation, annotations).
 
 ## What v1 does
 
@@ -41,14 +53,11 @@ Keyboard shortcuts are listed in the editor under **Help → Keyboard shortcuts*
 ## Architecture
 
 ```
-src/
-├── app/                      Next.js routes
-│   ├── page.tsx              Suite home (PDF tools live; Word/Excel/PPT/OCR "coming soon")
-│   ├── editor/               PDF editor (client-only)
-│   ├── dashboard/            Cloud documents + versions
-│   └── api/                  auth, documents, versions
-├── components/editor/        UI: TopBar, ToolBar, PageSidebar, Viewport, PageView,
-│                             PropertiesPanel, BottomBar, SearchPanel, Dialogs
+client/src/
+├── app/                      Pages: suite home, /editor, /dashboard (all static)
+├── components/editor/        TopBar, ToolBar, PageSidebar, Viewport, PageView,
+│                             PropertiesPanel, BottomBar, SearchPanel, Dialogs, cloud.ts
+├── components/home/          Account links, dashboard, cloud document list
 ├── lib/editor/               Editor core (no UI)
 │   ├── types.ts              Data model: pages[] → objects[]
 │   ├── store.ts              Zustand store: document, history, tools, selection, clipboard
@@ -62,8 +71,18 @@ src/
 │   ├── exporter.ts           Original PDF + edits → new PDF (pdf-lib)
 │   └── geometry.ts           View-space ⇄ PDF-space math (tested against pdf.js)
 ├── lib/storage/local.ts      IndexedDB autosave + recent files
-└── lib/server/               Prisma, S3/R2 presigned URLs, API helpers
+└── lib/cloudConfig.ts        Asks the server which cloud features are on
+
+server/src/
+├── index.ts                  Entry point (loads .env, starts Express)
+├── app.ts                    Express app: middleware, /api/config, /api/health, routes
+├── auth.ts                   Auth.js (@auth/express): GitHub/Google, Prisma adapter, JWT sessions
+├── routes/documents.ts       Documents CRUD, presigned uploads, versions + restore
+└── lib/                      db.ts (Prisma), storage.ts (S3/R2 presigned URLs), http.ts (auth guard, validation, errors)
+server/prisma/schema.prisma   Users, accounts, documents, versions
 ```
+
+**API** (all under `/api`): `GET /config`, `GET /health`, `/auth/*` (Auth.js), `GET|POST /documents`, `GET|PUT|DELETE /documents/:id`, `GET|POST /documents/:id/versions`.
 
 **Key design decisions**
 
@@ -74,12 +93,18 @@ src/
 
 ## Enabling cloud save (optional)
 
-1. Copy `.env.example` to `.env` and fill in `DATABASE_URL`, `AUTH_SECRET` (`npx auth secret`), at least one OAuth provider (GitHub or Google) and the S3/R2 settings.
+1. Copy `server/.env.example` to `server/.env` and fill in `DATABASE_URL`, `AUTH_SECRET` (`npx auth secret`), at least one OAuth provider (GitHub or Google) and the S3/R2 settings.
 2. `npm run db:push` to create the tables.
-3. Add a CORS rule to the bucket allowing `PUT` and `GET` from your app's origin (browsers upload and download directly).
-4. OAuth callback URL: `https://<your-domain>/api/auth/callback/<github|google>`.
+3. Add a CORS rule to the bucket allowing `PUT` and `GET` from the site's origin (browsers upload and download directly).
+4. OAuth callback URL: `<site-url>/api/auth/callback/<github|google>`, where site-url is the **client's** address (e.g. `http://localhost:3000` locally).
 
-Without these settings, the cloud buttons are hidden and the API returns `503`.
+Without these settings, the cloud buttons are hidden and the documents API returns `503`.
+
+## Deploying
+
+- **client/** can go on Vercel (or any Next.js host). Set `SERVER_URL` to the server's URL.
+- **server/** runs anywhere Node runs (Render, Railway, Fly, a VPS): `npm run build -w server && npm run start -w server`. Set `AUTH_URL=https://<your-site>/api/auth` so OAuth callbacks use the public address.
+- Keep the server reachable only through the client proxy where possible. If the browser must call it directly, set `CLIENT_ORIGIN` on the server to enable CORS.
 
 ## Known limitations (v1)
 
@@ -87,7 +112,7 @@ Without these settings, the cloud buttons are hidden and the API returns `503`.
 - **Export uses the standard PDF fonts** (Helvetica/Times/Courier, Latin characters). Characters outside that set are replaced (`₹` becomes `Rs.`). Embedding a Unicode font (e.g. Noto Sans via `@pdf-lib/fontkit`) fixes this.
 - Redacted pages become images on export, so their text is no longer selectable. That's the trade-off for real removal.
 - Password-protected PDFs, image cropping, form-field creation, find & replace, OCR and PDF/A are not built yet.
-- Pinned to stable majors: Next 15, Fabric 6, PDF.js 4, Prisma 6. Fabric 6 has advisories that only affect its SVG export (`toSVG`), which this app doesn't use. Upgrade to Fabric 7 when convenient.
+- Pinned to stable majors: Next 15, Fabric 6, PDF.js 4, Prisma 6, Express 5. Fabric 6 has advisories that only affect its SVG export (`toSVG`), which this app doesn't use. Upgrade to Fabric 7 when convenient.
 
 ## Roadmap
 
