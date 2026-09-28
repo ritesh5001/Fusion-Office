@@ -9,10 +9,12 @@ import { AccountLinks } from "../home/AccountLinks";
 // Absolute paths so the links work from every page, not just the homepage.
 const LINKS = [
   { href: "/tools", label: "All tools" },
-  { href: "/#editor", label: "Editor" },
-  { href: "/tools/image-editor", label: "Image editor" },
+  { href: "/#editor", label: "PDF editor" },
+  { href: "/write", label: "Word" },
+  { href: "/sheets", label: "Excel" },
+  { href: "/slides", label: "PowerPoint" },
+  { href: "/tools/image-editor", label: "Images" },
   { href: "/#privacy", label: "Privacy" },
-  { href: "/#suite", label: "Roadmap" },
   { href: "/#faq", label: "FAQ" },
 ];
 
@@ -36,7 +38,7 @@ export function Nav() {
           <Logo className="h-7 w-7" />
           Fusion Office
         </Link>
-        <ul className="hidden items-center gap-7 md:flex">
+        <ul className="hidden items-center gap-5 lg:flex">
           {LINKS.map((l) => (
             <li key={l.href}>
               <a href={l.href} className="text-[14px] text-ink-soft transition-colors hover:text-ink">

@@ -309,3 +309,21 @@ input[type="color"]::-moz-color-swatch {
   to { background-position: 8px 0, -8px 100%, 0 -8px, 100% 8px; }
 }
 @media (prefers-reduced-motion: reduce) { .fo-marquee { animation: none; } }
+
+/* ── Office editors: slides ────────────────────────────────────── */
+.fo-slide-text { line-height: 1.15; overflow-wrap: break-word; }
+.fo-slide-text p { margin: 0; min-height: 1.15em; }
+.fo-slide-text ul, .fo-slide-text ol { margin: 0; padding-left: 1.1em; }
+.fo-slide-text ul { list-style: disc; }
+.fo-slide-text ul ul { list-style: circle; }
+.fo-slide-text ol { list-style: decimal; }
+.fo-slide-text li { margin: 0.2em 0; }
+.fo-slide-text li > p { min-height: 0; }
+.fo-slide-text a { color: inherit; text-decoration: underline; }
+.fo-slide-text mark { color: inherit; padding: 0; }
+.fo-slide-text .ProseMirror { outline: none; white-space: pre-wrap; }
+.fo-slide-text p.is-editor-empty:first-child::before { content: attr(data-placeholder); opacity: 0.45; float: left; height: 0; pointer-events: none; }
+@media print {
+  .fo-slides-print { display: block !important; }
+  .fo-slides-print > div { break-after: page; }
+}

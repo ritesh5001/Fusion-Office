@@ -2,7 +2,7 @@
  * The tool catalogue. One entry per tool; pages, the hub, navigation and
  * workflows all read from here.
  */
-export type Category = "organize" | "optimize" | "convert-to" | "convert-from" | "edit" | "security" | "intelligence" | "image";
+export type Category = "office" | "organize" | "optimize" | "convert-to" | "convert-from" | "edit" | "security" | "intelligence" | "image";
 export type Runs = "browser" | "server" | "ai";
 
 export interface ToolDef {
@@ -23,6 +23,7 @@ export interface ToolDef {
 }
 
 export const CATEGORIES: { id: Category; label: string }[] = [
+  { id: "office", label: "Word, Excel, PowerPoint" },
   { id: "organize", label: "Organize" },
   { id: "optimize", label: "Optimize" },
   { id: "convert-to", label: "Convert to PDF" },
@@ -39,6 +40,10 @@ const IMAGES = "image/png,image/jpeg,image/webp";
 const ANY_IMAGE = "image/*,.heic,.heif,.avif";
 
 export const TOOLS: ToolDef[] = [
+  // Office editors (full-screen apps)
+  { slug: "word-editor", name: "Word editor", description: "Open and edit .docx files: fonts, headings, lists, tables, images. Save as Word or PDF.", category: "office", icon: "FileText", accept: ".docx,.doc,.odt,.rtf", multiple: false, runs: "browser", href: "/write", status: "ready" },
+  { slug: "excel-editor", name: "Excel editor", description: "Open and edit .xlsx and CSV: formulas, formatting, sorting, several sheets.", category: "office", icon: "FileSpreadsheet", accept: ".xlsx,.xls,.ods,.csv", multiple: false, runs: "browser", href: "/sheets", status: "ready" },
+  { slug: "powerpoint-editor", name: "PowerPoint editor", description: "Open and edit .pptx: text, shapes, pictures, tables, notes. Present or save.", category: "office", icon: "Presentation", accept: ".pptx,.ppt,.odp", multiple: false, runs: "browser", href: "/slides", status: "ready" },
   // Organize
   { slug: "merge-pdf", name: "Merge PDF", description: "Combine PDFs in the order you want.", category: "organize", icon: "Combine", accept: PDF, multiple: true, runs: "browser", status: "ready" },
   { slug: "split-pdf", name: "Split PDF", description: "Split by ranges, every few pages, or pull out selected pages.", category: "organize", icon: "Scissors", accept: PDF, multiple: false, runs: "browser", status: "ready" },

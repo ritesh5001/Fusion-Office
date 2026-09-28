@@ -272,9 +272,9 @@ const SUITE: { name: string; text: string; status: Status; href?: string }[] = [
   { name: "OCR", text: "Turn scanned pages into searchable text, on your device.", status: "Available", href: "/tools/ocr-pdf" },
   { name: "Converter", text: "PDF to and from Word, Excel, PowerPoint, images and web pages.", status: "Available", href: "/tools" },
   { name: "Fusion AI", text: "Summaries and translations today; questions with page references next.", status: "Available", href: "/tools/summarize-pdf" },
-  { name: "Writer", text: "Documents with styles, tables and tracked changes.", status: "Planned" },
-  { name: "Sheets", text: "Spreadsheets with formulas, filters and charts.", status: "Planned" },
-  { name: "Slides", text: "Presentations with themes and presenter view.", status: "Planned" },
+  { name: "Writer", text: "Edit Word documents: styles, lists, tables, images. Save as .docx or PDF.", status: "Available", href: "/write" },
+  { name: "Sheets", text: "Edit Excel workbooks: 400 formulas, formatting, sorting, several sheets.", status: "Available", href: "/sheets" },
+  { name: "Slides", text: "Edit PowerPoint decks: text, shapes, pictures, tables, notes, slideshow.", status: "Available", href: "/slides" },
   { name: "Forms and Sign", text: "Build forms and send documents out for signature.", status: "Planned" },
   { name: "Drive", text: "Folders, sharing and version history for every file.", status: "Planned" },
 ];

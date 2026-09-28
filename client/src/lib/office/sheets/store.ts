@@ -220,7 +220,21 @@ export const useSheets = create<SheetsStore>((set, get) => ({
     const count = axis === "row" ? g.r2 - g.r1 + 1 : g.c2 - g.c1 + 1;
     const at = axis === "row" ? (where === "before" ? g.r1 : g.r2 + 1) : where === "before" ? g.c1 : g.c2 + 1;
     const moved = where === "before" ? (axis === "row" ? { ...sel, ar: sel.ar + count, fr: sel.fr + count } : { ...sel, ac: sel.ac + count, fc: sel.fc + count }) : sel;
-    get().change((wb) => insertAxis(wb, active, axis, at, count), moved);
+    get().change((wb) => {
+      const next = insertAxis(wb, active, axis, at, count);
+      if (at === 0) return next;
+      // New rows/columns take their formatting from the one before them, like Excel.
+      return updateSheet(next, active, (sheet) => {
+        const updates: [string, Cell | undefined][] = [];
+        for (const k in sheet.cells) {
+          const { r, c } = unkey(k);
+          const s = sheet.cells[k].s;
+          if (!s || (axis === "row" ? r !== at - 1 : c !== at - 1)) continue;
+          for (let i = 0; i < count; i++) updates.push([axis === "row" ? key(at + i, c) : key(r, at + i), { s }]);
+        }
+        return updates.length ? withCells(sheet, updates) : sheet;
+      });
+    }, moved);
   },
 
   remove: (axis) => {

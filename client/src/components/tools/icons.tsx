@@ -13,6 +13,7 @@ const ICONS: Record<string, LucideIcon> = {
 
 /** One muted accent per category, so the catalogue scans quickly. */
 export const CATEGORY_TINT: Record<Category, string> = {
+  office: "bg-blue-50 text-blue-700",
   organize: "bg-orange-50 text-orange-600",
   optimize: "bg-emerald-50 text-emerald-600",
   "convert-to": "bg-amber-50 text-amber-700",
