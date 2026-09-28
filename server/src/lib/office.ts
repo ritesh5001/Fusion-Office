@@ -46,15 +46,36 @@ export function officeFormat(filename: string, bytes: Uint8Array): string {
 // LibreOffice is memory hungry; convert one or two files at a time.
 const queue = semaphore(Number(process.env.CONVERT_CONCURRENCY) || 1);
 
+export type OfficeTarget = "pdf" | "docx" | "xlsx" | "pptx";
+
+/** Which inputs can become which editable format (PDF works from all of them). */
+const EDITABLE_FROM: Record<Exclude<OfficeTarget, "pdf">, string[]> = {
+  docx: ["doc", "docx", "odt", "rtf"],
+  xlsx: ["xls", "xlsx", "ods", "csv"],
+  pptx: ["ppt", "pptx", "odp"],
+};
+
+export function checkTarget(ext: string, to: string): OfficeTarget {
+  if (to === "pdf") return "pdf";
+  if (to in EDITABLE_FROM && EDITABLE_FROM[to as keyof typeof EDITABLE_FROM].includes(ext)) return to as OfficeTarget;
+  throw new HttpError(400, `A .${ext} file can't be converted to .${to}.`);
+}
+
+export function officeToPdf(bytes: Uint8Array, ext: string): Promise<Uint8Array> {
+  return officeConvert(bytes, ext, "pdf");
+}
+
 /**
- * Convert an office document to PDF with headless LibreOffice. Each run gets a
+ * Convert an office document with headless LibreOffice. Each run gets a
  * throwaway profile and working folder so conversions can't affect each other.
  */
-export function officeToPdf(bytes: Uint8Array, ext: string): Promise<Uint8Array> {
+export function officeConvert(bytes: Uint8Array, ext: string, to: OfficeTarget): Promise<Uint8Array> {
   return queue(async () => {
     const dir = await mkdtemp(path.join(tmpdir(), "fo-office-"));
     try {
       const input = path.join(dir, `input.${ext}`);
+      // Output goes to its own folder, so a same-format pass (docx → docx) can't overwrite the input.
+      const outDir = path.join(dir, "out");
       await writeFile(input, bytes);
       await run(SOFFICE, [
         `-env:UserInstallation=${pathToFileURL(path.join(dir, "profile")).href}`,
@@ -64,13 +85,13 @@ export function officeToPdf(bytes: Uint8Array, ext: string): Promise<Uint8Array>
         "--nolockcheck",
         "--nodefault",
         "--convert-to",
-        "pdf",
+        to,
         "--outdir",
-        dir,
+        outDir,
         input,
       ]);
       try {
-        return new Uint8Array(await readFile(path.join(dir, "input.pdf")));
+        return new Uint8Array(await readFile(path.join(outDir, `input.${to}`)));
       } catch {
         throw new HttpError(422, "This file couldn't be converted. It may be damaged or password protected.");
       }

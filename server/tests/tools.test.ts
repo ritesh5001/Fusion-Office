@@ -146,3 +146,16 @@ test("rate limiter answers 429 with Retry-After once the limit is used", async (
     s.close();
   }
 });
+
+test("old formats convert to the editable ones (?to=docx)", { skip: !hasSoffice && "soffice not installed", timeout: 180_000 }, async () => {
+  const rtf = "{\\rtf1\\ansi{\\fonttbl\\f0 Helvetica;}\\f0 Hello from RTF\\par}";
+  const res = await fetch(`${base}/api/convert/office?to=docx`, { method: "POST", headers: { "x-filename": "note.rtf" }, body: rtf });
+  assert.equal(res.status, 200, await res.clone().text());
+  assert.match(res.headers.get("content-type") ?? "", /wordprocessingml/);
+  assert.match(res.headers.get("content-disposition") ?? "", /note\.docx/);
+  const bytes = Buffer.from(await res.arrayBuffer());
+  assert.equal(bytes.subarray(0, 2).toString(), "PK");
+  // A spreadsheet can't become a Word document.
+  const bad = await fetch(`${base}/api/convert/office?to=docx`, { method: "POST", headers: { "x-filename": "t.csv" }, body: "a,b\n1,2\n" });
+  assert.equal(bad.status, 400);
+});
