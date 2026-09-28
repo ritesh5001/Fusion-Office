@@ -11,3 +11,4 @@ client/public/pdf.worker.min.mjs
 .DS_Store
 .data
 server/.data
+client/public/tesseract
