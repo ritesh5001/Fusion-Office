@@ -20,7 +20,8 @@ const apiOrigin = originOf(process.env.NEXT_PUBLIC_API_URL);
 const csp = [
   "default-src 'self'",
   // Next.js injects inline bootstrap scripts; dev mode also needs eval for fast refresh.
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  // 'wasm-unsafe-eval' only permits WebAssembly (the in-browser OCR engine), not eval().
+  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   // Thumbnails, signatures and images placed on pages are data:/blob: URLs.
   "img-src 'self' data: blob:",
@@ -45,7 +46,8 @@ const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()" },
+  // Camera is allowed for this site only (Scan to PDF).
+  { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=(), payment=(), usb=()" },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
   // Browsers ignore HSTS over plain http, so this is safe locally.
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
@@ -68,9 +70,19 @@ const nextConfig: NextConfig = {
     // /api/* responses come from the server, which sets its own headers.
     return [{ source: "/((?!api/).*)", headers: securityHeaders }];
   },
-  // pdf.js optionally requires `canvas` (a Node addon), which is never needed in the browser.
-  webpack: (config) => {
+  webpack: (config, { isServer, webpack }) => {
+    // pdf.js optionally requires `canvas` (a Node addon), which is never needed in the browser.
     config.resolve.alias = { ...config.resolve.alias, canvas: false };
+    if (!isServer) {
+      // Some libraries (pptxgenjs) import `node:fs`/`node:https` and declare them
+      // unused in browsers via package.json "browser"; webpack needs the plain names.
+      config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(/^node:/, (resource: { request: string }) => {
+          resource.request = resource.request.replace(/^node:/, "");
+        }),
+      );
+      config.resolve.fallback = { ...config.resolve.fallback, fs: false, https: false, http: false, os: false, path: false, stream: false, zlib: false };
+    }
     return config;
   },
 };

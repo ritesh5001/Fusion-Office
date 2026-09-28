@@ -73,7 +73,7 @@ export const TOOLS: ToolDef[] = [
   // Intelligence
   { slug: "compare-pdf", name: "Compare PDF", description: "See every change between two versions, side by side.", category: "intelligence", icon: "GitCompare", accept: PDF, multiple: true, runs: "browser", status: "ready" },
   { slug: "summarize-pdf", name: "AI Summarizer", description: "Key points of a long document in seconds.", category: "intelligence", icon: "Sparkles", accept: PDF, multiple: false, runs: "ai", status: "ready" },
-  { slug: "translate-pdf", name: "Translate PDF", description: "Translate a document and keep its layout.", category: "intelligence", icon: "Languages", accept: PDF, multiple: false, runs: "ai", status: "ready" },
+  { slug: "translate-pdf", name: "Translate PDF", description: "Translate a whole document into another language.", category: "intelligence", icon: "Languages", accept: PDF, multiple: false, runs: "ai", status: "ready" },
 ];
 
 export const toolBySlug = (slug: string) => TOOLS.find((t) => t.slug === slug);

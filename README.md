@@ -50,6 +50,22 @@ Test helpers: `node client/scripts/make-sample-pdf.mjs sample.pdf` (test PDF wit
 
 Keyboard shortcuts are listed in the editor under **Help → Keyboard shortcuts** (or press `?`).
 
+## PDF tools (`/tools`)
+
+31 single-purpose tools, the full iLovePDF-style catalogue, share one upload → options → result flow. Most run **entirely in the browser**, so the file never leaves the device. Plan and details: [docs/TOOLS_PLAN.md](docs/TOOLS_PLAN.md).
+
+| Runs | Tools |
+| --- | --- |
+| In the browser | Merge, Split, Organize, Rotate, Compress, Repair, OCR (Tesseract.js, self-hosted), JPG → PDF, Scan to PDF (camera), PDF → JPG / Word / PowerPoint / Excel / Markdown, Watermark, Page numbers, Crop, Forms, Protect, Unlock, Redact, Compare, Workflows (chain tools and save the recipe) |
+| On the server | Word / PowerPoint / Excel → PDF (LibreOffice), HTML → PDF (headless Chromium) |
+| AI (server + Claude) | AI Summarizer, Translate PDF (Word + Markdown output). Needs `ANTHROPIC_API_KEY` |
+| In the editor | Edit PDF, Sign PDF |
+| Coming soon | PDF → PDF/A (Ghostscript) |
+
+Running the server tools locally: install LibreOffice (`brew install --cask libreoffice`) so `soffice` is on your PATH; Chrome is found automatically. Without them those tools say they aren't available.
+
+**AI tools** use `claude-opus-5` with server-side fallbacks turned on (`fallbacks: "default"`, beta `server-side-fallback-2026-07-01`): if Claude's safety checks decline a request, the API re-runs it on Anthropic's recommended fallback model instead of failing. Remove those two fields in `server/src/lib/ai.ts` to turn that off.
+
 ## Architecture
 
 ```
@@ -79,11 +95,14 @@ server/src/
 ├── auth.ts                   Auth.js (@auth/express): GitHub/Google, Prisma adapter, JWT sessions
 ├── routes/documents.ts       Documents CRUD, signed upload links, versions + restore
 ├── routes/files.ts           Signed-link file upload/download to the server disk
-└── lib/                      db.ts (Prisma), storage.ts (disk + signed links), security.ts (CORS, CSRF, headers), http.ts
+├── routes/convert.ts         Office → PDF (LibreOffice), HTML → PDF (Chromium)
+├── routes/ai.ts              Summarize / translate (Claude)
+└── lib/                      db.ts (Prisma), storage.ts (disk + signed links), security.ts (CORS, CSRF, headers), http.ts,
+                              office.ts, html.ts, netGuard.ts (SSRF guard + egress proxy), ai.ts, rateLimit.ts
 server/prisma/schema.prisma   Users, accounts, documents, versions
 ```
 
-**API** (all under `/api`): `GET /config`, `GET /health`, `/auth/*` (Auth.js), `GET|POST /documents`, `GET|PUT|DELETE /documents/:id`, `GET|POST /documents/:id/versions`.
+**API** (all under `/api`): `GET /config`, `GET /health`, `/auth/*` (Auth.js), `GET|POST /documents`, `GET|PUT|DELETE /documents/:id`, `GET|POST /documents/:id/versions`, `POST /convert/office` (raw file body + `X-Filename`), `POST /convert/html`, `POST /ai/summarize`, `POST /ai/translate`.
 
 **Key design decisions**
 
@@ -108,7 +127,7 @@ Without these settings the cloud buttons are hidden and the documents API return
 
 | Resource | Name | Notes |
 | --- | --- | --- |
-| Backend (web service) | `fusion-office` | API + Auth.js + file storage. Paid instance (`0.5c-512mb`) because it needs a **persistent disk** (5 GB at `/var/data`) for uploaded PDFs. Runs `prisma migrate deploy` on every start |
+| Backend (web service) | `fusion-office` | API + Auth.js + file storage + converters. **Docker** (`server/Dockerfile`: Node 22, LibreOffice, Chromium, Noto fonts incl. Indic and CJK). Paid instance (`0.5c-512mb`) because it needs a **persistent disk** (5 GB at `/var/data`) for uploaded PDFs. Runs `prisma migrate deploy` on every start. 512 MB handles one conversion at a time; pick a 2 GB plan for heavier use |
 | Frontend (web service) | `fusion-office-web` | Next.js site and editor. Free plan works; it reaches the backend over Render's private network (`SERVER_HOSTPORT`) |
 | Database | `fusion-office-db` | Render Postgres, wired to the backend's `DATABASE_URL` |
 
@@ -119,6 +138,7 @@ Steps:
    - `AUTH_URL` = `https://fusion-office-web.onrender.com/api/auth` (the **frontend** address; use your custom domain later)
    - `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET` (and/or Google). The GitHub OAuth app's callback is `https://fusion-office-web.onrender.com/api/auth/callback/github`.
    - `CLIENT_ORIGIN` only if you add custom domains.
+   - `ANTHROPIC_API_KEY` to turn on the AI tools (optional).
 3. `AUTH_SECRET` is generated automatically. Uploaded files survive deploys and restarts because they live on the disk.
 
 Good to know:
@@ -136,6 +156,7 @@ Good to know:
 | CSRF | Any write to `/api/documents` with an `Origin` not on the list gets `403`. Auth.js routes use their own CSRF token | `originGuard` in the same file |
 | API headers | helmet: strict CSP (`default-src 'none'`), `nosniff`, `frame-ancestors 'none'`, HSTS, no `X-Powered-By` | `securityHeaders` |
 | Site headers | CSP, `X-Frame-Options: DENY`, `nosniff`, Referrer-Policy, Permissions-Policy, COOP, HSTS | `client/next.config.ts` |
+| Server tools | `/api/convert` and `/api/ai` are origin-checked and rate limited per IP. Office uploads are checked by extension **and** file signature. HTML → PDF only reaches public addresses: Chromium is forced through a local proxy that refuses private, loopback and cloud-metadata addresses (redirects and sub-resources included) | `server/src/lib/netGuard.ts`, `server/src/app.ts` |
 | File links | Uploads/downloads use HMAC-signed links that expire after 15 minutes; only real PDFs (checked by content) are stored, size-capped by `MAX_UPLOAD_MB` | `server/src/lib/storage.ts`, `server/src/routes/files.ts` |
 
 By default the browser calls `/api/*` on the site itself and Next proxies it to the server, so CORS never comes into play. To call the server directly, set `NEXT_PUBLIC_API_URL` on the client and add the site to `CLIENT_ORIGIN` on the server. Both must share a parent domain (for example `app.example.com` and `api.example.com`) so the session cookie is sent.
@@ -145,13 +166,15 @@ By default the browser calls `/api/*` on the site itself and Next proxies it to 
 - **Editing existing text** works line by line on PDFs with a text layer. The original glyphs are removed from the page's content stream on export (`client/src/lib/pdf/textRemoval.ts`); lines the engine can't measure safely (Type3 fonts, unusual encodings, text inside form XObjects) are covered with the sampled background colour instead. Replacement text uses the standard fonts matched by family and weight, not the document's embedded font, and is left-aligned at the original position.
 - **Export uses the standard PDF fonts** (Helvetica/Times/Courier, Latin characters). Characters outside that set are replaced (`₹` becomes `Rs.`). Embedding a Unicode font (e.g. Noto Sans via `@pdf-lib/fontkit`) fixes this.
 - Redacted pages become images on export, so their text is no longer selectable. That's the trade-off for real removal.
-- Password-protected PDFs, image cropping, form-field creation, find & replace, OCR and PDF/A are not built yet.
+- In the editor: image cropping, form-field creation and find & replace are not built yet (password-protected PDFs, OCR and form filling are available as tools under `/tools`). PDF/A is not built yet.
+- Translate PDF returns the translation as Word and Markdown; it doesn't rebuild the original page layout.
+- The Docker image couldn't be built on the development machine (no Docker installed); its first real build happens on Render.
 - Pinned to stable majors: Next 15, Fabric 6, PDF.js 4, Prisma 6, Express 5. Fabric 6 has advisories that only affect its SVG export (`toSVG`), which this app doesn't use. Upgrade to Fabric 7 when convenient.
 
 ## Roadmap
 
 1. Unicode font embedding, image crop, form fields (text, checkbox, radio, dropdown, date, signature)
 2. In-place editing of existing text, find & replace, font detection
-3. OCR with Tesseract.js (scanned PDFs → searchable/editable)
-4. Python service for heavy work: compression, PDF ↔ DOCX/XLSX/PPTX, PDF/A
+3. PDF/A and deep repair with Ghostscript
+4. Layout-preserving translation (translated text placed back on the page)
 5. Word, spreadsheet and presentation editors on the same document/storage model

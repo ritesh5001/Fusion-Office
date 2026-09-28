@@ -44,7 +44,7 @@ Legend: **B** = runs in the browser · **S** = server engine · **AI** = server 
 | Security | Redact PDF (find and remove text for real) | B | Fusion glyph-removal engine | 1 |
 | Intelligence | Compare PDF (text diff + visual overlay) | B | pdf.js | 1 |
 | Intelligence | AI Summarizer | AI | Claude API | 2 |
-| Intelligence | Translate PDF | AI | Claude API + text replacement | 2 |
+| Intelligence | Translate PDF (to Word + Markdown) | AI | Claude API | 2 |
 | Workflows | Chain tools and reuse them | B | tool processors | 1 |
 
 Not in scope for the web app now (roadmap): desktop and mobile apps, an image
@@ -61,11 +61,14 @@ client/src/lib/tools/
   processors/*.ts      pure functions: (files, options) → files
 client/src/components/tools/
   ToolsHub.tsx         the catalogue page with category filters
-  ToolPage.tsx         shared shell: drop files → options → run → results
-  options/*.tsx        per-tool option panels and special UIs
+  ToolRunner.tsx       shared shell: drop files → options → run → results
+  specs.tsx            per-tool options panel + run function (processors load lazily)
+  custom/*.tsx         tools with their own UI: organize, crop, forms, compare, scan, workflows
 client/src/app/tools/  /tools and /tools/[slug] (static pages)
-server/src/routes/convert.ts   LibreOffice + Chromium conversions (phase 2)
-server/src/routes/ai.ts        summarize / translate via Claude (phase 2)
+server/src/routes/convert.ts   POST /api/convert/office (LibreOffice), /api/convert/html (Chromium)
+server/src/routes/ai.ts        POST /api/ai/summarize, /api/ai/translate (Claude)
+server/src/lib/netGuard.ts     SSRF guard: public-address checks + egress proxy for Chromium
+server/src/lib/rateLimit.ts    per-IP limits and a concurrency queue for the heavy routes
 ```
 
 Every browser processor is a pure function over bytes, so the same code powers
@@ -73,12 +76,30 @@ single tools, **workflows** (chains of processors), and unit tests.
 
 ## Phases
 
-1. **Tool platform + all browser tools** (merge through compare above), tools
-   hub, navigation, workflows, tests.
-2. **Server engines:** LibreOffice and Chromium conversions (Docker image on
-   Render), Claude-powered summarize and translate. Requires
-   `ANTHROPIC_API_KEY` for the AI tools.
-3. **Archival and deep repair:** Ghostscript for PDF/A and heavy repair.
+1. **Done.** Tool platform + all browser tools (merge through compare above),
+   tools hub, navigation, workflows, tests.
+2. **Done.** Server engines: LibreOffice and Chromium conversions (Docker image
+   on Render), Claude-powered summarize and translate. The AI tools need
+   `ANTHROPIC_API_KEY` on the server; without it they answer "not available".
+3. **Next.** Archival and deep repair: Ghostscript for PDF/A and heavy repair.
+   PDF/A shows as "Coming soon" until then.
+
+### Server tool safeguards
+
+- **Office → PDF:** extension allowlist plus a file-signature check, size cap
+  (`CONVERT_MAX_MB`), one throwaway LibreOffice profile and folder per file,
+  a timeout, and a queue (`CONVERT_CONCURRENCY`).
+- **HTML → PDF:** only public `http(s)` addresses. The address is checked
+  before loading, and Chromium is forced through a local proxy that resolves
+  every host itself and refuses private, loopback, link-local and metadata
+  addresses (covers redirects, sub-resources, fetch, workers and WebSockets;
+  WebRTC is disabled). Each page runs in a fresh browser context.
+- **AI:** Claude (`claude-opus-5`) with server-side fallbacks turned on
+  (`fallbacks: "default"`): if Claude's safety checks decline a request, the
+  API retries it on Anthropic's recommended fallback model. Oversized
+  documents get a clear "too long" error instead of being cut short. When
+  sign-in is configured, only signed-in users can use AI tools.
+- All heavy routes: origin check and per-IP rate limits.
 
 ## Quality bar
 

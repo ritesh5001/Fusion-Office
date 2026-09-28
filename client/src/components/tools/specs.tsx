@@ -2,10 +2,12 @@
 
 import type { ReactNode } from "react";
 import { PDF, derived, formatBytes, selectPages, parseRanges, stem, type ToolFile } from "@/lib/tools/files";
-import { mergePdfs, rotatePdf, splitPdf, pageCount } from "@/lib/tools/processors/organize";
-import { addPageNumbers, watermarkPdf, type Position } from "@/lib/tools/processors/stamp";
-import { protectPdf, unlockPdf } from "@/lib/tools/processors/security";
-import { repairPdf } from "@/lib/tools/processors/repair";
+import type { Position } from "@/lib/tools/processors/stamp";
+
+// PDF engines load when a tool actually runs, keeping tool pages light.
+const organize = () => import("@/lib/tools/processors/organize");
+const stamp = () => import("@/lib/tools/processors/stamp");
+const security = () => import("@/lib/tools/processors/security");
 import { apiFetch } from "@/lib/api";
 import type { LoadedFile, ToolResult, ToolSpec } from "./ToolRunner";
 import { ColorField, NumberField, PagesField, PositionPicker, Segmented, Slider, TextInput, Toggle } from "./controls";
@@ -22,7 +24,7 @@ async function eachFile(files: LoadedFile[], progress: (m: string, f?: number) =
   return out;
 }
 
-const pagesOf = async (f: LoadedFile, spec: string) => selectPages(spec, f.pages ?? (await pageCount(f.bytes)));
+const pagesOf = async (f: LoadedFile, spec: string) => selectPages(spec, f.pages ?? (await (await organize()).pageCount(f.bytes)));
 
 // ─── Organize ───────────────────────────────────────────────────────
 
@@ -38,7 +40,7 @@ const merge: ToolSpec<Record<string, never>> = {
   ),
   run: async (files, _o, progress) => {
     progress("Merging…");
-    const bytes = await mergePdfs(files.map((f) => f.bytes));
+    const bytes = await (await organize()).mergePdfs(files.map((f) => f.bytes));
     return { files: [pdfOut("merged.pdf", bytes)], summary: `${files.length} files merged into one PDF.` };
   },
 };
@@ -71,6 +73,7 @@ const split: ToolSpec<SplitOptions> = {
   ),
   validate: (_f, o) => (o.mode === "ranges" && !o.ranges.trim() ? "Enter at least one range." : o.mode === "extract" && !o.extract.trim() ? "Enter the pages to extract." : null),
   run: async ([f], o, progress) => {
+    const { pageCount, splitPdf } = await organize();
     const n = f.pages ?? (await pageCount(f.bytes));
     let groups: number[][];
     if (o.mode === "every") {
@@ -100,7 +103,7 @@ const rotate: ToolSpec<RotateOptions> = {
     </>
   ),
   run: async (files, o, progress) => ({
-    files: await eachFile(files, progress, async (f) => pdfOut(derived(f.name, "rotated"), await rotatePdf(f.bytes, o.angle, await pagesOf(f, o.pages)))),
+    files: await eachFile(files, progress, async (f) => pdfOut(derived(f.name, "rotated"), await (await organize()).rotatePdf(f.bytes, o.angle, await pagesOf(f, o.pages)))),
   }),
 };
 
@@ -160,7 +163,7 @@ const repair: ToolSpec<Record<string, never>> = {
   run: async (files, _o, progress) => {
     const notes: string[] = [];
     const out = await eachFile(files, progress, async (f) => {
-      const r = await repairPdf(f.bytes);
+      const r = await (await import("@/lib/tools/processors/repair")).repairPdf(f.bytes);
       notes.push(...r.notes.map((n) => (files.length > 1 ? `${f.name}: ${n}` : n)));
       return pdfOut(derived(f.name, "repaired"), r.bytes);
     });
@@ -280,9 +283,11 @@ const officeTo: ToolSpec<Record<string, never>> = {
   defaults: {},
   run: async (files, _o, progress) => ({
     files: await eachFile(files, progress, async (f) => {
-      const form = new FormData();
-      form.append("file", new Blob([f.bytes as BlobPart], { type: f.type }), f.name);
-      const res = await apiFetch("/api/convert/office", { method: "POST", body: form });
+      const res = await apiFetch("/api/convert/office", {
+        method: "POST",
+        headers: { "content-type": "application/octet-stream", "x-filename": encodeURIComponent(f.name) },
+        body: new Blob([f.bytes as BlobPart]),
+      });
       if (!res.ok) throw await serverError(res);
       return pdfOut(`${stem(f.name)}.pdf`, new Uint8Array(await res.arrayBuffer()));
     }),
@@ -371,7 +376,7 @@ const watermark: ToolSpec<WmOpts> = {
         o.kind === "text"
           ? { kind: "text" as const, text: o.text, font: o.font, fontSize: o.fontSize, color: o.color, opacity: o.opacity, rotation: o.rotation, position: o.position, mosaic: o.mosaic }
           : { kind: "image" as const, image: o.image!.bytes, imageType: (o.image!.type === "image/png" ? "png" : "jpg") as "png" | "jpg", scale: o.scale, opacity: o.opacity, rotation: o.rotation, position: o.position, mosaic: o.mosaic };
-      return pdfOut(derived(f.name, "watermarked"), await watermarkPdf(f.bytes, mark, await pagesOf(f, o.pages)));
+      return pdfOut(derived(f.name, "watermarked"), await (await stamp()).watermarkPdf(f.bytes, mark, await pagesOf(f, o.pages)));
     }),
   }),
 };
@@ -405,7 +410,7 @@ const pageNumbers: ToolSpec<NumOpts> = {
     </>
   ),
   run: async (files, o, progress) => ({
-    files: await eachFile(files, progress, async (f) => pdfOut(derived(f.name, "numbered"), await addPageNumbers(f.bytes, o, await pagesOf(f, o.pages)))),
+    files: await eachFile(files, progress, async (f) => pdfOut(derived(f.name, "numbered"), await (await stamp()).addPageNumbers(f.bytes, o, await pagesOf(f, o.pages)))),
   }),
 };
 
@@ -428,7 +433,7 @@ const protect: ToolSpec<ProtectOpts> = {
   validate: (_f, o) => (o.password.length < 4 ? "Use at least 4 characters." : o.password !== o.confirm ? "The passwords don't match." : null),
   run: async (files, o, progress) => ({
     files: await eachFile(files, progress, async (f) =>
-      pdfOut(derived(f.name, "protected"), await protectPdf(f.bytes, { userPassword: o.password, allowPrinting: o.allowPrinting, allowCopying: o.allowCopying, allowEditing: o.allowEditing })),
+      pdfOut(derived(f.name, "protected"), await (await security()).protectPdf(f.bytes, { userPassword: o.password, allowPrinting: o.allowPrinting, allowCopying: o.allowCopying, allowEditing: o.allowEditing })),
     ),
     summary: "Your PDF now asks for the password when it's opened.",
   }),
@@ -444,7 +449,7 @@ const unlock: ToolSpec<{ password: string }> = {
     </>
   ),
   validate: (_f, o) => (!o.password ? "Enter the file's password." : null),
-  run: async ([f], o) => ({ files: [pdfOut(derived(f.name, "unlocked"), await unlockPdf(f.bytes, o.password))], summary: "The password has been removed." }),
+  run: async ([f], o) => ({ files: [pdfOut(derived(f.name, "unlocked"), await (await security()).unlockPdf(f.bytes, o.password))], summary: "The password has been removed." }),
 };
 
 type RedactOpts = { terms: string; caseSensitive: boolean; wholeWord: boolean };

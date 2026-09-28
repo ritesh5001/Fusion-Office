@@ -2,7 +2,10 @@ import express from "express";
 import { authEnabled, authHandler, cloudEnabled, currentUser } from "./auth.js";
 import { documents } from "./routes/documents.js";
 import { files } from "./routes/files.js";
-import { errorHandler } from "./lib/http.js";
+import { convert } from "./routes/convert.js";
+import { ai } from "./routes/ai.js";
+import { errorHandler, signedInWhenAvailable } from "./lib/http.js";
+import { rateLimit } from "./lib/rateLimit.js";
 import { corsPolicy, originGuard, securityHeaders } from "./lib/security.js";
 
 /**
@@ -59,6 +62,20 @@ export function createApp() {
 
   app.use("/api/documents", originGuard(), documents);
   app.use("/api/files", files);
+  // Heavy work (LibreOffice, headless Chrome, Claude): origin-checked and rate limited per IP.
+  app.use(
+    "/api/convert",
+    originGuard(),
+    rateLimit({ name: "convert", windowMs: 10 * 60_000, max: Number(process.env.CONVERT_RATE_LIMIT) || 40 }),
+    convert,
+  );
+  app.use(
+    "/api/ai",
+    originGuard(),
+    rateLimit({ name: "ai", windowMs: 60 * 60_000, max: Number(process.env.AI_RATE_LIMIT) || 20 }),
+    signedInWhenAvailable,
+    ai,
+  );
 
   app.use("/api", (_req, res) => {
     res.status(404).json({ error: "Not found" });

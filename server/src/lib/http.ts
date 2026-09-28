@@ -1,5 +1,5 @@
 import type { NextFunction, Request, RequestHandler, Response } from "express";
-import { cloudEnabled, currentUser } from "../auth.js";
+import { authEnabled, cloudEnabled, currentUser } from "../auth.js";
 
 export class HttpError extends Error {
   constructor(
@@ -69,3 +69,16 @@ export function parseDocumentBody(body: unknown) {
   const confirm = Array.isArray(b.confirm) ? b.confirm.filter((x): x is string => typeof x === "string" && ID.test(x)) : [];
   return { name, state, sources, confirm, version: b.version === true, label: typeof b.label === "string" ? b.label.slice(0, 100) : undefined };
 }
+
+/**
+ * For paid features (AI): when sign-in is configured, only signed-in users
+ * may use them. Without sign-in configured the per-IP rate limit is the guard.
+ */
+export const signedInWhenAvailable: RequestHandler = async (req, _res, next) => {
+  try {
+    if (authEnabled && !(await currentUser(req))) throw new HttpError(401, "Please sign in to use AI tools.");
+    next();
+  } catch (err) {
+    next(err);
+  }
+};

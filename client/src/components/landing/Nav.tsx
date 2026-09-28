@@ -6,11 +6,13 @@ import { ArrowRight } from "lucide-react";
 import { Logo } from "../Logo";
 import { AccountLinks } from "../home/AccountLinks";
 
+// Absolute paths so the links work from every page, not just the homepage.
 const LINKS = [
-  { href: "#editor", label: "Editor" },
-  { href: "#privacy", label: "Privacy" },
-  { href: "#suite", label: "Roadmap" },
-  { href: "#faq", label: "FAQ" },
+  { href: "/tools", label: "All tools" },
+  { href: "/#editor", label: "Editor" },
+  { href: "/#privacy", label: "Privacy" },
+  { href: "/#suite", label: "Roadmap" },
+  { href: "/#faq", label: "FAQ" },
 ];
 
 export function Nav() {

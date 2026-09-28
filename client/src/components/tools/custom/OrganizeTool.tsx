@@ -15,16 +15,17 @@ const FILE_TINTS = ["bg-brand-600", "bg-orange-500", "bg-emerald-600", "bg-viole
 
 export function OrganizeTool() {
   const [sources, setSources] = useState<{ name: string; bytes: Uint8Array }[]>([]);
-  const [items, setItems] = useState<Item[]>([]);
-  const [history, setHistory] = useState<Item[][]>([]);
+  // Items and undo history live together so every edit builds on the latest
+  // state (rapid clicks can't overwrite each other).
+  const [state, setState] = useState<{ items: Item[]; history: Item[][] }>({ items: [], history: [] });
+  const { items, history } = state;
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [drag, setDrag] = useState<string | null>(null);
 
-  const change = (next: Item[]) => {
-    setHistory((h) => [...h.slice(-30), items]);
-    setItems(next);
-  };
+  const change = (fn: (current: Item[]) => Item[]) =>
+    setState((s) => ({ items: fn(s.items), history: [...s.history.slice(-30), s.items] }));
+  const undo = () => setState((s) => (s.history.length ? { items: s.history[s.history.length - 1], history: s.history.slice(0, -1) } : s));
 
   const add = async (files: File[]) => {
     setError(null);
@@ -44,7 +45,7 @@ export function OrganizeTool() {
         await doc.destroy();
       }
       setSources(newSources);
-      change([...items, ...added]);
+      change((cur) => [...cur, ...added]);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -52,16 +53,24 @@ export function OrganizeTool() {
     }
   };
 
-  const update = (id: string, fn: (it: Item) => Item | null) => change(items.flatMap((it) => (it.id === id ? (fn(it) ? [fn(it)!] : []) : [it])));
+  const update = (id: string, fn: (it: Item) => Item | null) =>
+    change((cur) =>
+      cur.flatMap((it) => {
+        if (it.id !== id) return [it];
+        const next = fn(it);
+        return next ? [next] : [];
+      }),
+    );
 
   const moveTo = (id: string, targetId: string) => {
     if (id === targetId) return;
-    const from = items.findIndex((i) => i.id === id);
-    const to = items.findIndex((i) => i.id === targetId);
-    const next = [...items];
-    const [it] = next.splice(from, 1);
-    next.splice(to, 0, it);
-    change(next);
+    change((cur) => {
+      const next = [...cur];
+      const from = next.findIndex((i) => i.id === id);
+      const [it] = next.splice(from, 1);
+      next.splice(next.findIndex((i) => i.id === targetId) + (from <= cur.findIndex((i) => i.id === targetId) ? 1 : 0), 0, it);
+      return next;
+    });
   };
 
   const save = async () => {
@@ -93,10 +102,10 @@ export function OrganizeTool() {
         <span className="mr-auto text-[13px] text-ink-soft">
           {items.length} page{items.length === 1 ? "" : "s"} · drag to reorder
         </span>
-        <button type="button" onClick={() => history.length && (setItems(history[history.length - 1]), setHistory((h) => h.slice(0, -1)))} disabled={!history.length} className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] ring-1 ring-rule hover:bg-white disabled:opacity-40">
+        <button type="button" onClick={undo} disabled={!history.length} className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] ring-1 ring-rule hover:bg-white disabled:opacity-40">
           <Undo2 className="h-4 w-4" aria-hidden="true" /> Undo
         </button>
-        <button type="button" onClick={() => change([...items].reverse())} className="h-9 rounded-full px-3 text-[13px] ring-1 ring-rule hover:bg-white">
+        <button type="button" onClick={() => change((cur) => [...cur].reverse())} className="h-9 rounded-full px-3 text-[13px] ring-1 ring-rule hover:bg-white">
           Reverse order
         </button>
         <label className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full px-3 text-[13px] ring-1 ring-rule hover:bg-white">
@@ -150,11 +159,14 @@ export function OrganizeTool() {
                 )}
                 <Btn
                   label="Insert blank page after"
-                  onClick={() => {
-                    const next = [...items];
-                    next.splice(i + 1, 0, { kind: "blank", width: 595.28, height: 841.89, id: `p${++n}`, label: "blank" });
-                    change(next);
-                  }}
+                  onClick={() =>
+                    change((cur) => {
+                      const next = [...cur];
+                      const at = next.findIndex((x) => x.id === it.id);
+                      next.splice(at + 1, 0, { kind: "blank", width: 595.28, height: 841.89, id: `p${++n}`, label: "blank" });
+                      return next;
+                    })
+                  }
                 >
                   <Plus className="h-3.5 w-3.5" />
                 </Btn>

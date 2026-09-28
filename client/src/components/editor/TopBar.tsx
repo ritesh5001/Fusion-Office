@@ -89,6 +89,7 @@ export function TopBar({ onToggleSidebar, onTogglePanel }: { onToggleSidebar: ()
               ? (["divider", { label: cloud.user ? "Save to cloud" : "Sign in to save to cloud", icon: <CloudUpload className="h-3.5 w-3.5" />, onSelect: () => run(saveToCloud(cloud, { version: true })) }] as const)
               : []),
             "divider",
+            { label: "All PDF tools…", onSelect: () => window.open("/tools", "_blank", "noopener") },
             { label: "Close document", icon: <X className="h-3.5 w-3.5" />, onSelect: () => st().closeDocument() },
           ]}
         />

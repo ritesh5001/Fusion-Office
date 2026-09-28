@@ -267,16 +267,15 @@ export function Steps() {
 type Status = "Available" | "Next" | "Planned";
 const SUITE: { name: string; text: string; status: Status; href?: string }[] = [
   { name: "Fusion PDF", text: "Edit, annotate, sign, redact and organize PDFs.", status: "Available", href: "/editor" },
-  { name: "PDF tools", text: "Merge, split, extract and rotate pages.", status: "Available", href: "/editor" },
-  { name: "Compress and watermark", text: "Smaller files and branded pages.", status: "Next" },
-  { name: "OCR", text: "Turn scanned pages into searchable text.", status: "Next" },
-  { name: "Converter", text: "PDF to and from Word, Excel, PowerPoint and images.", status: "Planned" },
+  { name: "PDF tools", text: "30 tools: merge, split, compress, watermark, protect, redact, compare…", status: "Available", href: "/tools" },
+  { name: "OCR", text: "Turn scanned pages into searchable text, on your device.", status: "Available", href: "/tools/ocr-pdf" },
+  { name: "Converter", text: "PDF to and from Word, Excel, PowerPoint, images and web pages.", status: "Available", href: "/tools" },
+  { name: "Fusion AI", text: "Summaries and translations today; questions with page references next.", status: "Available", href: "/tools/summarize-pdf" },
   { name: "Writer", text: "Documents with styles, tables and tracked changes.", status: "Planned" },
   { name: "Sheets", text: "Spreadsheets with formulas, filters and charts.", status: "Planned" },
   { name: "Slides", text: "Presentations with themes and presenter view.", status: "Planned" },
   { name: "Forms and Sign", text: "Build forms and send documents out for signature.", status: "Planned" },
   { name: "Drive", text: "Folders, sharing and version history for every file.", status: "Planned" },
-  { name: "Fusion AI", text: "Ask a document a question and get answers with page references.", status: "Planned" },
 ];
 
 function StatusChip({ status }: { status: Status }) {
@@ -366,7 +365,7 @@ const FAQ = [
   },
   {
     q: "What about scanned documents?",
-    a: "You can mark up, sign and redact scans today. Searching them needs OCR, which is next on the list.",
+    a: "Run them through OCR PDF first. It reads the page images on your device and adds invisible, selectable text, so you can search, copy and convert them.",
   },
   {
     q: "Which browsers does it work in?",
@@ -435,8 +434,8 @@ export function FinalCta() {
 
 export function Footer() {
   const cols = [
-    { title: "Product", links: [{ href: "/editor", label: "PDF editor" }, { href: "#editor", label: "Features" }, { href: "#suite", label: "Roadmap" }] },
-    { title: "Trust", links: [{ href: "#privacy", label: "Privacy" }, { href: "#faq", label: "FAQ" }] },
+    { title: "Product", links: [{ href: "/editor", label: "PDF editor" }, { href: "/tools", label: "All PDF tools" }, { href: "/#suite", label: "Roadmap" }] },
+    { title: "Trust", links: [{ href: "/#privacy", label: "Privacy" }, { href: "/#faq", label: "FAQ" }] },
     { title: "Account", links: [{ href: "/dashboard", label: "My documents" }] },
   ];
   return (
