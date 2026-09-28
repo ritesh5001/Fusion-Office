@@ -1,6 +1,7 @@
 import express from "express";
 import { authEnabled, authHandler, cloudEnabled, currentUser } from "./auth.js";
 import { documents } from "./routes/documents.js";
+import { files } from "./routes/files.js";
 import { errorHandler } from "./lib/http.js";
 import { corsPolicy, originGuard, securityHeaders } from "./lib/security.js";
 
@@ -57,6 +58,7 @@ export function createApp() {
   });
 
   app.use("/api/documents", originGuard(), documents);
+  app.use("/api/files", files);
 
   app.use("/api", (_req, res) => {
     res.status(404).json({ error: "Not found" });

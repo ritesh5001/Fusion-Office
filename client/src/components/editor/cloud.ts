@@ -8,7 +8,7 @@ import { openFromState } from "@/lib/editor/actions";
 import { toast } from "@/lib/editor/events";
 import type { DocumentState } from "@/lib/editor/types";
 import { signInUrl } from "@/lib/cloudConfig";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, apiUrl } from "@/lib/api";
 
 export interface CloudInfo {
   enabled: boolean;
@@ -34,12 +34,16 @@ async function uploadSources(docId: string, uploads: UploadTicket[]) {
   if (!uploads.length) return;
   const done: string[] = [];
   for (const u of uploads) {
-    const res = await fetch(u.url, {
+    // Signed links are relative to the API ("/api/files/…").
+    const res = await fetch(u.url.startsWith("/") ? apiUrl(u.url) : u.url, {
       method: "PUT",
       headers: { "content-type": "application/pdf" },
       body: getSourceBytes(u.sourceId) as BodyInit,
     });
-    if (!res.ok) throw new Error(`Uploading the original file failed (${res.status}). Check the bucket's CORS settings.`);
+    if (!res.ok) {
+      const detail = await res.json().catch(() => ({}));
+      throw new Error((detail as { error?: string }).error ?? `Uploading the original file failed (${res.status}).`);
+    }
     done.push(u.sourceId);
   }
   await api(`/api/documents/${docId}`, { method: "PUT", body: JSON.stringify({ confirm: done }) });
@@ -92,7 +96,7 @@ export async function openCloudDocument(id: string) {
   const data = await api<{ id: string; state: DocumentState; sources: { id: string; url: string }[] }>(`/api/documents/${id}`);
   const sources = new Map<string, Uint8Array>();
   for (const s of data.sources) {
-    const res = await fetch(s.url);
+    const res = await fetch(s.url.startsWith("/") ? apiUrl(s.url) : s.url);
     if (!res.ok) throw new Error("Could not download the original file from storage.");
     sources.set(s.id, new Uint8Array(await res.arrayBuffer()));
   }

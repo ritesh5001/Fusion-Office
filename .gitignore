@@ -9,3 +9,5 @@ next-env.d.ts
 client/public/pdf.worker.min.mjs
 .gstack
 .DS_Store
+.data
+server/.data

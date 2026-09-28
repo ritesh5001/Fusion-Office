@@ -62,7 +62,8 @@ test("Auth.js routes resolve under /api/auth when auth is configured", async () 
     }
     assert.ok(providers?.github, "github provider should be listed");
     const cfg = await fetch(`http://127.0.0.1:${port}/api/config`).then((r) => r.json());
-    assert.deepEqual(cfg, { authEnabled: true, cloudEnabled: false, user: null });
+    // Disk storage is always available, so auth + database is all cloud save needs.
+    assert.deepEqual(cfg, { authEnabled: true, cloudEnabled: true, user: null });
   } finally {
     child.kill();
   }

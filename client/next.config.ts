@@ -2,7 +2,9 @@ import type { NextConfig } from "next";
 
 // Where the backend (../server) runs. By default the browser only ever talks to
 // this Next app and /api/* is proxied, so auth cookies stay same-origin.
-const SERVER_URL = process.env.SERVER_URL ?? "http://localhost:4000";
+// On Render, SERVER_HOSTPORT is the backend's private-network "host:port".
+const SERVER_URL =
+  process.env.SERVER_URL ?? (process.env.SERVER_HOSTPORT ? `http://${process.env.SERVER_HOSTPORT}` : "http://localhost:4000");
 
 const isDev = process.env.NODE_ENV !== "production";
 const originOf = (url?: string) => {
@@ -14,10 +16,6 @@ const originOf = (url?: string) => {
 };
 // Direct-API mode (see src/lib/api.ts): the browser calls this origin itself.
 const apiOrigin = originOf(process.env.NEXT_PUBLIC_API_URL);
-// Presigned upload/download links point at the bucket. Set this to lock
-// connect-src to it (e.g. https://<account>.r2.cloudflarestorage.com);
-// otherwise any https origin is allowed for those requests.
-const storageOrigin = originOf(process.env.NEXT_PUBLIC_STORAGE_ORIGIN) || "https:";
 
 const csp = [
   "default-src 'self'",
@@ -27,7 +25,8 @@ const csp = [
   // Thumbnails, signatures and images placed on pages are data:/blob: URLs.
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  `connect-src 'self' ${apiOrigin} ${storageOrigin} blob: data:${isDev ? " ws: wss:" : ""}`,
+  // Files are stored by our own server, so no third-party origins are needed.
+  `connect-src 'self' ${apiOrigin} blob: data:${isDev ? " ws: wss:" : ""}`,
   // PDF.js runs in a worker served from /public.
   "worker-src 'self' blob:",
   // Printing loads the exported PDF into a blob: iframe.
@@ -55,6 +54,13 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  experimental: {
+    // PDFs are uploaded through the /api proxy. Next buffers proxied bodies and
+    // caps them at 10 MB by default; match the server's upload limit instead.
+    middlewareClientMaxBodySize: `${Number(process.env.MAX_UPLOAD_MB ?? 200) + 10}mb`,
+    // Large uploads on slow connections take longer than the 30 s default.
+    proxyTimeout: 5 * 60 * 1000,
+  },
   async rewrites() {
     return [{ source: "/api/:path*", destination: `${SERVER_URL}/api/:path*` }];
   },

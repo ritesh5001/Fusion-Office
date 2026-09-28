@@ -7,7 +7,7 @@ A document workspace. The first product is a **browser-based PDF editor**: uploa
 ```
 fusion-office/
 ├── client/    Frontend: Next.js + React + Tailwind. The PDF editor (PDF.js, pdf-lib, Fabric.js, Zustand)
-└── server/    Backend: Node.js + Express + TypeScript. API, Auth.js, Prisma/PostgreSQL, S3/R2
+└── server/    Backend: Node.js + Express + TypeScript. API, Auth.js, Prisma/PostgreSQL, disk file storage
 ```
 
 The two are separate npm workspaces. The browser only talks to the client. The client proxies `/api/*` to the server (`SERVER_URL`, default `http://localhost:4000`), so sign-in cookies stay same-origin and no CORS setup is needed.
@@ -46,7 +46,7 @@ Test helpers: `node client/scripts/make-sample-pdf.mjs sample.pdf` (test PDF wit
 | History | Undo / redo for every edit, with a visible history list |
 | Search | ⌘/Ctrl+F across all pages, results by page, highlighted matches |
 | Export | Download, flatten (forms + comments), print |
-| Cloud (optional) | Auth.js sign-in, save to S3/R2 + Postgres, autosave, versions + restore, dashboard |
+| Cloud (optional) | Auth.js sign-in, save to Postgres + server disk, autosave, versions + restore, dashboard |
 
 Keyboard shortcuts are listed in the editor under **Help → Keyboard shortcuts** (or press `?`).
 
@@ -77,8 +77,9 @@ server/src/
 ├── index.ts                  Entry point (loads .env, starts Express)
 ├── app.ts                    Express app: middleware, /api/config, /api/health, routes
 ├── auth.ts                   Auth.js (@auth/express): GitHub/Google, Prisma adapter, JWT sessions
-├── routes/documents.ts       Documents CRUD, presigned uploads, versions + restore
-└── lib/                      db.ts (Prisma), storage.ts (S3/R2 presigned URLs), http.ts (auth guard, validation, errors)
+├── routes/documents.ts       Documents CRUD, signed upload links, versions + restore
+├── routes/files.ts           Signed-link file upload/download to the server disk
+└── lib/                      db.ts (Prisma), storage.ts (disk + signed links), security.ts (CORS, CSRF, headers), http.ts
 server/prisma/schema.prisma   Users, accounts, documents, versions
 ```
 
@@ -89,22 +90,43 @@ server/prisma/schema.prisma   Users, accounts, documents, versions
 - **The original PDF is never modified while editing.** The store holds `pages[]` (each pointing at a page of a source PDF, or a blank page) plus user `objects[]` per page. Export combines them with pdf-lib. This keeps undo cheap (immutable snapshots) and makes future tools (merge, reorder, convert) straightforward.
 - **The model is the source of truth; Fabric.js is the view.** Each page has its own Fabric canvas that is reconciled against the model. User transforms are read back into the model. That's why every change is undoable and the properties panel and canvas never drift.
 - **Objects are stored by center + angle in "view space"** (points, top-left origin, as displayed). Page rotation transforms objects with the page. Export maps view space to PDF space with one matrix per rotation, verified against pdf.js in `tests/geometry.test.mts`.
-- **Cloud uploads go straight from the browser to S3/R2** with presigned URLs, so large PDFs never hit serverless body-size limits. Autosave sends only editor state.
+- **Uploaded PDFs live on the server's disk** and move through short-lived signed links, so the API never trusts a path from the browser. Autosave sends only editor state, not the file.
 
 ## Enabling cloud save (optional)
 
-1. Copy `server/.env.example` to `server/.env` and fill in `DATABASE_URL`, `AUTH_SECRET` (`npx auth secret`), at least one OAuth provider (GitHub or Google) and the S3/R2 settings.
-2. `npm run db:push` to create the tables.
-3. Add a CORS rule to the bucket allowing `PUT` and `GET` from the site's origin (browsers upload and download directly).
-4. OAuth callback URL: `<site-url>/api/auth/callback/<github|google>`, where site-url is the **client's** address (e.g. `http://localhost:3000` locally).
+Cloud save needs PostgreSQL, `AUTH_SECRET` and one OAuth provider. Uploaded PDFs are stored on the server's own disk (`STORAGE_DIR`, default `server/.data/files`) and moved with short-lived signed links (`/api/files/...`). No S3 or other bucket is involved.
 
-Without these settings, the cloud buttons are hidden and the documents API returns `503`.
+1. Copy `server/.env.example` to `server/.env` and fill in `DATABASE_URL`, `AUTH_SECRET` (`npx auth secret`) and GitHub or Google OAuth keys.
+2. `npm run db:migrate -w server` (production) or `npm run db:push` (quick local setup).
+3. OAuth callback URL: `<site>/api/auth/callback/<github|google>`, where site is the **frontend's** address.
 
-## Deploying
+Without these settings the cloud buttons are hidden and the documents API returns `503`.
 
-- **client/** can go on Vercel (or any Next.js host). Set `SERVER_URL` to the server's URL.
-- **server/** runs anywhere Node runs (Render, Railway, Fly, a VPS): `npm run build -w server && npm run start -w server`. Set `AUTH_URL=https://<your-site>/api/auth` so OAuth callbacks use the public address.
-- Keep the server reachable only through the client proxy where possible. If the browser must call it directly, set `CLIENT_ORIGIN` on the server to enable CORS.
+## Deploying on Render
+
+`render.yaml` is a Render Blueprint that creates everything:
+
+| Resource | Name | Notes |
+| --- | --- | --- |
+| Backend (web service) | `fusion-office` | API + Auth.js + file storage. Paid instance (`0.5c-512mb`) because it needs a **persistent disk** (5 GB at `/var/data`) for uploaded PDFs. Runs `prisma migrate deploy` on every start |
+| Frontend (web service) | `fusion-office-web` | Next.js site and editor. Free plan works; it reaches the backend over Render's private network (`SERVER_HOSTPORT`) |
+| Database | `fusion-office-db` | Render Postgres, wired to the backend's `DATABASE_URL` |
+
+Steps:
+
+1. Push to GitHub, then in Render: **New → Blueprint** and pick the repo. All services are in the Singapore region, the closest to India.
+2. When prompted, set on the backend:
+   - `AUTH_URL` = `https://fusion-office-web.onrender.com/api/auth` (the **frontend** address; use your custom domain later)
+   - `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET` (and/or Google). The GitHub OAuth app's callback is `https://fusion-office-web.onrender.com/api/auth/callback/github`.
+   - `CLIENT_ORIGIN` only if you add custom domains.
+3. `AUTH_SECRET` is generated automatically. Uploaded files survive deploys and restarts because they live on the disk.
+
+Good to know:
+
+- A service with a disk can't run more than one instance, and deploys have a few seconds of downtime while the disk moves to the new instance.
+- Free frontend instances sleep after inactivity; the first visit after that takes a while to wake up.
+- If a service named `fusion-office` already exists in your workspace (created by hand), Render may not let the Blueprint create one with the same name. Delete or rename the old one first, or rename the backend in `render.yaml` and update the `fromService` name to match.
+- `client/.env` is not used on Render (it's git-ignored). Don't set `SERVER_URL` there in production; the Blueprint provides `SERVER_HOSTPORT`.
 
 ## Security: CORS and headers
 
@@ -114,9 +136,9 @@ Without these settings, the cloud buttons are hidden and the documents API retur
 | CSRF | Any write to `/api/documents` with an `Origin` not on the list gets `403`. Auth.js routes use their own CSRF token | `originGuard` in the same file |
 | API headers | helmet: strict CSP (`default-src 'none'`), `nosniff`, `frame-ancestors 'none'`, HSTS, no `X-Powered-By` | `securityHeaders` |
 | Site headers | CSP, `X-Frame-Options: DENY`, `nosniff`, Referrer-Policy, Permissions-Policy, COOP, HSTS | `client/next.config.ts` |
-| Bucket CORS | `GET`/`PUT`/`HEAD` from the same origin list, for presigned uploads and downloads | `npm run storage:cors -w server` |
+| File links | Uploads/downloads use HMAC-signed links that expire after 15 minutes; only real PDFs (checked by content) are stored, size-capped by `MAX_UPLOAD_MB` | `server/src/lib/storage.ts`, `server/src/routes/files.ts` |
 
-By default the browser calls `/api/*` on the site itself and Next proxies it to the server, so CORS never comes into play. To call the server directly, set `NEXT_PUBLIC_API_URL` on the client and add the site to `CLIENT_ORIGIN` on the server. Both must share a parent domain (for example `app.example.com` and `api.example.com`) so the session cookie is sent. Set `NEXT_PUBLIC_STORAGE_ORIGIN` to lock the CSP's `connect-src` to your bucket.
+By default the browser calls `/api/*` on the site itself and Next proxies it to the server, so CORS never comes into play. To call the server directly, set `NEXT_PUBLIC_API_URL` on the client and add the site to `CLIENT_ORIGIN` on the server. Both must share a parent domain (for example `app.example.com` and `api.example.com`) so the session cookie is sent.
 
 ## Known limitations (v1)
 

@@ -13,7 +13,6 @@
   },
   "include": [
     "src",
-    "tests",
-    "scripts"
+    "tests"
   ]
 }
