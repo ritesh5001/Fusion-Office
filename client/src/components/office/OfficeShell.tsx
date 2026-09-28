@@ -77,17 +77,8 @@ function NameField({ value, onChange }: { value: string; onChange: (v: string) =
 /** Save `data` as a local draft shortly after it stops changing. */
 export function useAutosave<T>(kind: DraftKind, id: string | null, name: string, data: T | null, delay = 900) {
   const [status, setStatus] = useState<"saved" | "saving" | "idle">("idle");
-  const first = useRef(true);
-  useEffect(() => {
-    first.current = true;
-  }, [id]);
   useEffect(() => {
     if (!id || data === null) return;
-    // Opening a document isn't a change worth saving.
-    if (first.current) {
-      first.current = false;
-      return;
-    }
     setStatus("saving");
     const t = setTimeout(() => {
       saveDraft({ id, kind, name }, data)
