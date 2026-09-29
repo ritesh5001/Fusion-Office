@@ -9,19 +9,15 @@ const mono = IBM_Plex_Mono({ subsets: ["latin"], variable: "--font-mono-face", w
 
 export const metadata: Metadata = {
   title: { default: "Fusion Office", template: "%s · Fusion Office" },
-  description: "Edit any PDF in your browser. Add text, sign, redact for real and reorder pages. Your file never has to leave your computer.",
+  description:
+    "Free online tools for PDFs, Word, Excel, PowerPoint and images: edit, merge, compress, convert and sign. No sign-up, and most tools run in your browser so files stay on your device.",
 };
 
 export const viewport: Viewport = { themeColor: "#f4f5f6" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    // suppressHydrationWarning: the inline script below adds the "js" class before hydration.
-    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${signature.variable} ${display.variable} ${mono.variable}`}>
-      <head>
-        {/* Scroll-reveal styles only apply when JS runs, so content never stays hidden. */}
-        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
-      </head>
+    <html lang="en" className={`${inter.variable} ${signature.variable} ${display.variable} ${mono.variable}`}>
       <body className="font-sans">{children}</body>
     </html>
   );

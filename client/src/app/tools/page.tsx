@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Nav } from "@/components/landing/Nav";
-import { Footer } from "@/components/landing/Sections";
+import { Footer } from "@/components/landing/Footer";
 import { ToolsHub } from "@/components/tools/ToolsHub";
 import { TOOLS } from "@/lib/tools/registry";
 

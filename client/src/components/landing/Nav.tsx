@@ -8,14 +8,12 @@ import { AccountLinks } from "../home/AccountLinks";
 
 // Absolute paths so the links work from every page, not just the homepage.
 const LINKS = [
-  { href: "/tools", label: "All tools" },
-  { href: "/#editor", label: "PDF editor" },
+  { href: "/#tools", label: "All tools" },
+  { href: "/editor", label: "PDF editor" },
   { href: "/write", label: "Word" },
   { href: "/sheets", label: "Excel" },
   { href: "/slides", label: "PowerPoint" },
   { href: "/tools/image-editor", label: "Images" },
-  { href: "/#privacy", label: "Privacy" },
-  { href: "/#faq", label: "FAQ" },
 ];
 
 export function Nav() {
