@@ -6,6 +6,7 @@ import { downloadFile, formatBytes, toToolFile, zipFiles, type ToolFile } from "
 import { openPdf, renderToCanvas } from "@/lib/tools/pdfjs";
 import type { ToolDef } from "@/lib/tools/registry";
 import { Dropzone } from "./Dropzone";
+import { Mascot } from "../mascot/Mascot";
 import { cn } from "../ui/primitives";
 
 export interface LoadedFile extends ToolFile {
@@ -130,8 +131,9 @@ export function ToolRunner<O>({ tool, spec }: { tool: ToolDef; spec: ToolSpec<O>
     <div>
       {needsFiles ? (
         loading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="h-6 w-6 animate-spin text-ink-soft" aria-label="Loading files" />
+          <div className="flex flex-col items-center justify-center rounded-2xl bg-brand-50/40 py-14" role="status">
+            <Mascot mood="working" size={92} />
+            <p className="mt-4 text-[15px] font-medium text-ink">Reading your {tool.multiple ? "files" : "file"}…</p>
           </div>
         ) : (
           <Dropzone accept={tool.accept} multiple={tool.multiple} onFiles={add} label={tool.multiple ? "Choose files" : "Choose a file"} />
@@ -188,6 +190,18 @@ export function ToolRunner<O>({ tool, spec }: { tool: ToolDef; spec: ToolSpec<O>
             )}
           </div>
           <aside className="h-fit rounded-2xl bg-white p-5 ring-1 ring-ink/10 xl:sticky xl:top-24">
+            {(running || error) && (
+              <div className="mb-4 flex items-center gap-3 rounded-xl bg-paper px-3 py-2.5" role="status">
+                <Mascot mood={running ? "working" : "oops"} size={48} />
+                <p className="text-[13px] font-medium text-ink">{running
+                    ? tool.runs === "browser"
+                      ? "On it! Working right here on your device."
+                      : tool.runs === "ai"
+                        ? "On it! Reading your document with AI."
+                        : "On it! Converting on our server."
+                    : "Something needs a look."}</p>
+              </div>
+            )}
             {Options && (
               <div className="space-y-4">
                 <Options options={options} set={(patch) => setOptions((o) => ({ ...o, ...patch }))} files={files} />
@@ -218,9 +232,10 @@ export function ToolRunner<O>({ tool, spec }: { tool: ToolDef; spec: ToolSpec<O>
         </div>
       )}
       {error && needsFiles && (
-        <p role="alert" className="mt-4 rounded-md bg-red-50 px-3 py-2 text-center text-[13px] text-red-700">
+        <div role="alert" className="mt-4 flex items-center justify-center gap-3 rounded-xl bg-red-50 px-4 py-3 text-[14px] text-red-700">
+          <Mascot mood="oops" size={40} />
           {error}
-        </p>
+        </div>
       )}
     </div>
   );
@@ -264,10 +279,8 @@ function Results({ result, onReset, anchor }: { result: ToolResult; onReset: () 
   return (
     <div ref={anchor} className="mx-auto max-w-[760px] scroll-mt-24">
       <div className="rounded-2xl bg-white p-6 text-center ring-1 ring-ink/10 md:p-8">
-        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-          <Check className="h-6 w-6" aria-hidden="true" />
-        </span>
-        <h2 className="mt-4 font-display text-[26px] font-semibold tracking-[-0.02em]">Done</h2>
+        <Mascot mood="happy" size={104} interactive />
+        <h2 className="mt-3 font-display text-[26px] font-bold tracking-[-0.02em]">All done!</h2>
         {result.summary && <div className="mx-auto mt-2 max-w-[56ch] text-[15px] leading-relaxed text-ink-soft">{result.summary}</div>}
         {!many && result.files[0]?.type.startsWith("image/") && <ImagePreview file={result.files[0]} />}
         {result.files.length > 0 && (

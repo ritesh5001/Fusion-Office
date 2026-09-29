@@ -1,47 +1,36 @@
+"use client";
+
+import { Mascot, type Mood } from "../mascot/Mascot";
 import { Tile } from "../tools/icons";
 
-/** A sheet of paper with a folded corner and a few text lines. */
-function Sheet({ className, lines = 5 }: { className?: string; lines?: number }) {
+/** Hero: Folio in the middle, the file types it handles floating around it, and what it's thinking. */
+export function HeroArt({ mood, message }: { mood: Mood; message: string }) {
   return (
-    <div className={`absolute rounded-[18px] bg-white p-5 shadow-[0_24px_50px_-24px_rgb(36_71_230/0.45)] ring-1 ring-ink/5 ${className ?? ""}`}>
-      <div className="absolute right-0 top-0 h-7 w-7 rounded-bl-[10px] rounded-tr-[18px] bg-gradient-to-bl from-slate-200 to-slate-100" />
-      <div className="space-y-2.5 pt-8">
-        {Array.from({ length: lines }, (_, i) => (
-          <div key={i} className="h-2 rounded-full bg-slate-200" style={{ width: `${[92, 78, 86, 60, 72, 50][i % 6]}%` }} />
-        ))}
-      </div>
-    </div>
-  );
-}
+    <div className="relative mx-auto h-[380px] w-full max-w-[400px]">
+      <div className="absolute inset-4 rounded-full bg-[radial-gradient(circle,rgb(91_140_255/0.22),transparent_66%)] blur-2xl" aria-hidden="true" />
+      {/* Soft rings Folio sits in. */}
+      <div className="absolute left-1/2 top-[54%] h-[250px] w-[250px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-brand-200/60" aria-hidden="true" />
+      <div className="absolute left-1/2 top-[54%] h-[340px] w-[340px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-brand-200/50" aria-hidden="true" />
 
-/** Hero illustration: the file types Fusion Office handles, floating together. */
-export function HeroArt() {
-  return (
-    <div className="relative mx-auto h-[360px] w-full max-w-[400px]" aria-hidden="true">
-      <div className="absolute inset-6 rounded-full bg-[radial-gradient(circle,rgb(91_140_255/0.28),transparent_68%)] blur-2xl" />
-      <div className="absolute left-[18%] top-[8%] h-[250px] w-[190px] rotate-[-8deg] rounded-[22px] bg-brand-100/70" />
-
-      <div className="float-slow absolute left-[20%] top-[4%] h-[260px] w-[200px]">
-        <Sheet className="inset-0" lines={6} />
-        <Tile swatch="red" letter="PDF" size="lg" className="absolute -left-7 top-7 h-12 w-[72px] rotate-[-6deg]" letterClassName="text-[19px]" />
+      <div aria-hidden="true">
+        <Tile swatch="red" letter="PDF" size="lg" className="float-a absolute left-[2%] top-[20%] h-11 w-[66px] rotate-[-8deg]" letterClassName="text-[17px]" />
+        <Tile swatch="blue" letter="W" size="lg" className="float-b absolute right-[6%] top-[14%] h-14 w-14 rotate-[6deg]" />
+        <Tile swatch="green" letter="X" size="lg" className="float-c absolute bottom-[12%] left-[6%] h-14 w-14 rotate-[-5deg]" />
+        <Tile swatch="orange" letter="P" size="lg" className="float-slow absolute bottom-[6%] right-[14%] h-12 w-12 rotate-[8deg]" letterClassName="text-[24px]" />
+        <Tile swatch="teal" icon="Image" size="md" className="float-a absolute right-[0%] top-[52%] rotate-[-6deg]" />
       </div>
 
-      <div className="float-a absolute right-[4%] top-[10%]">
-        <Sheet className="relative h-[120px] w-[108px] !p-4" lines={3} />
-        <Tile swatch="blue" letter="W" size="lg" className="absolute -bottom-4 -left-5 h-[58px] w-[58px] rotate-[4deg]" />
+      <div className="absolute left-1/2 top-[54%] -translate-x-1/2 -translate-y-1/2">
+        <Mascot mood={mood} size={170} follow interactive />
       </div>
 
-      <Tile swatch="green" letter="X" size="lg" className="float-b absolute left-[40%] top-[40%] h-[84px] w-[84px] rounded-[22px] rotate-[-4deg]" letterClassName="text-[42px]" />
-
-      <div className="float-c absolute bottom-[10%] left-[8%] flex h-[70px] w-[70px] items-center justify-center rounded-full bg-white shadow-xl ring-1 ring-ink/5">
-        <svg viewBox="0 0 24 24" className="h-9 w-9 text-brand-600" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 12a8 8 0 1 1-2.34-5.66" />
-          <path d="M20 4v5h-5" />
-        </svg>
+      {/* What Folio is thinking; announced politely to screen readers. */}
+      <div className="absolute left-1/2 top-0 w-max max-w-[300px] -translate-x-1/2" aria-live="polite">
+        <p key={message} className="m-bubble relative rounded-2xl bg-white px-4 py-2.5 text-center text-[14px] font-medium text-ink shadow-[0_12px_28px_-16px_rgb(36_71_230/0.5)] ring-1 ring-brand-100">
+          {message}
+          <span className="absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 bg-white ring-1 ring-brand-100 [clip-path:polygon(100%_0,100%_100%,0_100%)]" aria-hidden="true" />
+        </p>
       </div>
-
-      <Tile swatch="orange" letter="P" size="lg" className="float-a absolute bottom-[6%] left-[40%] h-16 w-16 rotate-[6deg]" letterClassName="text-[32px]" />
-      <Tile swatch="teal" icon="Image" size="lg" className="float-b absolute bottom-[16%] right-[4%] h-[72px] w-[72px] rotate-[-6deg] [&_svg]:h-9 [&_svg]:w-9" />
     </div>
   );
 }

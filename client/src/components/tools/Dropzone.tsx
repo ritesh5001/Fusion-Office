@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { UploadCloud } from "lucide-react";
+import { Mascot } from "../mascot/Mascot";
 import { cn } from "../ui/primitives";
 
 /** Plain-words name for an accept list ("PDF files", "images"). */
@@ -71,10 +71,8 @@ export function Dropzone({
     >
       {!compact && (
         <>
-          <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#5b8cff] to-[#2447e6] text-white shadow-lg shadow-blue-600/30">
-            <UploadCloud className="h-8 w-8" strokeWidth={2.2} aria-hidden="true" />
-          </span>
-          <p className="mt-5 text-[17px] font-semibold text-ink">Drop your {what} here</p>
+          <Mascot mood={over ? "curious" : "idle"} size={92} follow />
+          <p className="mt-4 text-[17px] font-semibold text-ink">{over ? "Ooh, let go to add it!" : `Drop your ${what} here`}</p>
           <p className="mt-1 text-[13px] text-ink-soft">or</p>
         </>
       )}

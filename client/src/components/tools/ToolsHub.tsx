@@ -6,6 +6,8 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ArrowRight, Search, Server, Sparkles, X } from "lucide-react";
 import { CATEGORIES, TOOLS, toolBySlug, type Category, type ToolDef } from "@/lib/tools/registry";
 import { Tile, ToolTile } from "./icons";
+import { Mascot, type Mood } from "../mascot/Mascot";
+import { HeroArt } from "../landing/HeroArt";
 import { cn } from "../ui/primitives";
 
 /** Shown under the search box: the tools people reach for most. */
@@ -93,12 +95,39 @@ function rank(t: ToolDef, words: string[]) {
  * The tool finder: hero search (with the page's intro and artwork around it)
  * and the categorised list of every tool. Both share the search state.
  */
-export function ToolsHub({ intro, art, strip, title = "All tools" }: { intro?: ReactNode; art?: ReactNode; strip?: ReactNode; title?: string }) {
+/** Folio's mood in the hero, and what it says. */
+interface FinderState {
+  mood: Mood;
+  message: string;
+}
+
+export function ToolsHub({
+  intro,
+  art,
+  strip,
+  title = "All tools",
+}: {
+  intro?: ReactNode;
+  /** Show Folio next to the search, reacting to it. */
+  art?: boolean;
+  strip?: ReactNode;
+  title?: string;
+}) {
   const router = useRouter();
   const [cat, setCat] = useState<Category | "all">("all");
   const [query, setQuery] = useState("");
   const input = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLElement>(null);
+  const [focused, setFocused] = useState(false);
+  const [typing, setTyping] = useState(false);
+
+  // "Typing" lasts a moment after the last key, so Folio looks busy while you type.
+  useEffect(() => {
+    if (!query) return setTyping(false);
+    setTyping(true);
+    const t = setTimeout(() => setTyping(false), 450);
+    return () => clearTimeout(t);
+  }, [query]);
 
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
   const results = useMemo(() => {
@@ -145,10 +174,28 @@ export function ToolsHub({ intro, art, strip, title = "All tools" }: { intro?: R
   const firstReady = results.find((t) => t.status === "ready");
   const grouped = cat === "all" && !words.length;
 
+  const finder: FinderState = typing
+    ? { mood: "working", message: "Looking…" }
+    : words.length && firstReady
+      ? {
+          mood: "happy",
+          message: `Found ${results.length} tool${results.length === 1 ? "" : "s"}! Press Enter to open ${firstReady.name}.`,
+        }
+      : words.length
+        ? { mood: "confused", message: "Hmm, nothing matches. Try “pdf” or “image”." }
+        : focused
+          ? { mood: "curious", message: "Type what you need: merge, compress, sign…" }
+          : { mood: "idle", message: "Hi, I’m Folio! What are we working on today?" };
+
   return (
     <>
       <section className="mx-auto grid max-w-[1280px] items-center gap-10 px-5 pb-10 pt-10 md:px-8 md:pt-14 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_400px]">
         <div className="text-center">
+          {art && (
+            <div className="mb-3 flex justify-center lg:hidden">
+              <Mascot mood={finder.mood} size={84} interactive />
+            </div>
+          )}
           {intro}
           <form
             id="search"
@@ -172,6 +219,8 @@ export function ToolsHub({ intro, art, strip, title = "All tools" }: { intro?: R
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Escape" && setQuery("")}
+                onFocus={() => setFocused(true)}
+                onBlur={() => setFocused(false)}
                 placeholder="Search tools (e.g. merge PDF, compress image)"
                 autoComplete="off"
                 enterKeyHint="search"
@@ -215,14 +264,18 @@ export function ToolsHub({ intro, art, strip, title = "All tools" }: { intro?: R
             })}
           </div>
         </div>
-        {art && <div className="hidden lg:block">{art}</div>}
+        {art && (
+          <div className="hidden lg:block">
+            <HeroArt mood={finder.mood} message={finder.message} />
+          </div>
+        )}
       </section>
 
       {strip}
 
       <section ref={list} aria-labelledby="all-tools" className="scroll-mt-16 border-t border-rule bg-white">
         <div className="mx-auto max-w-[1280px] px-5 pb-20 pt-12 md:px-8">
-          <h2 id="all-tools" className="font-display text-[clamp(1.6rem,3vw,2rem)] font-bold tracking-[-0.03em]">
+          <h2 id="all-tools" className="scroll-mt-24 font-display text-[clamp(1.6rem,3vw,2rem)] font-bold tracking-[-0.03em]">
             {title}
           </h2>
 
@@ -258,8 +311,9 @@ export function ToolsHub({ intro, art, strip, title = "All tools" }: { intro?: R
 
           <div className="mt-6">
             {results.length === 0 ? (
-              <div className="rounded-2xl bg-paper px-6 py-14 text-center">
-                <p className="text-[16px] font-semibold">No tool matches “{query}”.</p>
+              <div className="rounded-2xl bg-paper px-6 py-12 text-center">
+                <Mascot mood="confused" size={96} />
+                <p className="mt-3 text-[16px] font-semibold">No tool matches “{query}”.</p>
                 <p className="mt-1 text-[14px] text-ink-soft">Try a simpler word, like “pdf”, “image” or “convert”.</p>
                 <button
                   type="button"
@@ -304,7 +358,7 @@ export function ToolsHub({ intro, art, strip, title = "All tools" }: { intro?: R
 
 function ToolGrid({ tools }: { tools: ToolDef[] }) {
   return (
-    <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
       {tools.map((t) => (
         <li key={t.slug}>
           <ToolCard tool={t} />
@@ -314,36 +368,38 @@ function ToolGrid({ tools }: { tools: ToolDef[] }) {
   );
 }
 
+/** Square card: icon on top, name and description below. Grows only if a long name needs the room. */
 function ToolCard({ tool: t }: { tool: ToolDef }) {
   const soon = t.status === "soon";
+  const badge = soon ? (
+    <span className="absolute right-3 top-3 rounded-full bg-paper-deep px-2 py-0.5 text-[11px] font-medium text-ink-soft">Soon</span>
+  ) : t.runs !== "browser" ? (
+    <span
+      className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-paper-deep px-2 py-0.5 text-[11px] font-medium text-ink-soft"
+      title={t.runs === "ai" ? "Uses AI on our server" : "Converted on our server, then deleted"}
+    >
+      {t.runs === "ai" ? <Sparkles className="h-3 w-3" aria-hidden="true" /> : <Server className="h-3 w-3" aria-hidden="true" />}
+      {t.runs === "ai" ? "AI" : "Server"}
+    </span>
+  ) : null;
   const body = (
     <>
-      <ToolTile tool={t} size="lg" />
-      <span className="flex min-w-0 flex-1 flex-col">
-        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="text-[16px] font-bold tracking-[-0.01em] text-ink">{t.name}</span>
-          {soon ? (
-            <span className="rounded-full bg-paper-deep px-2 py-0.5 text-[11px] font-medium text-ink-soft">Soon</span>
-          ) : t.runs !== "browser" ? (
-            <span
-              className="inline-flex items-center gap-1 rounded-full bg-paper-deep px-2 py-0.5 text-[11px] font-medium text-ink-soft"
-              title={t.runs === "ai" ? "Uses AI on our server" : "Converted on our server, then deleted"}
-            >
-              {t.runs === "ai" ? <Sparkles className="h-3 w-3" aria-hidden="true" /> : <Server className="h-3 w-3" aria-hidden="true" />}
-              {t.runs === "ai" ? "AI" : "Server"}
-            </span>
-          ) : null}
+      {badge}
+      <ToolTile
+        tool={t}
+        size="lg"
+        className="h-11 w-11 rounded-[13px] transition-transform duration-200 group-hover:scale-105 sm:h-14 sm:w-14 sm:rounded-[16px] [&_svg]:h-[22px] [&_svg]:w-[22px] sm:[&_svg]:h-7 sm:[&_svg]:w-7"
+      />
+      <span className="mt-3 line-clamp-2 text-[14px] font-bold sm:mt-3.5 sm:text-[15px] leading-tight tracking-[-0.01em] text-ink">{t.name}</span>
+      <span className="mt-1 line-clamp-1 text-[12.5px] leading-snug text-ink-soft sm:mt-1.5 sm:line-clamp-2">{t.description}</span>
+      {!soon && (
+        <span className="mt-3 hidden items-center gap-1 rounded-lg bg-brand-50 px-3 py-1.5 text-[13px] font-semibold text-brand-700 transition-colors group-hover:bg-brand-600 group-hover:text-white md:inline-flex">
+          Open Tool <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
         </span>
-        <span className="mt-1 line-clamp-2 text-[13px] leading-snug text-ink-soft">{t.description}</span>
-        {!soon && (
-          <span className="mt-3 inline-flex w-fit items-center gap-1 rounded-lg bg-brand-50 px-3 py-1.5 text-[13px] font-semibold text-brand-700 transition-colors group-hover:bg-brand-600 group-hover:text-white">
-            Open Tool <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-          </span>
-        )}
-      </span>
+      )}
     </>
   );
-  const cls = "group flex h-full items-start gap-4 rounded-2xl bg-white p-5 ring-1 ring-ink/10 transition";
+  const cls = "group relative flex aspect-square h-full flex-col items-center justify-center rounded-2xl bg-white p-4 text-center ring-1 ring-ink/10 transition";
   return soon ? (
     <div className={cn(cls, "opacity-60")} aria-disabled="true">
       {body}

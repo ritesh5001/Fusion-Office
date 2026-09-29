@@ -25,7 +25,8 @@ const COLUMNS = [
   {
     title: "Fusion Office",
     links: [
-      { href: "/#tools", label: "All tools" },
+      { href: "/#all-tools", label: "All tools" },
+      { href: "/#how-it-works", label: "How it works" },
       { href: "/#faq", label: "FAQ" },
       { href: "/dashboard", label: "My documents" },
     ],

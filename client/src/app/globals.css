@@ -146,6 +146,78 @@ input[type="color"]::-moz-color-swatch {
   }
 }
 
+/* ── Folio, the mascot (components/mascot/Mascot.tsx) ───────────── */
+@property --m-a { syntax: "<color>"; inherits: true; initial-value: #7ea6ff; }
+@property --m-b { syntax: "<color>"; inherits: true; initial-value: #2f54eb; }
+@property --m-c { syntax: "<color>"; inherits: true; initial-value: #9fe8ff; }
+
+.mascot {
+  --m-a: #7ea6ff; --m-b: #2f54eb; --m-c: #9fe8ff;
+  transition: --m-a 500ms ease, --m-b 500ms ease, --m-c 500ms ease;
+}
+.mascot[data-mood="curious"] { --m-a: #7cc8ff; --m-b: #1d6fe0; --m-c: #c3f5ff; }
+.mascot[data-mood="working"] { --m-a: #a79bff; --m-b: #4f46e5; --m-c: #8fd6ff; }
+.mascot[data-mood="happy"],
+.mascot[data-mood="wink"] { --m-a: #6fe3a8; --m-b: #0f9f6e; --m-c: #d4ff9e; }
+.mascot[data-mood="oops"] { --m-a: #ff9a8f; --m-b: #e0344b; --m-c: #ffd0a6; }
+.mascot[data-mood="sleepy"] { --m-a: #c4b8ff; --m-b: #7c6fd6; --m-c: #e6e0ff; }
+.mascot[data-mood="confused"] { --m-a: #ffd27a; --m-b: #f08c00; --m-c: #fff1b8; }
+
+.mascot .m-svg { filter: drop-shadow(0 14px 22px color-mix(in srgb, var(--m-b) 32%, transparent)); }
+.mascot .m-part,
+.mascot .m-body,
+.mascot .m-shadow,
+.mascot .m-eyes { transform-box: fill-box; transform-origin: center; }
+.mascot .m-part { transition: opacity 180ms ease, transform 260ms cubic-bezier(0.3, 1.5, 0.5, 1); }
+.mascot .m-eyes { transform: translate(var(--lx, 0), var(--ly, 0)); transition: transform 180ms ease-out; }
+.mascot .m-body { transform-origin: 50% 100%; }
+
+/* Always: breathe and blink. */
+.mascot .m-body { animation: m-breathe 3.6s ease-in-out infinite; }
+.mascot .m-blink { transform-box: fill-box; transform-origin: center; animation: m-blink 4.8s infinite; }
+.mascot[data-mood="curious"] .m-body { animation: m-hop 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) 1, m-breathe 3.6s ease-in-out 0.5s infinite; rotate: -5deg; }
+.mascot[data-mood="working"] .m-body { animation: m-bob 0.7s ease-in-out infinite; }
+.mascot[data-mood="working"] .m-eyes { animation: m-scan 1.6s ease-in-out infinite; }
+.mascot[data-mood="happy"] .m-body,
+.mascot[data-mood="wink"] .m-body { animation: m-jump 0.9s cubic-bezier(0.3, 1.4, 0.5, 1) 2, m-breathe 3.6s ease-in-out 1.8s infinite; }
+.mascot[data-mood="happy"] .m-shadow,
+.mascot[data-mood="wink"] .m-shadow { animation: m-shadow 0.9s cubic-bezier(0.3, 1.4, 0.5, 1) 2; }
+.mascot[data-mood="oops"] .m-body { animation: m-shake 0.45s ease-in-out 1; }
+.mascot[data-mood="sleepy"] .m-body { animation: m-breathe 5.5s ease-in-out infinite; }
+.mascot[data-mood="sleepy"] .m-blink { animation: none; }
+.mascot[data-mood="confused"] .m-body { rotate: 7deg; transition: rotate 300ms ease; }
+.mascot .m-orbit { transform-origin: 61px 62px; animation: m-orbit 1.1s linear infinite; }
+.mascot .m-z { animation: m-z 2.4s ease-in infinite; }
+.mascot .m-z2 { animation-delay: 1.2s; }
+.mascot .m-q { transform-box: fill-box; transform-origin: 50% 100%; animation: m-pop 0.45s cubic-bezier(0.3, 1.8, 0.5, 1) both; }
+
+@keyframes m-breathe { 0%, 100% { scale: 1 1; } 50% { scale: 1.025 0.985; } }
+@keyframes m-blink { 0%, 92%, 100% { scale: 1 1; } 95% { scale: 1 0.1; } }
+@keyframes m-hop { 0% { translate: 0 0; } 50% { translate: 0 -8px; } 100% { translate: 0 0; } }
+@keyframes m-jump {
+  0% { translate: 0 0; scale: 1 1; }
+  20% { translate: 0 0; scale: 1.06 0.92; }
+  50% { translate: 0 -16px; scale: 0.96 1.05; }
+  80% { translate: 0 0; scale: 1.04 0.95; }
+  100% { translate: 0 0; scale: 1 1; }
+}
+@keyframes m-shadow { 0%, 100% { scale: 1 1; opacity: 0.18; } 50% { scale: 0.7 1; opacity: 0.1; } }
+@keyframes m-bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -4px; } }
+@keyframes m-scan { 0%, 100% { transform: translate(-3px, -1px); } 50% { transform: translate(3px, -1px); } }
+@keyframes m-shake { 0%, 100% { translate: 0 0; } 20%, 60% { translate: -5px 0; } 40%, 80% { translate: 5px 0; } }
+@keyframes m-orbit { to { rotate: 360deg; } }
+@keyframes m-z { 0% { opacity: 0; translate: 0 6px; } 30% { opacity: 1; } 100% { opacity: 0; translate: 6px -14px; } }
+@keyframes m-pop { from { scale: 0; } to { scale: 1; } }
+
+/* Speech bubble next to Folio. */
+.m-bubble { animation: m-bubble 0.35s cubic-bezier(0.3, 1.5, 0.5, 1) both; }
+@keyframes m-bubble { from { opacity: 0; scale: 0.9; translate: 0 6px; } to { opacity: 1; scale: 1; translate: 0 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot *, .m-bubble { animation: none !important; transition-duration: 0ms !important; }
+  .mascot .m-orbit { display: none; }
+}
+
 /* ── Office editors: Word document page ───────────────────────── */
 .fo-doc .ProseMirror {
   outline: none;

@@ -143,7 +143,9 @@ export function Tile({
     <span
       aria-hidden="true"
       className={cn(
-        "relative inline-flex shrink-0 items-center justify-center overflow-hidden bg-gradient-to-br text-white shadow-lg ring-1 ring-inset ring-white/25",
+        // Callers may position the tile themselves (absolute); otherwise it anchors its own highlight.
+        /\b(absolute|fixed)\b/.test(className ?? "") ? "" : "relative",
+        "inline-flex shrink-0 items-center justify-center overflow-hidden bg-gradient-to-br text-white shadow-lg ring-1 ring-inset ring-white/25",
         SWATCH[swatch],
         s.box,
         className,

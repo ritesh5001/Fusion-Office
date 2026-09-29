@@ -1,7 +1,7 @@
 import { FileCheck2, Plus } from "lucide-react";
 import { Nav } from "@/components/landing/Nav";
 import { Footer } from "@/components/landing/Footer";
-import { HeroArt } from "@/components/landing/HeroArt";
+import { HowItWorks } from "@/components/landing/HowItWorks";
 import { ToolsHub } from "@/components/tools/ToolsHub";
 import { Tile, type Swatch } from "@/components/tools/icons";
 import { TOOLS } from "@/lib/tools/registry";
@@ -68,7 +68,7 @@ export default function Home() {
                 </p>
               </header>
             }
-            art={<HeroArt />}
+            art
             strip={
               <ul aria-label="Why Fusion Office" className="mx-auto grid max-w-[1280px] grid-cols-2 gap-x-4 gap-y-5 px-5 pb-12 md:px-8 lg:grid-cols-4">
                 {strip.map((s) => (
@@ -83,6 +83,8 @@ export default function Home() {
               </ul>
             }
           />
+
+          <HowItWorks />
 
           <section id="faq" aria-labelledby="faq-title" className="scroll-mt-20 border-t border-rule bg-paper">
             <div className="mx-auto max-w-[820px] px-5 py-20 md:px-8">
