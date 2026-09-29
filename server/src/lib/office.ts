@@ -5,8 +5,9 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { HttpError } from "./http.js";
 import { semaphore } from "./rateLimit.js";
+import { INSTALLED_SOFFICE } from "./tools.js";
 
-const SOFFICE = process.env.SOFFICE_PATH || "soffice";
+export const SOFFICE = process.env.SOFFICE_PATH || INSTALLED_SOFFICE || "soffice";
 const TIMEOUT_MS = Number(process.env.CONVERT_TIMEOUT_MS) || 120_000;
 
 const ZIP = [0x50, 0x4b, 0x03, 0x04];

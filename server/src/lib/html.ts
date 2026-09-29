@@ -3,14 +3,21 @@ import puppeteer, { TimeoutError, type Browser } from "puppeteer-core";
 import { HttpError } from "./http.js";
 import { BLOCKED_HEADER, checkPublicUrl, startEgressProxy } from "./netGuard.js";
 import { semaphore } from "./rateLimit.js";
+import { INSTALLED_CHROME } from "./tools.js";
 
-/** CHROME_PATH, or a Chrome/Chromium found in the usual places. */
+/** CHROME_PATH, a Chrome/Chromium found in the usual places, or one installed into .tools. */
 export const CHROME =
   process.env.CHROME_PATH ||
   ["/usr/bin/chromium", "/usr/bin/chromium-browser", "/usr/bin/google-chrome", "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"].find((p) =>
     existsSync(p),
   ) ||
+  INSTALLED_CHROME ||
   "";
+// The downloaded headless shell runs as a normal user on hosts without the
+// kernel features Chrome's sandbox needs (pages still only reach the public
+// internet through the egress proxy).
+const HEADLESS_SHELL = CHROME.includes("chrome-headless-shell");
+const NO_SANDBOX = process.env.CHROME_NO_SANDBOX === "1" || (HEADLESS_SHELL && process.env.CHROME_NO_SANDBOX !== "0");
 const PAGE_TIMEOUT_MS = 30_000;
 const MAX_REQUESTS = 600;
 
@@ -23,7 +30,7 @@ function browser(): Promise<Browser> {
     const proxy = await startEgressProxy();
     const b = await puppeteer.launch({
       executablePath: CHROME,
-      headless: true,
+      headless: HEADLESS_SHELL ? "shell" : true,
       args: [
         `--proxy-server=http://127.0.0.1:${proxy.port}`,
         // Chrome skips proxies for localhost unless told otherwise.
@@ -40,7 +47,7 @@ function browser(): Promise<Browser> {
         "--disable-dev-shm-usage",
         "--hide-scrollbars",
         "--mute-audio",
-        ...(process.env.CHROME_NO_SANDBOX === "1" ? ["--no-sandbox"] : []),
+        ...(NO_SANDBOX ? ["--no-sandbox"] : []),
       ],
     });
     b.on("disconnected", () => {

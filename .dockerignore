@@ -8,3 +8,4 @@ client/*
 server/dist
 server/.data
 docs
+server/.tools

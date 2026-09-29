@@ -29,6 +29,7 @@ COPY package.json package-lock.json ./
 COPY server/package.json server/
 COPY client/package.json client/
 COPY server/prisma server/prisma
+COPY server/scripts server/scripts
 RUN npm ci --workspace server --include=dev
 
 COPY server server

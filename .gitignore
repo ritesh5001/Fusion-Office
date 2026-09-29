@@ -12,3 +12,4 @@ client/public/pdf.worker.min.mjs
 .data
 server/.data
 client/public/tesseract
+server/.tools
