@@ -13,7 +13,7 @@
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "start:prod": "prisma migrate deploy && node dist/index.js",
+    "start:prod": "if [ -n \"$DATABASE_URL\" ]; then prisma migrate deploy; fi && node dist/index.js",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev"
   },
