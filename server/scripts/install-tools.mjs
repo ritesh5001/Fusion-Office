@@ -129,6 +129,37 @@ async function installChrome() {
   return installed.executablePath;
 }
 
+/** On the build host itself: report missing system libraries and try a real conversion. */
+function selfTest(paths) {
+  if (process.platform !== "linux") return;
+  const missing = (bin) =>
+    onPath("ldd") && existsSync(bin)
+      ? [...spawnSync("ldd", [bin], { encoding: "utf8" }).stdout.matchAll(/^\s*(\S+) => not found/gm)].map((m) => m[1])
+      : [];
+  if (paths.soffice) {
+    const program = path.dirname(paths.soffice);
+    const libs = [...new Set([...missing(path.join(program, "soffice.bin")), ...missing(path.join(program, "libmergedlo.so"))])];
+    if (libs.length) console.warn(`[install-tools] LibreOffice is missing system libraries: ${libs.join(", ")}`);
+    const dir = path.join(TOOLS, "selftest");
+    rmSync(dir, { recursive: true, force: true });
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(path.join(dir, "test.csv"), "a,b\n1,2\n");
+    const r = spawnSync(
+      paths.soffice,
+      [`-env:UserInstallation=file://${dir}/profile`, "--headless", "--norestore", "--convert-to", "pdf", "--outdir", dir, path.join(dir, "test.csv")],
+      { encoding: "utf8", timeout: 180_000, env: { ...process.env, HOME: dir } },
+    );
+    if (existsSync(path.join(dir, "test.pdf"))) log("self-test: LibreOffice converted a file to PDF");
+    else console.warn(`[install-tools] self-test: LibreOffice failed (${r.status ?? r.error?.message}): ${(r.stderr || "").slice(-800)}`);
+    rmSync(dir, { recursive: true, force: true });
+  }
+  if (paths.chrome) {
+    const libs = missing(paths.chrome);
+    if (libs.length) console.warn(`[install-tools] Chrome is missing system libraries: ${libs.join(", ")}`);
+    else log("self-test: Chrome has all its libraries");
+  }
+}
+
 async function main() {
   const flag = process.env.INSTALL_TOOLS;
   if (flag === "0" || (!process.env.RENDER && flag !== "1")) return;
@@ -164,6 +195,7 @@ async function main() {
 
   writeFileSync(PATHS, JSON.stringify(paths, null, 2));
   log(`wrote ${PATHS}`);
+  selfTest(paths);
 }
 
 main().catch((err) => console.warn(`[install-tools] ${err.message}`));

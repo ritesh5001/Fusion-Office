@@ -16,7 +16,8 @@ function installed(): { soffice?: string; chrome?: string } {
   }
 }
 
-const tools = installed();
+// The downloads are Linux builds.
+const tools = process.platform === "linux" ? installed() : {};
 const usable = (p?: string) => (p && existsSync(p) ? p : undefined);
 
 export const INSTALLED_SOFFICE = usable(tools.soffice);
