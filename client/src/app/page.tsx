@@ -30,14 +30,14 @@ export default function Home() {
   const inBrowser = ready.filter((t) => t.runs === "browser").length;
 
   const strip: { icon: string; swatch: Swatch; title: string; text: string }[] = [
-    { icon: "BadgeCheck", swatch: "green", title: "100% free", text: "No sign-up, no watermarks" },
-    { icon: "ShieldCheck", swatch: "emerald", title: "Private by design", text: "Most tools work in your browser" },
-    { icon: "LayoutGrid", swatch: "blue", title: `${TOOLS.length} tools`, text: "PDF, Office and images in one place" },
+    { icon: "BadgeCheck", swatch: "green", title: "100% free", text: "No sign‑up, no watermarks" },
+    { icon: "ShieldCheck", swatch: "emerald", title: "Private by design", text: "Files stay on your device" },
+    { icon: "LayoutGrid", swatch: "blue", title: `${TOOLS.length} tools`, text: "PDF, Office and images" },
     { icon: "MonitorSmartphone", swatch: "sky", title: "Works on any device", text: "Desktop, tablet and mobile" },
   ];
 
   return (
-    <div className="landing relative min-h-dvh overflow-x-clip">
+    <div className="landing relative min-h-dvh overflow-x-clip" style={{ background: "#fff" }}>
       <a
         href="#all-tools"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-ink focus:px-4 focus:py-2 focus:text-paper"
@@ -46,7 +46,7 @@ export default function Home() {
       </a>
       {/* Soft blue wash behind the hero. */}
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-[820px] bg-[radial-gradient(60%_60%_at_75%_20%,rgb(91_140_255/0.18),transparent_70%),linear-gradient(180deg,#eef3ff_0%,#f4f6fb_60%,transparent_100%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[820px] bg-[radial-gradient(55%_55%_at_78%_30%,rgb(91_140_255/0.16),transparent_70%),linear-gradient(180deg,#eef3ff_0%,#f5f8ff_55%,#ffffff_100%)]"
         aria-hidden="true"
       />
       <div className="relative z-10">
@@ -59,20 +59,25 @@ export default function Home() {
                   <FileCheck2 className="h-4 w-4" aria-hidden="true" />
                   {TOOLS.length} free tools · {inBrowser} work without uploading
                 </p>
-                <h1 className="mx-auto mt-5 text-balance font-display text-[clamp(2.1rem,4.1vw,3.4rem)] font-extrabold leading-[1.08] tracking-[-0.04em] text-ink">
+                <h1 className="mx-auto mt-5 max-w-[600px] text-balance font-display text-[clamp(2.25rem,4.6vw,3.6rem)] font-extrabold leading-[1.04] tracking-[-0.04em] text-ink lg:mx-0">
                   Every tool for your{" "}
-                  <span className="bg-gradient-to-r from-brand-600 via-[#3b6cff] to-[#1aa3ff] bg-clip-text text-transparent lg:block">PDFs, documents and images</span>
+                  <span className="bg-gradient-to-r from-brand-600 via-[#3b6cff] to-[#1aa3ff] bg-clip-text text-transparent">PDFs, documents and images</span>
                 </h1>
-                <p className="mx-auto mt-5 max-w-[48ch] text-pretty text-[17px] leading-relaxed text-ink-soft">
-                  Pick a tool, add your file, download the result. Free, no sign-up, and your files stay on your device.
+                <p className="mx-auto mt-5 max-w-[540px] text-pretty text-[17px] leading-relaxed text-ink-soft lg:mx-0">
+                  Pick a tool, add your file, download the result. Free, no sign‑up, and your files stay on your device.
                 </p>
               </header>
             }
             art
             strip={
-              <ul aria-label="Why Fusion Office" className="mx-auto grid max-w-[1280px] grid-cols-2 gap-x-4 gap-y-5 px-5 pb-12 md:px-8 lg:grid-cols-4">
+              <div className="mx-auto max-w-[1280px] px-5 pb-16 md:px-8">
+                {/* One bar, four equal cells: reads as a single unit under the hero. */}
+                <ul
+                  aria-label="Why Fusion Office"
+                  className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-rule/80 shadow-[0_20px_40px_-30px_rgb(36_71_230/0.45)] ring-1 ring-rule xl:grid-cols-4"
+                >
                 {strip.map((s) => (
-                  <li key={s.title} className="flex flex-col items-start gap-2.5 sm:flex-row sm:items-center sm:gap-3.5">
+                  <li key={s.title} className="flex flex-col items-start gap-3 bg-white px-5 py-5 sm:flex-row sm:items-center sm:gap-3.5 lg:px-6">
                     <Tile swatch={s.swatch} icon={s.icon} size="md" />
                     <span>
                       <span className="block text-[15px] font-bold text-ink">{s.title}</span>
@@ -80,7 +85,8 @@ export default function Home() {
                     </span>
                   </li>
                 ))}
-              </ul>
+                </ul>
+              </div>
             }
           />
 

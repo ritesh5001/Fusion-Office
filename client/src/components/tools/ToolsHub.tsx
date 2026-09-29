@@ -11,7 +11,7 @@ import { HeroArt } from "../landing/HeroArt";
 import { cn } from "../ui/primitives";
 
 /** Shown under the search box: the tools people reach for most. */
-const POPULAR = ["edit-pdf", "merge-pdf", "compress-pdf", "pdf-to-word", "word-to-pdf", "compress-image"];
+const POPULAR = ["edit-pdf", "merge-pdf", "compress-pdf", "pdf-to-word", "compress-image"];
 
 /** Short names for the category tabs. */
 const TAB_LABEL: Record<Category, string> = {
@@ -185,12 +185,13 @@ export function ToolsHub({
         ? { mood: "confused", message: "Hmm, nothing matches. Try “pdf” or “image”." }
         : focused
           ? { mood: "curious", message: "Type what you need: merge, compress, sign…" }
-          : { mood: "idle", message: "Hi, I’m Folio! What are we working on today?" };
+          : { mood: "idle", message: "Hi, I’m Folio! What shall we do today?" };
 
   return (
     <>
-      <section className="mx-auto grid max-w-[1280px] items-center gap-10 px-5 pb-10 pt-10 md:px-8 md:pt-14 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_400px]">
-        <div className="text-center">
+      {/* Hero: with artwork it's a 12-column split (text 7, art 5) sharing one left edge; without, centred. */}
+      <section className={cn("mx-auto grid max-w-[1280px] items-center gap-10 px-5 pb-12 pt-10 md:px-8 md:pt-14", art && "lg:grid-cols-12 lg:gap-12 lg:pb-14 lg:pt-16")}>
+        <div className={cn("text-center", art && "lg:col-span-7 lg:text-left")}>
           {art && (
             <div className="mb-3 flex justify-center lg:hidden">
               <Mascot mood={finder.mood} size={84} interactive />
@@ -200,7 +201,7 @@ export function ToolsHub({
           <form
             id="search"
             role="search"
-            className="mx-auto mt-8 max-w-[620px] scroll-mt-28"
+            className={cn("mx-auto mt-8 max-w-[620px] scroll-mt-28", art && "lg:mx-0 lg:max-w-[640px]")}
             onSubmit={(e) => {
               e.preventDefault();
               if (words.length && firstReady) router.push(href(firstReady));
@@ -221,7 +222,7 @@ export function ToolsHub({
                 onKeyDown={(e) => e.key === "Escape" && setQuery("")}
                 onFocus={() => setFocused(true)}
                 onBlur={() => setFocused(false)}
-                placeholder="Search tools (e.g. merge PDF, compress image)"
+                placeholder="Search tools, e.g. merge PDF"
                 autoComplete="off"
                 enterKeyHint="search"
                 className="h-11 min-w-0 flex-1 bg-transparent px-3 text-[16px] text-ink outline-none placeholder:text-ink-soft/80 focus-visible:outline-none [&::-webkit-search-cancel-button]:hidden"
@@ -248,15 +249,19 @@ export function ToolsHub({
               </button>
             </div>
           </form>
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-[13px]">
+          <div className={cn("mt-4 flex flex-wrap items-center justify-center gap-2 text-[13px]", art && "lg:max-w-[640px] lg:justify-start")}>
             <span className="font-medium text-ink">Popular:</span>
-            {POPULAR.map((slug) => {
+            {POPULAR.map((slug, i) => {
               const t = toolBySlug(slug);
               return t ? (
                 <Link
                   key={slug}
                   href={href(t)}
-                  className="rounded-lg bg-white px-3 py-1.5 text-ink shadow-sm ring-1 ring-rule transition hover:text-brand-700 hover:ring-brand-600"
+                  // At laptop widths the split column only fits four chips on one line.
+                  className={cn(
+                    i === POPULAR.length - 1 && art && "lg:max-xl:hidden",
+                    "rounded-lg bg-white px-3 py-1.5 text-ink shadow-sm ring-1 ring-rule transition hover:text-brand-700 hover:ring-brand-600",
+                  )}
                 >
                   {t.name}
                 </Link>
@@ -265,7 +270,7 @@ export function ToolsHub({
           </div>
         </div>
         {art && (
-          <div className="hidden lg:block">
+          <div className="hidden lg:col-span-5 lg:block">
             <HeroArt mood={finder.mood} message={finder.message} />
           </div>
         )}
@@ -273,7 +278,7 @@ export function ToolsHub({
 
       {strip}
 
-      <section ref={list} aria-labelledby="all-tools" className="scroll-mt-16 border-t border-rule bg-white">
+      <section ref={list} aria-labelledby="all-tools" className="scroll-mt-16 bg-white">
         <div className="mx-auto max-w-[1280px] px-5 pb-20 pt-12 md:px-8">
           <h2 id="all-tools" className="scroll-mt-24 font-display text-[clamp(1.6rem,3vw,2rem)] font-bold tracking-[-0.03em]">
             {title}
