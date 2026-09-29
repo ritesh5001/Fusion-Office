@@ -2,11 +2,12 @@
 
 import dynamic from "next/dynamic";
 import { toolBySlug } from "@/lib/tools/registry";
+import { isCustomTool, type CustomTool } from "@/lib/tools/custom";
 import { SPECS } from "./specs";
 import { ToolRunner } from "./ToolRunner";
 
 // Tools with their own interface (browser-only, so no server rendering).
-const CUSTOM: Record<string, React.ComponentType> = {
+const CUSTOM: Record<CustomTool, React.ComponentType> = {
   "organize-pdf": dynamic(() => import("./custom/OrganizeTool").then((m) => m.OrganizeTool), { ssr: false }),
   "crop-pdf": dynamic(() => import("./custom/CropTool").then((m) => m.CropTool), { ssr: false }),
   "pdf-forms": dynamic(() => import("./custom/FormsTool").then((m) => m.FormsTool), { ssr: false }),
@@ -20,8 +21,10 @@ const CUSTOM: Record<string, React.ComponentType> = {
 };
 
 export function ToolClient({ slug }: { slug: string }) {
-  const Custom = CUSTOM[slug];
-  if (Custom) return <Custom />;
+  if (isCustomTool(slug)) {
+    const Custom = CUSTOM[slug];
+    return <Custom />;
+  }
   const tool = toolBySlug(slug);
   const spec = SPECS[slug];
   if (!tool || !spec) return null;

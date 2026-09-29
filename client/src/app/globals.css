@@ -120,6 +120,16 @@ input[type="color"]::-moz-color-swatch {
   to { background-position: calc(50% + 24px) 0, 0 0; }
 }
 
+/* Hero artwork: tiles drift gently, each on its own rhythm. */
+.float-a { animation: float 6s ease-in-out infinite; }
+.float-b { animation: float 7.5s ease-in-out -2s infinite; }
+.float-c { animation: float 5.5s ease-in-out -1s infinite; }
+.float-slow { animation: float 9s ease-in-out -3s infinite; }
+@keyframes float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -10px; }
+}
+
 @media (pointer: coarse) {
   .landing .btn {
     min-height: 44px;
@@ -127,7 +137,11 @@ input[type="color"]::-moz-color-swatch {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .landing-env {
+  .landing-env,
+  .float-a,
+  .float-b,
+  .float-c,
+  .float-slow {
     animation: none !important;
   }
 }

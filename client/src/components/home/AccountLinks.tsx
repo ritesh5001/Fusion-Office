@@ -1,25 +1,49 @@
 "use client";
 
 import Link from "next/link";
+import { FileText } from "lucide-react";
 import { signInUrl, signOutUrl, useCloudConfig } from "@/lib/cloudConfig";
 
-/** Sign in / My documents / Sign out — shown only when the backend has auth on. */
+/** My Documents / avatar / Sign in — shown only when the backend has auth on. */
 export function AccountLinks() {
   const { authEnabled, user, loading } = useCloudConfig();
   if (loading || !authEnabled) return null;
-  const cls = "h-9 rounded-md px-3 text-sm leading-9 text-slate-600 hover:bg-slate-100";
-  return user ? (
+  const docs = (
+    <Link
+      href="/dashboard"
+      className="hidden h-10 items-center gap-1.5 rounded-full px-4 text-[14px] font-medium text-brand-700 ring-1 ring-brand-200 transition-colors hover:bg-brand-50 md:inline-flex"
+    >
+      <FileText className="h-4 w-4" aria-hidden="true" />
+      My Documents
+    </Link>
+  );
+  if (!user) {
+    return (
+      <>
+        {docs}
+        <a href={signInUrl("/dashboard")} className="h-10 rounded-full px-4 text-[14px] font-medium leading-10 text-ink hover:bg-paper-deep">
+          Sign in
+        </a>
+      </>
+    );
+  }
+  const initial = (user.name || user.email || "?").trim().charAt(0).toUpperCase();
+  return (
     <>
-      <Link href="/dashboard" className={cls}>
-        My documents
-      </Link>
-      <a href={signOutUrl()} className={cls}>
-        Sign out
+      {docs}
+      <a
+        href={signOutUrl()}
+        title={`Signed in as ${user.email ?? user.name ?? "you"} · Sign out`}
+        aria-label="Sign out"
+        className="order-last flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-slate-500 to-slate-700 text-[14px] font-semibold text-white ring-2 ring-white"
+      >
+        {user.image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={user.image} alt="" className="h-full w-full object-cover" />
+        ) : (
+          initial
+        )}
       </a>
     </>
-  ) : (
-    <a href={signInUrl("/dashboard")} className="h-9 rounded-md border border-slate-200 bg-white px-3.5 text-sm font-medium leading-9 text-slate-700 hover:bg-slate-50">
-      Sign in
-    </a>
   );
 }

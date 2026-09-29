@@ -2,9 +2,9 @@
 
 import { forwardRef, useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
 
-export function cn(...parts: (string | false | null | undefined)[]) {
-  return parts.filter(Boolean).join(" ");
-}
+import { cn } from "@/lib/cn";
+
+export { cn };
 
 type IconButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   label: string;

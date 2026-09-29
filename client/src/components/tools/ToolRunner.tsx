@@ -134,14 +134,14 @@ export function ToolRunner<O>({ tool, spec }: { tool: ToolDef; spec: ToolSpec<O>
             <Loader2 className="h-6 w-6 animate-spin text-ink-soft" aria-label="Loading files" />
           </div>
         ) : (
-          <Dropzone accept={tool.accept} multiple={tool.multiple} onFiles={add} label={tool.multiple ? "Select files" : "Select file"} />
+          <Dropzone accept={tool.accept} multiple={tool.multiple} onFiles={add} label={tool.multiple ? "Choose files" : "Choose a file"} />
         )
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+        <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
           <div className="space-y-4">
             {!spec.noFiles && (
               <>
-                <ul className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                <ul className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
                   {files.map((f, i) => (
                     <li key={f.id} className="group relative flex flex-col overflow-hidden rounded-xl bg-white ring-1 ring-ink/10">
                       <div className="flex h-40 items-center justify-center bg-paper-deep p-3">
@@ -187,7 +187,7 @@ export function ToolRunner<O>({ tool, spec }: { tool: ToolDef; spec: ToolSpec<O>
               </>
             )}
           </div>
-          <aside className="h-fit rounded-2xl bg-white p-5 ring-1 ring-ink/10 lg:sticky lg:top-24">
+          <aside className="h-fit rounded-2xl bg-white p-5 ring-1 ring-ink/10 xl:sticky xl:top-24">
             {Options && (
               <div className="space-y-4">
                 <Options options={options} set={(patch) => setOptions((o) => ({ ...o, ...patch }))} files={files} />

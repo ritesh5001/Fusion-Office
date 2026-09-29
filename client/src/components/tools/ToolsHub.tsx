@@ -2,14 +2,40 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Search, Server, Sparkles, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { ArrowRight, Search, Server, Sparkles, X } from "lucide-react";
 import { CATEGORIES, TOOLS, toolBySlug, type Category, type ToolDef } from "@/lib/tools/registry";
-import { CATEGORY_TINT, ToolIcon } from "./icons";
+import { Tile, ToolTile } from "./icons";
 import { cn } from "../ui/primitives";
 
 /** Shown under the search box: the tools people reach for most. */
 const POPULAR = ["edit-pdf", "merge-pdf", "compress-pdf", "pdf-to-word", "word-to-pdf", "compress-image"];
+
+/** Short names for the category tabs. */
+const TAB_LABEL: Record<Category, string> = {
+  office: "Office",
+  organize: "Organize",
+  optimize: "Optimize",
+  "convert-to": "Convert to PDF",
+  "convert-from": "Convert from PDF",
+  edit: "Edit",
+  security: "Security",
+  intelligence: "Intelligence",
+  image: "Images",
+};
+
+/** Section headings in the full list. */
+const HEADING: Record<Category, string> = {
+  office: "Word, Excel, PowerPoint",
+  organize: "Organize PDF",
+  optimize: "Optimize PDF",
+  "convert-to": "Convert to PDF",
+  "convert-from": "Convert from PDF",
+  edit: "Edit & sign PDF",
+  security: "PDF security",
+  intelligence: "AI & compare",
+  image: "Image tools",
+};
 
 /** Words people type that don't appear in the tool names. */
 const SYNONYMS: Record<string, string> = {
@@ -49,9 +75,6 @@ const SYNONYMS: Record<string, string> = {
   kb: "compress resize",
 };
 
-/** Shorter names for the category bar, so it fits on one row. */
-const TAB_LABEL: Partial<Record<Category, string>> = { office: "Office" };
-
 const href = (t: ToolDef) => t.href ?? `/tools/${t.slug}`;
 
 /** Every word must match the tool's name, description or category (directly or through a synonym). */
@@ -66,11 +89,16 @@ function rank(t: ToolDef, words: string[]) {
   return (words.every((w) => name.includes(w)) ? 0 : 1) * 2 + (t.status === "soon" ? 1 : 0);
 }
 
-export function ToolsHub({ showSearch = true }: { showSearch?: boolean }) {
+/**
+ * The tool finder: hero search (with the page's intro and artwork around it)
+ * and the categorised list of every tool. Both share the search state.
+ */
+export function ToolsHub({ intro, art, strip, title = "All tools" }: { intro?: ReactNode; art?: ReactNode; strip?: ReactNode; title?: string }) {
   const router = useRouter();
   const [cat, setCat] = useState<Category | "all">("all");
   const [query, setQuery] = useState("");
   const input = useRef<HTMLInputElement>(null);
+  const list = useRef<HTMLElement>(null);
 
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
   const results = useMemo(() => {
@@ -81,7 +109,6 @@ export function ToolsHub({ showSearch = true }: { showSearch?: boolean }) {
 
   // "/" jumps to search from anywhere on the page, like most tool sites.
   useEffect(() => {
-    if (!showSearch) return;
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement;
       if (e.key !== "/" || e.metaKey || e.ctrlKey || el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
@@ -90,28 +117,54 @@ export function ToolsHub({ showSearch = true }: { showSearch?: boolean }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [showSearch]);
+  }, []);
+
+  // Links into the page (#search from the header, #cat-… from the menus) show the full list first.
+  useEffect(() => {
+    const onHash = () => {
+      const hash = window.location.hash;
+      if (hash === "#search") {
+        input.current?.focus({ preventScroll: true });
+        input.current?.scrollIntoView({ block: "center" });
+      } else if (hash.startsWith("#cat-")) {
+        setCat("all");
+        setQuery("");
+        requestAnimationFrame(() => document.getElementById(hash.slice(1))?.scrollIntoView());
+      }
+    };
+    onHash();
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
+  const show = (c: Category | "all") => {
+    setCat(c);
+    list.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const firstReady = results.find((t) => t.status === "ready");
   const grouped = cat === "all" && !words.length;
 
   return (
-    <div>
-      {showSearch && (
-        <div>
+    <>
+      <section className="mx-auto grid max-w-[1280px] items-center gap-10 px-5 pb-10 pt-10 md:px-8 md:pt-14 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_400px]">
+        <div className="text-center">
+          {intro}
           <form
-            className="mx-auto max-w-[640px]"
+            id="search"
             role="search"
+            className="mx-auto mt-8 max-w-[620px] scroll-mt-28"
             onSubmit={(e) => {
               e.preventDefault();
               if (words.length && firstReady) router.push(href(firstReady));
+              else list.current?.scrollIntoView({ behavior: "smooth", block: "start" });
             }}
           >
             <label htmlFor="tool-search" className="sr-only">
               Search tools
             </label>
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-soft" aria-hidden="true" />
+            <div className="relative flex items-center rounded-2xl bg-white p-1.5 shadow-[0_18px_40px_-24px_rgb(36_71_230/0.45)] ring-1 ring-ink/10 transition focus-within:ring-2 focus-within:ring-brand-600">
+              <Search className="pointer-events-none ml-3.5 h-5 w-5 shrink-0 text-ink-soft" aria-hidden="true" />
               <input
                 ref={input}
                 id="tool-search"
@@ -119,116 +172,139 @@ export function ToolsHub({ showSearch = true }: { showSearch?: boolean }) {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Escape" && setQuery("")}
-                placeholder="Search tools: merge, compress, jpg…"
+                placeholder="Search tools (e.g. merge PDF, compress image)"
                 autoComplete="off"
-                enterKeyHint="go"
-                className="h-14 w-full rounded-2xl bg-white pl-13 pr-14 text-[16px] text-ink shadow-[0_10px_30px_-18px_rgb(16_19_26/0.35)] ring-1 ring-ink/10 outline-none transition placeholder:text-ink-soft/80 focus-visible:outline-none focus:ring-2 focus:ring-brand-600 [&::-webkit-search-cancel-button]:hidden"
+                enterKeyHint="search"
+                className="h-11 min-w-0 flex-1 bg-transparent px-3 text-[16px] text-ink outline-none placeholder:text-ink-soft/80 focus-visible:outline-none [&::-webkit-search-cancel-button]:hidden"
               />
-              {query ? (
+              {query && (
                 <button
                   type="button"
                   onClick={() => {
                     setQuery("");
                     input.current?.focus();
                   }}
-                  className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-ink-soft hover:bg-paper-deep hover:text-ink"
+                  className="mr-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-soft hover:bg-paper-deep hover:text-ink"
                   aria-label="Clear search"
                 >
                   <X className="h-4 w-4" aria-hidden="true" />
                 </button>
-              ) : (
-                <kbd className="pointer-events-none absolute right-4 top-1/2 hidden -translate-y-1/2 rounded-md bg-paper-deep px-2 py-0.5 font-mono text-[12px] text-ink-soft ring-1 ring-rule sm:block">/</kbd>
               )}
+              <button
+                type="submit"
+                className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl bg-brand-600 px-4 text-[14px] font-semibold text-white transition-colors hover:bg-brand-700 sm:px-5"
+              >
+                <Search className="h-4 w-4 sm:hidden" aria-hidden="true" />
+                <span className="sr-only sm:not-sr-only">Search</span>
+              </button>
             </div>
           </form>
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[13px]">
-            <span className="text-ink-soft">Popular:</span>
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-[13px]">
+            <span className="font-medium text-ink">Popular:</span>
             {POPULAR.map((slug) => {
               const t = toolBySlug(slug);
               return t ? (
-                <Link key={slug} href={href(t)} className="rounded-full bg-white px-3 py-1.5 text-ink ring-1 ring-rule transition hover:ring-brand-600 hover:text-brand-700">
+                <Link
+                  key={slug}
+                  href={href(t)}
+                  className="rounded-lg bg-white px-3 py-1.5 text-ink shadow-sm ring-1 ring-rule transition hover:text-brand-700 hover:ring-brand-600"
+                >
                   {t.name}
                 </Link>
               ) : null;
             })}
           </div>
         </div>
-      )}
+        {art && <div className="hidden lg:block">{art}</div>}
+      </section>
 
-      {/* Category bar: stays under the header while scrolling through the tools. */}
-      <div className="sticky top-16 z-30 mx-[calc(50%-50vw)] mt-12 border-b border-rule bg-paper/90 py-3 backdrop-blur-md">
-        <div role="tablist" aria-label="Tool categories" className="-my-1 overflow-x-auto px-5 py-1 [scrollbar-width:none] md:px-8">
-          <div className="mx-auto flex w-max gap-2">
-          {[{ id: "all" as const, label: "All tools" }, ...CATEGORIES].map((c) => {
-            const count = c.id === "all" ? TOOLS.length : TOOLS.filter((t) => t.category === c.id).length;
-            return (
-              <button
-                key={c.id}
-                type="button"
-                role="tab"
-                aria-selected={cat === c.id}
-                onClick={() => setCat(c.id)}
-                className={cn(
-                  "h-9 shrink-0 whitespace-nowrap rounded-full px-4 text-[13px] font-medium transition-colors",
-                  cat === c.id ? "bg-ink text-paper" : "bg-white text-ink ring-1 ring-rule hover:ring-rule-strong",
-                )}
-              >
-                {c.id === "all" ? c.label : (TAB_LABEL[c.id] ?? c.label)}
-                <span className={cn("ml-1.5 tabular-nums", cat === c.id ? "text-paper/60" : "text-ink-soft")}>{count}</span>
-              </button>
-            );
-          })}
+      {strip}
+
+      <section ref={list} aria-labelledby="all-tools" className="scroll-mt-16 border-t border-rule bg-white">
+        <div className="mx-auto max-w-[1280px] px-5 pb-20 pt-12 md:px-8">
+          <h2 id="all-tools" className="font-display text-[clamp(1.6rem,3vw,2rem)] font-bold tracking-[-0.03em]">
+            {title}
+          </h2>
+
+          {/* Category tabs: stay under the header while scrolling. */}
+          <div className="sticky top-16 z-30 -mx-5 mt-5 bg-white/95 px-5 py-3 backdrop-blur-md md:-mx-8 md:px-8">
+            <div role="tablist" aria-label="Tool categories" className="-my-1 flex gap-2 overflow-x-auto py-1 [scrollbar-width:none]">
+              {[{ id: "all" as const, label: "All Tools" }, ...CATEGORIES.map((c) => ({ id: c.id, label: TAB_LABEL[c.id] }))].map((c) => {
+                const count = c.id === "all" ? TOOLS.length : TOOLS.filter((t) => t.category === c.id).length;
+                const on = cat === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={on}
+                    onClick={() => setCat(c.id)}
+                    className={cn(
+                      "flex min-w-[76px] shrink-0 flex-col items-center justify-center rounded-xl px-3.5 py-2 text-[13px] font-medium leading-tight transition",
+                      on ? "bg-brand-600 text-white shadow-[0_8px_18px_-10px_rgb(47_84_235/0.9)]" : "bg-white text-ink ring-1 ring-rule hover:ring-brand-600/60",
+                    )}
+                  >
+                    <span className="whitespace-nowrap">{c.label}</span>
+                    <span className={cn("mt-0.5 text-[12px] tabular-nums", on ? "text-white/75" : "text-ink-soft")}>{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <p className="sr-only" aria-live="polite">
+            {words.length ? `${results.length} tools match “${query}”` : ""}
+          </p>
+
+          <div className="mt-6">
+            {results.length === 0 ? (
+              <div className="rounded-2xl bg-paper px-6 py-14 text-center">
+                <p className="text-[16px] font-semibold">No tool matches “{query}”.</p>
+                <p className="mt-1 text-[14px] text-ink-soft">Try a simpler word, like “pdf”, “image” or “convert”.</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery("");
+                    setCat("all");
+                  }}
+                  className="mt-5 h-10 rounded-full bg-brand-600 px-5 text-[14px] font-semibold text-white hover:bg-brand-700"
+                >
+                  Show all tools
+                </button>
+              </div>
+            ) : grouped ? (
+              <div className="space-y-12">
+                {CATEGORIES.map((c) => {
+                  const inCat = results.filter((t) => t.category === c.id);
+                  return inCat.length ? (
+                    <section key={c.id} id={`cat-${c.id}`} aria-labelledby={`cat-${c.id}-title`} className="scroll-mt-40">
+                      <div className="flex items-center justify-between gap-4">
+                        <h3 id={`cat-${c.id}-title`} className="text-[20px] font-bold tracking-[-0.02em]">
+                          {HEADING[c.id]}
+                        </h3>
+                        <button type="button" onClick={() => show(c.id)} className="inline-flex items-center gap-1 text-[13px] font-medium text-brand-700 hover:underline">
+                          View all <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                        </button>
+                      </div>
+                      <ToolGrid tools={inCat} />
+                    </section>
+                  ) : null;
+                })}
+                <WorkflowCard />
+              </div>
+            ) : (
+              <ToolGrid tools={results} />
+            )}
           </div>
         </div>
-      </div>
-
-      <p className="sr-only" aria-live="polite">
-        {words.length ? `${results.length} tools match “${query}”` : ""}
-      </p>
-
-      <div className="mt-8">
-        {results.length === 0 ? (
-          <div className="rounded-2xl bg-white px-6 py-14 text-center ring-1 ring-ink/10">
-            <p className="text-[16px] font-medium">No tool matches “{query}”.</p>
-            <p className="mt-1 text-[14px] text-ink-soft">Try a simpler word, like “pdf”, “image” or “convert”.</p>
-            <button
-              type="button"
-              onClick={() => {
-                setQuery("");
-                setCat("all");
-              }}
-              className="mt-5 h-10 rounded-full bg-ink px-5 text-[14px] font-medium text-paper hover:bg-ink/85"
-            >
-              Show all tools
-            </button>
-          </div>
-        ) : grouped ? (
-          <div className="space-y-12">
-            {CATEGORIES.map((c) => {
-              const list = results.filter((t) => t.category === c.id);
-              return list.length ? (
-                <section key={c.id} aria-labelledby={`cat-${c.id}`}>
-                  <h2 id={`cat-${c.id}`} className="flex items-baseline gap-2 text-[15px] font-semibold tracking-[-0.01em]">
-                    {c.label}
-                    <span className="text-[13px] font-normal text-ink-soft">{list.length}</span>
-                  </h2>
-                  <ToolGrid tools={list} />
-                </section>
-              ) : null;
-            })}
-            <WorkflowCard />
-          </div>
-        ) : (
-          <ToolGrid tools={results} />
-        )}
-      </div>
-    </div>
+      </section>
+    </>
   );
 }
 
 function ToolGrid({ tools }: { tools: ToolDef[] }) {
   return (
-    <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {tools.map((t) => (
         <li key={t.slug}>
           <ToolCard tool={t} />
@@ -242,17 +318,15 @@ function ToolCard({ tool: t }: { tool: ToolDef }) {
   const soon = t.status === "soon";
   const body = (
     <>
-      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${CATEGORY_TINT[t.category]}`}>
-        <ToolIcon name={t.icon} className="h-5 w-5" />
-      </span>
-      <span className="min-w-0">
+      <ToolTile tool={t} size="lg" />
+      <span className="flex min-w-0 flex-1 flex-col">
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="text-[15px] font-semibold tracking-[-0.01em] text-ink">{t.name}</span>
+          <span className="text-[16px] font-bold tracking-[-0.01em] text-ink">{t.name}</span>
           {soon ? (
             <span className="rounded-full bg-paper-deep px-2 py-0.5 text-[11px] font-medium text-ink-soft">Soon</span>
           ) : t.runs !== "browser" ? (
             <span
-              className="inline-flex items-center gap-1 rounded-full bg-paper-deep px-2 py-0.5 text-[11px] text-ink-soft"
+              className="inline-flex items-center gap-1 rounded-full bg-paper-deep px-2 py-0.5 text-[11px] font-medium text-ink-soft"
               title={t.runs === "ai" ? "Uses AI on our server" : "Converted on our server, then deleted"}
             >
               {t.runs === "ai" ? <Sparkles className="h-3 w-3" aria-hidden="true" /> : <Server className="h-3 w-3" aria-hidden="true" />}
@@ -260,17 +334,22 @@ function ToolCard({ tool: t }: { tool: ToolDef }) {
             </span>
           ) : null}
         </span>
-        <span className="mt-1 line-clamp-2 block text-[13px] leading-snug text-ink-soft">{t.description}</span>
+        <span className="mt-1 line-clamp-2 text-[13px] leading-snug text-ink-soft">{t.description}</span>
+        {!soon && (
+          <span className="mt-3 inline-flex w-fit items-center gap-1 rounded-lg bg-brand-50 px-3 py-1.5 text-[13px] font-semibold text-brand-700 transition-colors group-hover:bg-brand-600 group-hover:text-white">
+            Open Tool <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+          </span>
+        )}
       </span>
     </>
   );
-  const cls = "flex h-full items-start gap-3.5 rounded-2xl bg-white p-4 ring-1 ring-ink/10 transition";
+  const cls = "group flex h-full items-start gap-4 rounded-2xl bg-white p-5 ring-1 ring-ink/10 transition";
   return soon ? (
     <div className={cn(cls, "opacity-60")} aria-disabled="true">
       {body}
     </div>
   ) : (
-    <Link href={href(t)} className={cn(cls, "hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-18px_rgb(16_19_26/0.45)] hover:ring-brand-600/50")}>
+    <Link href={href(t)} className={cn(cls, "hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-22px_rgb(16_19_26/0.4)] hover:ring-brand-600/40")}>
       {body}
     </Link>
   );
@@ -280,16 +359,16 @@ function WorkflowCard() {
   return (
     <Link
       href="/tools/workflows"
-      className="flex flex-col items-start gap-4 rounded-2xl bg-ink p-5 text-paper transition hover:bg-ink/90 sm:flex-row sm:items-center"
+      className="group flex flex-col items-start gap-4 rounded-2xl bg-gradient-to-r from-[#1e2a78] to-brand-600 p-6 text-white transition hover:shadow-[0_20px_40px_-20px_rgb(47_84_235/0.8)] sm:flex-row sm:items-center"
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10">
-        <ToolIcon name="Workflow" className="h-5 w-5" />
-      </span>
+      <Tile swatch="indigo" icon="Workflow" size="lg" />
       <span className="flex-1">
-        <span className="block text-[15px] font-semibold">Do the same steps often?</span>
-        <span className="mt-0.5 block text-[13px] text-white/65">Chain tools into a workflow, save it, and run it on any PDF in one go.</span>
+        <span className="block text-[17px] font-bold">Do the same steps often?</span>
+        <span className="mt-0.5 block text-[14px] text-white/75">Chain tools into a workflow, save it, and run it on any PDF in one go.</span>
       </span>
-      <span className="rounded-full bg-white px-4 py-2 text-[13px] font-medium text-ink">Create a workflow</span>
+      <span className="inline-flex items-center gap-1 rounded-xl bg-white px-4 py-2.5 text-[14px] font-semibold text-brand-700">
+        Create a workflow <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+      </span>
     </Link>
   );
 }
