@@ -8,6 +8,7 @@ import type { DocumentState, EditorPage } from "./types";
 import { clearSources, loadPdfSource, readFileBytes, registerSource } from "../pdf/sources";
 import { exportPdf, imageToPdfBytes, type ExportOptions } from "../pdf/exporter";
 import { loadDocumentLocal, saveDocumentLocal, saveSourceLocal } from "../storage/local";
+import { flushLiveText } from "./liveText";
 
 export const MAX_FILE_MB = Number(process.env.NEXT_PUBLIC_MAX_FILE_MB ?? 200);
 
@@ -128,6 +129,7 @@ export function placeImage(src: string, width: number, height: number, opts: { i
 const baseName = () => (useEditor.getState().doc?.name ?? "document.pdf").replace(/\.pdf$/i, "");
 
 export async function exportDocument(opts: ExportOptions = {}): Promise<Uint8Array> {
+  flushLiveText();
   const { doc } = useEditor.getState();
   if (!doc) throw new Error("No document open");
   return exportPdf(doc, opts);
@@ -139,6 +141,7 @@ export async function downloadDocument(opts: ExportOptions = {}) {
 }
 
 export async function extractPages(pageIds: string[]) {
+  flushLiveText();
   const { doc } = useEditor.getState();
   if (!doc || pageIds.length === 0) return;
   const bytes = await exportPdf(doc, { pageIds });
@@ -151,6 +154,7 @@ export async function extractPages(pageIds: string[]) {
 
 /** Split into several files. `groups` are lists of 0-based page indexes. */
 export async function splitDocument(groups: number[][]) {
+  flushLiveText();
   const { doc } = useEditor.getState();
   if (!doc) return;
   for (const [n, group] of groups.entries()) {

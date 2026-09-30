@@ -72,9 +72,12 @@ export interface TextObject extends Positioned {
 }
 
 export interface CharStyle {
+  /** The PDF's own font for this letter; "" means a standard font (the letter was restyled). */
   pdfFont?: string;
   bold?: boolean;
   italic?: boolean;
+  underline?: boolean;
+  color?: string;
 }
 
 /** The original text a replacement stands in for. */

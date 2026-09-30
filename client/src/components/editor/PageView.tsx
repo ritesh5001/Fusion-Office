@@ -19,7 +19,8 @@ import { renderPage } from "@/lib/pdf/renderer";
 import { getTextLines, textRectsBetween, type TextLine } from "@/lib/pdf/text";
 import { sampleTextColors } from "@/lib/pdf/colors";
 import { createLine, createShape, createText, newId } from "@/lib/editor/objects";
-import { findById, pathToLocalD, readFabricObject, syncCanvas, type Tagged } from "@/lib/editor/fabricAdapter";
+import { findById, fitLineWidth, pathToLocalD, readFabricObject, syncCanvas, type Tagged } from "@/lib/editor/fabricAdapter";
+import { setLiveText } from "@/lib/editor/liveText";
 import { linePath } from "@/lib/pdf/geometry";
 
 const DRAG_TOOLS: ToolId[] = ["rect", "ellipse", "triangle", "line", "arrow", "redact", "whiteout", "highlight", "underline", "strikeout"];
@@ -522,32 +523,27 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
   // processor) instead of wrapping onto a second line, up to the page edge.
   const onTextChanged = (opt: { target: FabricObject }) => {
     const tb = opt.target;
-    const model = (tb as Tagged).__model;
-    if (!(tb instanceof Textbox) || model?.type !== "text" || !model.replaces || tb.angle) return;
-    const hardLines = tb.text.split("\n").length;
-    if (tb.textLines.length <= hardLines) return; // nothing wrapped
-    const sx = tb.scaleX || 1;
-    const half = (tb.width * sx) / 2;
-    const leftEdge = tb.left - half;
-    const rightEdge = tb.left + half;
-    const pageW = viewSize(getPage()).width;
-    const margin = 4;
-    // Room available from the edge that stays put.
-    const room = (tb.textAlign === "right" ? rightEdge - margin : tb.textAlign === "center" ? 2 * Math.min(tb.left, pageW - tb.left) - 2 * margin : pageW - margin - leftEdge) / sx;
-    if (room <= tb.width) return;
-    tb.set({ width: room });
-    tb.initDimensions();
-    const natural = Math.min(room, Math.ceil(tb.calcTextWidth()) + 2);
-    tb.set({ width: natural });
-    tb.initDimensions();
-    const w = natural * sx;
-    tb.set({ left: tb.textAlign === "right" ? rightEdge - w / 2 : tb.textAlign === "center" ? tb.left : leftEdge + w / 2 });
-    tb.setCoords();
-    canvas.requestRenderAll();
+    if (tb instanceof Textbox) fitLineWidth(tb, viewSize(getPage()).width);
+  };
+
+  // Let the properties panel format the selected letters of the box being edited.
+  const onEditingEntered = (opt: { target: FabricObject }) => {
+    const t = opt.target as Tagged;
+    const model = t.__model;
+    if (!(t instanceof Textbox) || model?.type !== "text") return;
+    setLiveText({
+      id: model.id,
+      tb: t,
+      commit: (label = "Edit text") => {
+        const next = readFabricObject(t);
+        st().replaceObjects(getPage().id, [next], label, `new:${next.id}`);
+      },
+    });
   };
 
   const onEditingExited = (opt: { target: FabricObject }) => {
     lastEditExit = Date.now();
+    setLiveText(null);
     const t = opt.target as Tagged;
     const model = t.__model;
     if (!model || model.type !== "text") return;
@@ -566,7 +562,12 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
     // Emptying a replacement means "delete this text from the PDF", so keep it.
     if (!next.text.trim() && !model.replaces) {
       st().deleteObjects(getPage().id, [model.id], key);
-    } else if (next.text !== model.text || Math.abs(next.height - model.height) > 0.5 || Math.abs(next.width - model.width) > 0.5) {
+    } else if (
+      next.text !== model.text ||
+      Math.abs(next.height - model.height) > 0.5 ||
+      Math.abs(next.width - model.width) > 0.5 ||
+      JSON.stringify(next.charStyles ?? null) !== JSON.stringify(model.charStyles ?? null)
+    ) {
       st().replaceObjects(getPage().id, [next], "Edit text", key);
     }
   };
@@ -591,6 +592,7 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
   canvas.on("path:created", onPathCreated as never);
   canvas.on("object:modified", onModified);
   canvas.on("text:changed", onTextChanged as never);
+  canvas.on("text:editing:entered", onEditingEntered as never);
   canvas.on("text:editing:exited", onEditingExited as never);
   canvas.on("selection:created", onSelection);
   canvas.on("selection:updated", onSelection);

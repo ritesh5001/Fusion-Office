@@ -14,6 +14,7 @@ import {
   util,
 } from "fabric";
 import type {
+  CharStyle,
   CommentObject,
   EditorObject,
   EditorPage,
@@ -41,9 +42,24 @@ export const CSS_FONTS: Record<FontFamily, string> = {
  * CSS font for text: the PDF's own font face (loaded by pdf.js when the page
  * rendered) first, the standard family as the fallback for missing letters.
  */
-const cssFont = (pdfFont: string | undefined, family: FontFamily) => (pdfFont ? `"${pdfFont}", ${CSS_FONTS[family]}` : CSS_FONTS[family]);
+export const cssFont = (pdfFont: string | undefined, family: FontFamily) => (pdfFont ? `"${pdfFont}", ${CSS_FONTS[family]}` : CSS_FONTS[family]);
 
-type FabricCharStyle = { fontFamily?: string; fontWeight?: string; fontStyle?: string; foFont?: string; foBold?: boolean; foItalic?: boolean };
+/**
+ * A letter's Fabric style. The fo* fields remember what the model said (Fabric
+ * copies them to newly typed letters), so styles survive the round trip.
+ */
+export type FabricCharStyle = {
+  fontFamily?: string;
+  fontWeight?: string;
+  fontStyle?: string;
+  underline?: boolean;
+  fill?: string;
+  foFont?: string;
+  foBold?: boolean;
+  foItalic?: boolean;
+  foUnderline?: boolean;
+  foColor?: string;
+};
 
 /** Model char styles → Fabric's. The PDF's bold face is already bold, so no synthetic bold on top. */
 function toFabricStyles(o: TextObject): Record<number, Record<number, FabricCharStyle>> {
@@ -53,13 +69,16 @@ function toFabricStyles(o: TextObject): Record<number, Record<number, FabricChar
     for (const [ch, st] of Object.entries(chars)) {
       const bold = st.bold ?? o.bold;
       const italic = st.italic ?? o.italic;
+      const pdfFont = st.pdfFont ?? o.pdfFont; // "" = standard font
       row[Number(ch)] = {
-        fontFamily: cssFont(st.pdfFont ?? o.pdfFont, o.fontFamily),
-        fontWeight: st.pdfFont ?? o.pdfFont ? "normal" : bold ? "bold" : "normal",
-        fontStyle: st.pdfFont ?? o.pdfFont ? "normal" : italic ? "italic" : "normal",
+        fontFamily: cssFont(pdfFont, o.fontFamily),
+        fontWeight: pdfFont ? "normal" : bold ? "bold" : "normal",
+        fontStyle: pdfFont ? "normal" : italic ? "italic" : "normal",
         foFont: st.pdfFont,
         foBold: st.bold,
         foItalic: st.italic,
+        ...(st.underline !== undefined && { underline: st.underline, foUnderline: st.underline }),
+        ...(st.color && { fill: st.color, foColor: st.color }),
       };
     }
     out[Number(line)] = row;
@@ -73,8 +92,14 @@ function fromFabricStyles(styles: unknown): TextObject["charStyles"] {
   let any = false;
   for (const [line, chars] of Object.entries((styles ?? {}) as Record<string, Record<string, FabricCharStyle>>)) {
     for (const [ch, st] of Object.entries(chars ?? {})) {
-      if (st.foFont === undefined && st.foBold === undefined && st.foItalic === undefined) continue;
-      (out[Number(line)] ??= {})[Number(ch)] = { pdfFont: st.foFont, bold: st.foBold, italic: st.foItalic };
+      const cs: CharStyle = {};
+      if (st.foFont !== undefined) cs.pdfFont = st.foFont;
+      if (st.foBold !== undefined) cs.bold = st.foBold;
+      if (st.foItalic !== undefined) cs.italic = st.foItalic;
+      if (st.foUnderline !== undefined) cs.underline = st.foUnderline;
+      if (st.foColor !== undefined) cs.color = st.foColor;
+      if (!Object.keys(cs).length) continue;
+      (out[Number(line)] ??= {})[Number(ch)] = cs;
       any = true;
     }
   }
@@ -325,7 +350,7 @@ export function readFabricObject(fo: Tagged): EditorObject {
         width: round(tb.width * sx),
         height: round(tb.height * sy),
         fontSize: scaled ? round(model.fontSize * sy, 1) : model.fontSize,
-        charStyles: model.charStyles ? fromFabricStyles(tb.styles) : undefined,
+        charStyles: fromFabricStyles(tb.styles),
       };
       if (!out.charStyles) delete out.charStyles;
       return out;
@@ -446,7 +471,10 @@ async function reconcile(canvas: Canvas, page: EditorPage) {
       if (existing && existing.__model === m) return;
       if (existing && existing === editing) {
         // Don't yank a textbox out from under the user mid-edit.
+        // …but do show changes made from the panel meanwhile.
+        const prev = existing.__model;
         existing.__model = m;
+        if (m.type === "text" && prev?.type === "text") applyTextChanges(existing as Textbox, prev, m);
         return;
       }
       try {
@@ -474,6 +502,67 @@ async function reconcile(canvas: Canvas, page: EditorPage) {
 
   if (wasActiveId && created.has(wasActiveId)) canvas.setActiveObject(created.get(wasActiveId)!);
   canvas.requestRenderAll();
+}
+
+/**
+ * Apply model changes to a textbox that is being edited, touching only what
+ * changed, so the text being typed and its current width are left alone.
+ */
+function applyTextChanges(tb: Textbox, prev: TextObject, o: TextObject) {
+  const patch: Record<string, unknown> = {};
+  if (prev.fontSize !== o.fontSize) patch.fontSize = o.fontSize;
+  if (prev.fontFamily !== o.fontFamily || prev.pdfFont !== o.pdfFont) patch.fontFamily = cssFont(o.pdfFont, o.fontFamily);
+  if (prev.bold !== o.bold || prev.pdfFont !== o.pdfFont) patch.fontWeight = o.bold && !o.pdfFont ? "bold" : "normal";
+  if (prev.italic !== o.italic || prev.pdfFont !== o.pdfFont) patch.fontStyle = o.italic && !o.pdfFont ? "italic" : "normal";
+  if (prev.underline !== o.underline) patch.underline = o.underline;
+  if (prev.color !== o.color) patch.fill = o.color;
+  if (prev.align !== o.align) patch.textAlign = o.align;
+  if (prev.lineHeight !== o.lineHeight) patch.lineHeight = o.lineHeight;
+  if (prev.letterSpacing !== o.letterSpacing) patch.charSpacing = o.letterSpacing;
+  if (prev.opacity !== o.opacity) patch.opacity = o.opacity;
+  if (prev.width !== o.width) patch.width = o.width;
+  if (prev.cx !== o.cx || prev.cy !== o.cy || prev.angle !== o.angle) Object.assign(patch, { left: o.cx, top: o.cy, angle: o.angle });
+  // Letter styles cleared (whole-line bold, new font…): drop Fabric's too.
+  if (prev.charStyles && !o.charStyles) patch.styles = {};
+  if (!Object.keys(patch).length) return;
+  tb.set(patch);
+  tb.initDimensions();
+  // A bigger size or wider font shouldn't push a PDF line onto two lines either.
+  const c = tb.canvas;
+  if (c) fitLineWidth(tb, c.getWidth() / (c.getZoom() || 1));
+  tb.setCoords();
+  tb.canvas?.requestRenderAll();
+}
+
+/**
+ * Widen a line taken from the PDF so it doesn't wrap (like a line in a word
+ * processor), keeping the edge its alignment anchors, up to the page edge.
+ */
+export function fitLineWidth(tb: Textbox, pageWidth: number) {
+  const model = (tb as Tagged).__model;
+  if (model?.type !== "text" || !model.replaces || tb.angle) return;
+  if (tb.textLines.length <= tb.text.split("\n").length) return; // nothing wrapped
+  const sx = tb.scaleX || 1;
+  const half = (tb.width * sx) / 2;
+  const leftEdge = tb.left - half;
+  const rightEdge = tb.left + half;
+  const margin = 4;
+  const room =
+    (tb.textAlign === "right"
+      ? rightEdge - margin
+      : tb.textAlign === "center"
+        ? 2 * Math.min(tb.left, pageWidth - tb.left) - 2 * margin
+        : pageWidth - margin - leftEdge) / sx;
+  if (room <= tb.width) return;
+  tb.set({ width: room });
+  tb.initDimensions();
+  const natural = Math.min(room, Math.ceil(tb.calcTextWidth()) + 2);
+  tb.set({ width: natural });
+  tb.initDimensions();
+  const w = natural * sx;
+  tb.set({ left: tb.textAlign === "right" ? rightEdge - w / 2 : tb.textAlign === "center" ? tb.left : leftEdge + w / 2 });
+  tb.setCoords();
+  tb.canvas?.requestRenderAll();
 }
 
 export function findById(canvas: Canvas, id: string): Tagged | undefined {

@@ -26,6 +26,7 @@ import { HIGHLIGHT_COLORS, OBJECT_LABELS } from "@/lib/editor/objects";
 import { readImageFile } from "@/lib/editor/images";
 import { toast } from "@/lib/editor/events";
 import { viewSize, type EditorObject, type FontFamily, type Rect, type TextAlign } from "@/lib/editor/types";
+import { styleSelection } from "@/lib/editor/liveText";
 import { pickFiles } from "./filePicker";
 import { Button, ColorInput, Field, IconButton, NumberInput, Select, cn } from "../ui/primitives";
 import { MOD } from "./TopBar";
@@ -156,13 +157,33 @@ function ObjectProperties({ pageId, obj }: { pageId: string; obj: EditorObject }
             <NumberInput value={obj.fontSize} min={4} max={400} step={1} precision={obj.fontSize % 1 ? 1 : 0} suffix="pt" onChange={(fontSize) => update({ fontSize })} />
           </div>
           <div className="mt-2 flex items-center gap-1">
-            <IconButton size="sm" label="Bold" active={obj.bold} onClick={() => update({ bold: !obj.bold, pdfFont: undefined, charStyles: undefined })}>
+            {/* With letters selected while editing, these style just the selection. mouseDown is
+                prevented so the click doesn't take focus (and the selection) away from the text. */}
+            <IconButton
+              size="sm"
+              label="Bold"
+              active={obj.bold}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => styleSelection(obj, { kind: "bold" }) || update({ bold: !obj.bold, pdfFont: undefined, charStyles: undefined })}
+            >
               <Bold className="h-4 w-4" />
             </IconButton>
-            <IconButton size="sm" label="Italic" active={obj.italic} onClick={() => update({ italic: !obj.italic, pdfFont: undefined, charStyles: undefined })}>
+            <IconButton
+              size="sm"
+              label="Italic"
+              active={obj.italic}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => styleSelection(obj, { kind: "italic" }) || update({ italic: !obj.italic, pdfFont: undefined, charStyles: undefined })}
+            >
               <Italic className="h-4 w-4" />
             </IconButton>
-            <IconButton size="sm" label="Underline" active={obj.underline} onClick={() => update({ underline: !obj.underline })}>
+            <IconButton
+              size="sm"
+              label="Underline"
+              active={obj.underline}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => styleSelection(obj, { kind: "underline" }) || update({ underline: !obj.underline })}
+            >
               <Underline className="h-4 w-4" />
             </IconButton>
             <div className="mx-1 h-5 w-px bg-slate-200" />
@@ -172,7 +193,7 @@ function ObjectProperties({ pageId, obj }: { pageId: string; obj: EditorObject }
               </IconButton>
             ))}
             <div className="ml-auto">
-              <ColorInput label="Text color" value={obj.color} onChange={(color) => update({ color }, "color")} />
+              <ColorInput label="Text color" value={obj.color} onChange={(color) => styleSelection(obj, { kind: "color", value: color }) || update({ color }, "color")} />
             </div>
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2">

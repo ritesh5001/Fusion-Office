@@ -394,6 +394,10 @@ async function drawObject(ctx: ExportContext, page: PDFPage, obj: EditorObject, 
 interface CharLook {
   bold: boolean;
   italic: boolean;
+  color: string;
+  underline: boolean;
+  /** Restyled by the user: drawn with the standard font, not the PDF's own. */
+  std: boolean;
 }
 
 /**
@@ -405,15 +409,24 @@ async function drawText(ctx: ExportContext, page: PDFPage, obj: TextObject, vh: 
   if (!obj.text.trim()) return;
   const size = obj.fontSize;
   const spacing = (obj.letterSpacing / 1000) * size;
-  const textColor = color(obj.color);
   const encoders = obj.opacity >= 1 ? (ctx.reuse.get(obj.id) ?? []) : [];
 
   // Style of every character of obj.text (char styles are per original line).
+  const base: CharLook = { bold: obj.bold, italic: obj.italic, color: obj.color, underline: obj.underline, std: false };
   const looks: CharLook[] = [];
   obj.text.split("\n").forEach((line, li) => {
     const row = obj.charStyles?.[li] ?? {};
-    for (let k = 0; k < line.length; k++) looks.push({ bold: row[k]?.bold ?? obj.bold, italic: row[k]?.italic ?? obj.italic });
-    looks.push({ bold: obj.bold, italic: obj.italic }); // the newline
+    for (let k = 0; k < line.length; k++) {
+      const c = row[k];
+      looks.push({
+        bold: c?.bold ?? obj.bold,
+        italic: c?.italic ?? obj.italic,
+        color: c?.color ?? obj.color,
+        underline: c?.underline ?? obj.underline,
+        std: c?.pdfFont === "",
+      });
+    }
+    looks.push(base); // the newline
   });
   const std = {
     rr: await ctx.font(obj.fontFamily, false, false),
@@ -423,7 +436,10 @@ async function drawText(ctx: ExportContext, page: PDFPage, obj: TextObject, vh: 
   };
   const stdFor = (l: CharLook) => (l.bold ? (l.italic ? std.bi : std.br) : l.italic ? std.ri : std.rr);
   // The original font for a style: same weight and slant, else the line's main font for its main style.
-  const encFor = (l: CharLook) => encoders.find((e) => e.bold === l.bold && e.italic === l.italic) ?? (l.bold === obj.bold && l.italic === obj.italic ? encoders[0] : undefined);
+  const encFor = (l: CharLook) =>
+    l.std
+      ? undefined
+      : encoders.find((e) => e.bold === l.bold && e.italic === l.italic) ?? (l.bold === obj.bold && l.italic === obj.italic ? encoders[0] : undefined);
 
   type Face = { kind: "enc"; enc: FontEncoder } | { kind: "std"; font: PDFFont };
   const faceOf = (ch: string, l: CharLook): Face => {
@@ -435,7 +451,6 @@ async function drawText(ctx: ExportContext, page: PDFPage, obj: TextObject, vh: 
     if (f.kind === "enc") return ((f.enc.width(f.enc.code(ch)!) ?? 0) / 1000) * size;
     return f.font.widthOfTextAtSize(sanitize(f.font, ch), size);
   };
-  const base: CharLook = { bold: obj.bold, italic: obj.italic };
   const measure = (s: string) => [...s].reduce((w, ch) => w + charWidth(ch, base), 0) + spacing * Math.max(0, [...s].length - 1);
   const lines = wrapText(obj.text, obj.width + 0.5, measure);
 
@@ -447,7 +462,7 @@ async function drawText(ctx: ExportContext, page: PDFPage, obj: TextObject, vh: 
       const start = at >= 0 ? at : cursor;
       cursor = start + raw.length;
       const chars = [...raw];
-      const segs: { face: Face; text: string; width: number }[] = [];
+      const segs: { face: Face; text: string; width: number; color: string; underline: boolean }[] = [];
       let offset = start;
       for (const ch of chars) {
         const l = looks[offset] ?? base;
@@ -455,25 +470,26 @@ async function drawText(ctx: ExportContext, page: PDFPage, obj: TextObject, vh: 
         const face = faceOf(ch, l);
         const w = charWidth(ch, l);
         const last = segs[segs.length - 1];
-        const same = last && (last.face.kind === "enc" && face.kind === "enc" ? last.face.enc === face.enc : last.face.kind === "std" && face.kind === "std" && last.face.font === face.font);
-        if (same) {
+        const sameFace = last && (last.face.kind === "enc" && face.kind === "enc" ? last.face.enc === face.enc : last.face.kind === "std" && face.kind === "std" && last.face.font === face.font);
+        if (sameFace && last.color === l.color && last.underline === l.underline) {
           last.text += ch;
           last.width += w;
-        } else segs.push({ face, text: ch, width: w });
+        } else segs.push({ face, text: ch, width: w, color: l.color, underline: l.underline });
       }
       const lw = segs.reduce((a, g) => a + g.width, 0) + spacing * Math.max(0, chars.length - 1);
       const left = -obj.width / 2 + (obj.align === "center" ? (obj.width - lw) / 2 : obj.align === "right" ? obj.width - lw : 0);
       const y = obj.height / 2 - textBaseline(i, size, obj.lineHeight);
       let x = left;
-      for (const g of segs) {
+      segs.forEach((g, si) => {
         const n = [...g.text].length;
+        const segColor = color(g.color);
         if (g.face.kind === "enc") {
           const run = encodeRun(g.face.enc, g.text, size, spacing);
           if (run) {
             page.pushOperators(
               beginText(),
               setFontAndSize(g.face.enc.resource, size),
-              setFillingColor(textColor),
+              setFillingColor(segColor),
               setCharacterSpacing(spacing),
               setTextMatrix(1, 0, 0, 1, x, y),
               showText(PDFHexString.of(run.hex)),
@@ -482,20 +498,22 @@ async function drawText(ctx: ExportContext, page: PDFPage, obj: TextObject, vh: 
           }
         } else {
           const font = g.face.font;
-          if (spacing === 0) page.drawText(sanitize(font, g.text), { x, y, size, font, color: textColor, opacity: obj.opacity });
+          if (spacing === 0) page.drawText(sanitize(font, g.text), { x, y, size, font, color: segColor, opacity: obj.opacity });
           else {
             let cx = x;
             for (const ch of g.text) {
-              page.drawText(sanitize(font, ch), { x: cx, y, size, font, color: textColor, opacity: obj.opacity });
+              page.drawText(sanitize(font, ch), { x: cx, y, size, font, color: segColor, opacity: obj.opacity });
               cx += font.widthOfTextAtSize(sanitize(font, ch), size) + spacing;
             }
           }
         }
+        // Underline per run, so only underlined words get one (continuous across runs).
+        const span = g.width + spacing * (si === segs.length - 1 ? n - 1 : n);
+        if (g.underline && g.text.trim()) {
+          page.drawRectangle({ x, y: y - size * 0.12, width: span, height: Math.max(0.6, size / 15), color: segColor, opacity: obj.opacity });
+        }
         x += g.width + spacing * n;
-      }
-      if (obj.underline && raw.trim()) {
-        page.drawRectangle({ x: left, y: y - size * 0.12, width: lw, height: Math.max(0.6, size / 15), color: textColor, opacity: obj.opacity });
-      }
+      });
     });
   });
 }
