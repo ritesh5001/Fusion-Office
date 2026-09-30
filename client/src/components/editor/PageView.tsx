@@ -518,6 +518,34 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
     if (models.length) st().replaceObjects(getPage().id, models);
   };
 
+  // A line taken from the PDF grows as you type (like a line in a word
+  // processor) instead of wrapping onto a second line, up to the page edge.
+  const onTextChanged = (opt: { target: FabricObject }) => {
+    const tb = opt.target;
+    const model = (tb as Tagged).__model;
+    if (!(tb instanceof Textbox) || model?.type !== "text" || !model.replaces || tb.angle) return;
+    const hardLines = tb.text.split("\n").length;
+    if (tb.textLines.length <= hardLines) return; // nothing wrapped
+    const sx = tb.scaleX || 1;
+    const half = (tb.width * sx) / 2;
+    const leftEdge = tb.left - half;
+    const rightEdge = tb.left + half;
+    const pageW = viewSize(getPage()).width;
+    const margin = 4;
+    // Room available from the edge that stays put.
+    const room = (tb.textAlign === "right" ? rightEdge - margin : tb.textAlign === "center" ? 2 * Math.min(tb.left, pageW - tb.left) - 2 * margin : pageW - margin - leftEdge) / sx;
+    if (room <= tb.width) return;
+    tb.set({ width: room });
+    tb.initDimensions();
+    const natural = Math.min(room, Math.ceil(tb.calcTextWidth()) + 2);
+    tb.set({ width: natural });
+    tb.initDimensions();
+    const w = natural * sx;
+    tb.set({ left: tb.textAlign === "right" ? rightEdge - w / 2 : tb.textAlign === "center" ? tb.left : leftEdge + w / 2 });
+    tb.setCoords();
+    canvas.requestRenderAll();
+  };
+
   const onEditingExited = (opt: { target: FabricObject }) => {
     lastEditExit = Date.now();
     const t = opt.target as Tagged;
@@ -538,7 +566,7 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
     // Emptying a replacement means "delete this text from the PDF", so keep it.
     if (!next.text.trim() && !model.replaces) {
       st().deleteObjects(getPage().id, [model.id], key);
-    } else if (next.text !== model.text || Math.abs(next.height - model.height) > 0.5) {
+    } else if (next.text !== model.text || Math.abs(next.height - model.height) > 0.5 || Math.abs(next.width - model.width) > 0.5) {
       st().replaceObjects(getPage().id, [next], "Edit text", key);
     }
   };
@@ -562,6 +590,7 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
   canvas.on("mouse:up", onUp);
   canvas.on("path:created", onPathCreated as never);
   canvas.on("object:modified", onModified);
+  canvas.on("text:changed", onTextChanged as never);
   canvas.on("text:editing:exited", onEditingExited as never);
   canvas.on("selection:created", onSelection);
   canvas.on("selection:updated", onSelection);
