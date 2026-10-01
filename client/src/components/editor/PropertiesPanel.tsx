@@ -11,6 +11,8 @@ import {
   ArrowUpToLine,
   Bold,
   Copy,
+  Eye,
+  EyeOff,
   FlipHorizontal2,
   FlipVertical2,
   ImageUp,
@@ -75,8 +77,17 @@ function Header({ title, subtitle }: { title: string; subtitle?: string }) {
 
 function ArrangeActions({ pageId, ids }: { pageId: string; ids: string[] }) {
   const st = useEditor.getState;
+  const objs = useEditor(
+    useShallow((s) => s.doc?.pages.find((p) => p.id === pageId)?.objects.filter((o) => ids.includes(o.id)) ?? []),
+  );
+  const allLocked = objs.length > 0 && objs.every((o) => o.locked);
+  const allHidden = objs.length > 0 && objs.every((o) => o.hidden);
+  // Hiding a redaction or edited PDF text would make the file differ from the page.
+  const canHide = objs.every((o) => o.type !== "redact" && !(o.type === "text" && o.replaces));
+  const setFlag = (flag: "locked" | "hidden", on: boolean) =>
+    st().replaceObjects(pageId, objs.map((o) => ({ ...o, [flag]: on || undefined })), flag === "locked" ? (on ? "Lock" : "Unlock") : on ? "Hide" : "Show");
   return (
-    <Section title="Arrange">
+    <Section title="Layer">
       <div className="flex items-center justify-between">
         <div className="flex">
           <IconButton size="sm" label="Bring to front" onClick={() => st().reorderObjects(pageId, ids, "front")}>
@@ -93,6 +104,18 @@ function ArrangeActions({ pageId, ids }: { pageId: string; ids: string[] }) {
           </IconButton>
         </div>
         <div className="flex">
+          <IconButton
+            size="sm"
+            label={allHidden ? "Show layer" : canHide ? "Hide layer" : "Can't hide redactions or edited PDF text"}
+            active={allHidden}
+            disabled={!canHide}
+            onClick={() => setFlag("hidden", !allHidden)}
+          >
+            {allHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </IconButton>
+          <IconButton size="sm" label={allLocked ? "Unlock layer" : "Lock layer"} active={allLocked} onClick={() => setFlag("locked", !allLocked)}>
+            {allLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+          </IconButton>
           <IconButton size="sm" label="Duplicate" shortcut={`${MOD}D`} onClick={() => st().duplicateSelection()}>
             <Copy className="h-4 w-4" />
           </IconButton>

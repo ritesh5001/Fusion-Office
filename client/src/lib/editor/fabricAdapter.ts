@@ -283,6 +283,7 @@ export async function createFabricObject(o: EditorObject): Promise<Tagged> {
     }
   }
   fo.set(SELECTION_STYLE);
+  if (o.hidden) fo.visible = false;
   const tagged = fo as Tagged;
   tagged.editorId = o.id;
   tagged.__model = o;

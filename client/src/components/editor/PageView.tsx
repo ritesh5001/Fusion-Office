@@ -251,8 +251,10 @@ function applyTool(canvas: Canvas) {
   for (const obj of canvas.getObjects() as Tagged[]) {
     const isText = obj.__model?.type === "text";
     const erasable = obj.__model?.type === "path" || obj.__model?.type === "markup";
-    obj.selectable = select;
-    obj.evented = select || (tool === "eraser" && erasable) || (textTool && isText);
+    // Locked or hidden layers ignore the pointer whatever the tool.
+    const frozen = !!(obj.__model?.locked || obj.__model?.hidden);
+    obj.selectable = select && !frozen;
+    obj.evented = !frozen && (select || (tool === "eraser" && erasable) || (textTool && isText));
     obj.hoverCursor = select ? "move" : tool === "eraser" ? "pointer" : textTool ? "text" : "crosshair";
   }
   if (!select) {

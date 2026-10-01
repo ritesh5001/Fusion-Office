@@ -251,7 +251,7 @@ async function exportPage(ctx: ExportContext, page: EditorPage, opts: ExportOpti
     pdfPage.drawRectangle({ x: c.rect.x, y: view.height - c.rect.y - c.rect.h, width: c.rect.w, height: c.rect.h, color: color(c.background) });
   }
   for (const obj of page.objects) {
-    if (covered(obj)) continue;
+    if (covered(obj) || obj.hidden) continue;
     if (obj.type === "comment" && !opts.flatten) continue; // added as annotation below
     if (obj.type === "comment" && !opts.includeComments) continue;
     await drawObject(ctx, pdfPage, obj, view.height);
@@ -264,7 +264,7 @@ async function exportPage(ctx: ExportContext, page: EditorPage, opts: ExportOpti
 
   if (opts.includeComments && !opts.flatten) {
     for (const obj of page.objects) {
-      if (obj.type !== "comment") continue;
+      if (obj.type !== "comment" || obj.hidden) continue;
       const [ux, uy] = applyMatrix(matrix, obj.cx, view.height - obj.cy);
       const annot = out.context.obj({
         Type: "Annot",

@@ -81,6 +81,8 @@ export interface EditorState {
   /** Remove an object that was just added and never changed, leaving no trace in the history. */
   discardNew: (pageId: string, id: string) => void;
   reorderObjects: (pageId: string, ids: string[], where: "forward" | "backward" | "front" | "back") => void;
+  /** Move one object to a position in the page's stack (0 = back). */
+  moveObjectTo: (pageId: string, id: string, index: number) => void;
   undo: () => void;
   redo: () => void;
 
@@ -276,6 +278,22 @@ export const useEditor = create<EditorState>()((set, get) => ({
           [arr[i], arr[j]] = [arr[j], arr[i]];
         }
         return { ...p, objects: arr };
+      }),
+    );
+  },
+
+  moveObjectTo: (pageId, id, index) => {
+    const page = get().doc?.pages.find((p) => p.id === pageId);
+    const from = page?.objects.findIndex((o) => o.id === id) ?? -1;
+    if (!page || from < 0) return;
+    const to = Math.max(0, Math.min(page.objects.length - 1, index));
+    if (to === from) return;
+    get().commit("Arrange", (pages) =>
+      mapPage(pages, pageId, (p) => {
+        const objs = [...p.objects];
+        const [moved] = objs.splice(from, 1);
+        objs.splice(to, 0, moved);
+        return { ...p, objects: objs };
       }),
     );
   },

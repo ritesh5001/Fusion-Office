@@ -35,7 +35,17 @@ export type ToolId =
 export type FontFamily = "Helvetica" | "Times" | "Courier";
 export type TextAlign = "left" | "center" | "right";
 
-interface Positioned {
+/** Layer settings every object has (Layers panel). */
+export interface LayerFlags {
+  /** Not drawn on the page or in the exported PDF. */
+  hidden?: boolean;
+  /** Can't be selected or moved on the page (still editable from the Layers panel). */
+  locked?: boolean;
+  /** Custom name shown in the Layers panel. */
+  name?: string;
+}
+
+interface Positioned extends LayerFlags {
   id: string;
   cx: number;
   cy: number;
@@ -131,7 +141,7 @@ export interface Rect {
 }
 
 /** Highlight / underline / strikeout attached to text runs on the page. */
-export interface MarkupObject {
+export interface MarkupObject extends LayerFlags {
   id: string;
   type: "markup";
   style: "highlight" | "underline" | "strikeout";
@@ -140,7 +150,7 @@ export interface MarkupObject {
   opacity: number;
 }
 
-export interface CommentObject {
+export interface CommentObject extends LayerFlags {
   id: string;
   type: "comment";
   cx: number;
@@ -152,14 +162,14 @@ export interface CommentObject {
 }
 
 /** Redaction: the content under it is REMOVED on export (page is rasterized). */
-export interface RedactObject {
+export interface RedactObject extends LayerFlags {
   id: string;
   type: "redact";
   rect: Rect;
 }
 
 /** Whiteout: a visual cover. Underlying content remains in the file. */
-export interface WhiteoutObject {
+export interface WhiteoutObject extends LayerFlags {
   id: string;
   type: "whiteout";
   rect: Rect;
