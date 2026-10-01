@@ -18,6 +18,9 @@ const CUSTOM: Record<CustomTool, React.ComponentType> = {
   "remove-watermark-image": dynamic(() => import("./custom/ImageUnwatermarkTool").then((m) => m.ImageUnwatermarkTool), { ssr: false }),
   "image-editor": dynamic(() => import("./custom/ImageEditor").then((m) => m.ImageEditor), { ssr: false }),
   "crop-image": dynamic(() => import("./custom/ImageEditor").then((m) => () => <m.ImageEditor mode="crop" />), { ssr: false }),
+  "chat-with-pdf": dynamic(() => import("./custom/ChatPdfTool").then((m) => m.ChatPdfTool), { ssr: false }),
+  "pdf-to-audio": dynamic(() => import("./custom/ReadAloudTool").then((m) => m.ReadAloudTool), { ssr: false }),
+  "gst-invoice": dynamic(() => import("./custom/GstInvoiceTool").then((m) => m.GstInvoiceTool), { ssr: false }),
 };
 
 export function ToolClient({ slug }: { slug: string }) {

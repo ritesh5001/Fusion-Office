@@ -27,7 +27,27 @@ function acceptLabel(tool: Pick<ToolDef, "accept" | "multiple">): string {
   return many ? "files" : "a file";
 }
 
+/** Steps for tools that don't follow "add a file, choose settings, download". */
+const CUSTOM_STEPS: Record<string, { title: string; text: string }[]> = {
+  "chat-with-pdf": [
+    { title: "Add your PDF", text: "Its text is read on your device." },
+    { title: "Ask a question", text: "In your own words, or pick a suggestion." },
+    { title: "Get the answer", text: "With the pages it comes from." },
+  ],
+  "pdf-to-audio": [
+    { title: "Add your PDF", text: "Its text is read on your device." },
+    { title: "Choose a voice and speed", text: "Your browser's own voices." },
+    { title: "Press play", text: "Tap any sentence to jump there." },
+  ],
+  "gst-invoice": [
+    { title: "Fill in both parties", text: "GSTINs are checked as you type." },
+    { title: "Add the items", text: "CGST/SGST or IGST is worked out for you." },
+    { title: "Download the PDF", text: "The next invoice number is ready." },
+  ],
+};
+
 function steps(tool: ToolDef) {
+  if (CUSTOM_STEPS[tool.slug]) return CUSTOM_STEPS[tool.slug];
   const what = acceptLabel(tool);
   return [
     tool.accept

@@ -99,6 +99,7 @@ export const TOOLS: ToolDef[] = [
   { slug: "invert-colours", name: "Invert colours", description: "Dark mode, sepia, grayscale or high contrast versions of a PDF.", category: "edit", icon: "Contrast", accept: PDF, multiple: true, runs: "browser", status: "ready" },
   { slug: "text-to-handwriting", name: "Text to handwriting", description: "Type or paste text and get realistic handwritten pages.", category: "edit", icon: "PenTool", accept: "", multiple: false, runs: "browser", status: "ready" },
   { slug: "pdf-to-handwriting", name: "PDF to handwriting", description: "Turn the text of a PDF into handwritten notes.", category: "edit", icon: "NotebookPen", accept: PDF, multiple: false, runs: "browser", status: "ready" },
+  { slug: "gst-invoice", name: "GST invoice", description: "Create a GST tax invoice with CGST, SGST or IGST, HSN codes and amount in words.", category: "edit", icon: "ReceiptIndianRupee", accept: "", multiple: false, runs: "browser", status: "ready" },
   // Security
   { slug: "protect-pdf", name: "Protect PDF", description: "Add a password with AES-256 encryption.", category: "security", icon: "Lock", accept: PDF, multiple: true, runs: "browser", status: "ready", chainable: true },
   { slug: "unlock-pdf", name: "Unlock PDF", description: "Remove the password from a PDF you can open.", category: "security", icon: "Unlock", accept: PDF, multiple: false, runs: "browser", status: "ready" },
@@ -111,6 +112,8 @@ export const TOOLS: ToolDef[] = [
   { slug: "compare-pdf", name: "Compare PDF", description: "See every change between two versions, side by side.", category: "intelligence", icon: "GitCompare", accept: PDF, multiple: true, runs: "browser", status: "ready" },
   { slug: "summarize-pdf", name: "AI Summarizer", description: "Key points of a long document in seconds.", category: "intelligence", icon: "Sparkles", accept: PDF, multiple: false, runs: "ai", status: "ready" },
   { slug: "translate-pdf", name: "Translate PDF", description: "Translate a whole document into another language.", category: "intelligence", icon: "Languages", accept: PDF, multiple: false, runs: "ai", status: "ready" },
+  { slug: "chat-with-pdf", name: "Chat with PDF", description: "Ask questions about a PDF and get answers with the pages they come from.", category: "intelligence", icon: "MessagesSquare", accept: PDF, multiple: false, runs: "ai", status: "ready" },
+  { slug: "pdf-to-audio", name: "PDF to Audio", description: "Listen to any PDF read aloud, with the sentence highlighted as it's read.", category: "intelligence", icon: "Headphones", accept: PDF, multiple: false, runs: "browser", status: "ready" },
   // Images
   { slug: "image-editor", name: "Image editor", description: "Crop, straighten, adjust light and colour, add filters and text, then resize and save.", category: "image", icon: "SlidersHorizontal", accept: ANY_IMAGE, multiple: false, runs: "browser", status: "ready" },
   { slug: "compress-image", name: "Compress image", description: "Make JPG, PNG and WEBP files smaller, or fit them under a size like 50 KB.", category: "image", icon: "ImageDown", accept: ANY_IMAGE, multiple: true, runs: "browser", status: "ready" },

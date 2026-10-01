@@ -2,7 +2,7 @@ import {
   Archive, ArrowLeftRight, BadgeCheck, Brush, Camera, ClipboardList, Combine, Crop, Eraser, EyeOff, FileCode, FileSpreadsheet, FileText, FlipHorizontal2, GitCompare,
   Globe, Image, ImageDown, ImagePlus, Languages, LayoutGrid, ListOrdered, Lock, Minimize2, PenLine, Presentation, RotateCw, Scaling,
   MonitorSmartphone, ScanText, Scissors, ShieldCheck, Signature, SlidersHorizontal, Sparkles, Stamp, Unlock, Workflow, Wrench,
-  Bookmark, BookOpen, BookText, Code, Columns2, Contrast, FileArchive, FileCode2, FileCog, FileType, Fingerprint, Grid2x2, Hash, Images, Layers, LockOpen, NotebookPen, PanelTop, PenTool, Receipt, Scale, ScanSearch, Sheet, ShieldOff, Shuffle, Table, TextSearch, type LucideIcon,
+  Bookmark, BookOpen, BookText, Code, Headphones, MessagesSquare, ReceiptIndianRupee, Columns2, Contrast, FileArchive, FileCode2, FileCog, FileType, Fingerprint, Grid2x2, Hash, Images, Layers, LockOpen, NotebookPen, PanelTop, PenTool, Receipt, Scale, ScanSearch, Sheet, ShieldOff, Shuffle, Table, TextSearch, type LucideIcon,
 } from "lucide-react";
 import type { Category, ToolDef } from "@/lib/tools/registry";
 import { cn } from "@/lib/cn";
@@ -11,7 +11,7 @@ const ICONS: Record<string, LucideIcon> = {
   Archive, ArrowLeftRight, BadgeCheck, Brush, Camera, ClipboardList, Combine, Crop, Eraser, EyeOff, FileCode, FileSpreadsheet, FileText, FlipHorizontal2, GitCompare,
   Globe, Image, ImageDown, ImagePlus, Languages, LayoutGrid, ListOrdered, Lock, Minimize2, PenLine, Presentation, RotateCw, Scaling,
   MonitorSmartphone, ScanText, Scissors, ShieldCheck, Signature, SlidersHorizontal, Sparkles, Stamp, Unlock, Workflow, Wrench,
-  Bookmark, BookOpen, BookText, Code, Columns2, Contrast, FileArchive, FileCode2, FileCog, FileType, Fingerprint, Grid2x2, Hash, Images, Layers, LockOpen, NotebookPen, PanelTop, PenTool, Receipt, Scale, ScanSearch, Sheet, ShieldOff, Shuffle, Table, TextSearch,
+  Bookmark, BookOpen, BookText, Code, Headphones, MessagesSquare, ReceiptIndianRupee, Columns2, Contrast, FileArchive, FileCode2, FileCog, FileType, Fingerprint, Grid2x2, Hash, Images, Layers, LockOpen, NotebookPen, PanelTop, PenTool, Receipt, Scale, ScanSearch, Sheet, ShieldOff, Shuffle, Table, TextSearch,
 };
 
 /** One muted accent per category (small inline marks). */
@@ -135,6 +135,9 @@ const TOOL_SWATCH: Record<string, Swatch> = {
   "privacy-scanner": "indigo",
   "file-fingerprint": "violet",
   "thumbmark-maker": "blue",
+  "chat-with-pdf": "violet",
+  "pdf-to-audio": "pink",
+  "gst-invoice": "orange",
 };
 
 /** Word, Excel and PowerPoint get their familiar letter marks. */

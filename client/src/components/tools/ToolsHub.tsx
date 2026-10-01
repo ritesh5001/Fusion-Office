@@ -107,6 +107,17 @@ const SYNONYMS: Record<string, string> = {
   gst: "gst",
   portal: "gst",
   md: "markdown",
+  invoice: "invoice",
+  bill: "invoice",
+  billing: "invoice",
+  tax: "gst",
+  chat: "chat",
+  ask: "chat",
+  question: "chat",
+  listen: "audio",
+  speak: "audio",
+  tts: "audio",
+  voice: "audio",
   txt: "text",
 };
 

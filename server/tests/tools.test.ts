@@ -124,6 +124,18 @@ test("AI routes validate input and answer 503 without an API key", async () => {
   assert.equal((await post("/api/ai/translate", { pages: ["Hello"], target: "Chinese (Simplified)" })).status, 503);
 });
 
+test("chat with PDF checks the conversation before asking the AI", async () => {
+  const pages = ["The vessel MV Ocean Star was cleaned on 1 October."];
+  const chat = (messages: unknown) => post("/api/ai/chat", { pages, messages });
+  assert.equal((await chat([])).status, 400);
+  assert.equal((await chat([{ role: "assistant", text: "hi" }])).status, 400); // must start with the user
+  assert.equal((await chat([{ role: "user", text: "a" }, { role: "assistant", text: "b" }])).status, 400); // must end with the user
+  assert.equal((await chat([{ role: "user", text: "x".repeat(4_001) }])).status, 413);
+  assert.equal((await chat(Array.from({ length: 41 }, (_, i) => ({ role: i % 2 ? "assistant" : "user", text: "q" })))).status, 413);
+  const ok = await chat([{ role: "user", text: "When was it cleaned?" }, { role: "assistant", text: "On 1 October (p. 1)." }, { role: "user", text: "Which vessel?" }]);
+  assert.equal(ok.status, 503); // valid; only the missing API key stops it
+});
+
 test("heavy routes refuse other origins", async () => {
   const res = await fetch(`${base}/api/ai/summarize`, { method: "POST", headers: { "content-type": "application/json", origin: "https://evil.example" }, body: "{}" });
   assert.equal(res.status, 403);

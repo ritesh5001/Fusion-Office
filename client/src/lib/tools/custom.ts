@@ -13,6 +13,9 @@ export const CUSTOM_TOOLS = [
   "remove-watermark-image",
   "image-editor",
   "crop-image",
+  "chat-with-pdf",
+  "pdf-to-audio",
+  "gst-invoice",
 ] as const;
 
 export type CustomTool = (typeof CUSTOM_TOOLS)[number];

@@ -13,6 +13,7 @@ import type { LoadedFile, ToolResult, ToolSpec } from "./ToolRunner";
 import { ColorField, NumberField, PagesField, PositionPicker, Segmented, Slider, TextInput, Toggle } from "./controls";
 import { IMAGE_SPECS } from "./imageSpecs";
 import { MORE_SPECS } from "./moreSpecs";
+import { documentText } from "@/lib/tools/documentText";
 
 const pdfOut = (name: string, bytes: Uint8Array): ToolFile => ({ name, bytes, type: PDF });
 
@@ -499,20 +500,6 @@ const redact: ToolSpec<RedactOpts> = {
 };
 
 // ─── AI ─────────────────────────────────────────────────────────────
-
-async function documentText(bytes: Uint8Array, progress: (m: string, f?: number) => void): Promise<string[]> {
-  const { openPdf, pageTextRuns } = await import("@/lib/tools/pdfjs");
-  const { groupLines } = await import("@/lib/tools/text");
-  const pdf = await openPdf(bytes);
-  const pages: string[] = [];
-  for (let i = 0; i < pdf.numPages; i++) {
-    progress(`Reading page ${i + 1} of ${pdf.numPages}…`, i / pdf.numPages);
-    pages.push(groupLines((await pageTextRuns(pdf, i)).runs).map((l) => l.text).join("\n"));
-  }
-  await pdf.destroy();
-  if (!pages.some((p) => p.trim())) throw new Error("This PDF has no selectable text. Run OCR PDF first.");
-  return pages;
-}
 
 type SumOpts = { length: "short" | "medium" | "detailed" };
 const summarize: ToolSpec<SumOpts> = {
