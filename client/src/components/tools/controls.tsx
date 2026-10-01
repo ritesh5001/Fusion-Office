@@ -89,6 +89,35 @@ export function TextInput({
   );
 }
 
+export function TextArea({
+  label,
+  hint,
+  value,
+  onChange,
+  placeholder,
+  rows = 8,
+}: {
+  label: string;
+  hint?: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  rows?: number;
+}) {
+  return (
+    <label className="block space-y-1.5">
+      <Label hint={hint}>{label}</Label>
+      <textarea
+        value={value}
+        rows={rows}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full resize-y rounded-lg bg-white px-3 py-2 text-[14px] leading-relaxed ring-1 ring-rule outline-none focus:ring-2 focus:ring-brand-500"
+      />
+    </label>
+  );
+}
+
 export function NumberField({
   label,
   value,

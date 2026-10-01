@@ -1,7 +1,8 @@
 import {
   Archive, ArrowLeftRight, BadgeCheck, Brush, Camera, ClipboardList, Combine, Crop, Eraser, EyeOff, FileCode, FileSpreadsheet, FileText, FlipHorizontal2, GitCompare,
   Globe, Image, ImageDown, ImagePlus, Languages, LayoutGrid, ListOrdered, Lock, Minimize2, PenLine, Presentation, RotateCw, Scaling,
-  MonitorSmartphone, ScanText, Scissors, ShieldCheck, Signature, SlidersHorizontal, Sparkles, Stamp, Unlock, Workflow, Wrench, type LucideIcon,
+  MonitorSmartphone, ScanText, Scissors, ShieldCheck, Signature, SlidersHorizontal, Sparkles, Stamp, Unlock, Workflow, Wrench,
+  Bookmark, BookOpen, BookText, Code, Columns2, Contrast, FileArchive, FileCode2, FileCog, FileType, Fingerprint, Grid2x2, Hash, Images, Layers, LockOpen, NotebookPen, PanelTop, PenTool, Receipt, Scale, ScanSearch, Sheet, ShieldOff, Shuffle, Table, TextSearch, type LucideIcon,
 } from "lucide-react";
 import type { Category, ToolDef } from "@/lib/tools/registry";
 import { cn } from "@/lib/cn";
@@ -10,6 +11,7 @@ const ICONS: Record<string, LucideIcon> = {
   Archive, ArrowLeftRight, BadgeCheck, Brush, Camera, ClipboardList, Combine, Crop, Eraser, EyeOff, FileCode, FileSpreadsheet, FileText, FlipHorizontal2, GitCompare,
   Globe, Image, ImageDown, ImagePlus, Languages, LayoutGrid, ListOrdered, Lock, Minimize2, PenLine, Presentation, RotateCw, Scaling,
   MonitorSmartphone, ScanText, Scissors, ShieldCheck, Signature, SlidersHorizontal, Sparkles, Stamp, Unlock, Workflow, Wrench,
+  Bookmark, BookOpen, BookText, Code, Columns2, Contrast, FileArchive, FileCode2, FileCog, FileType, Fingerprint, Grid2x2, Hash, Images, Layers, LockOpen, NotebookPen, PanelTop, PenTool, Receipt, Scale, ScanSearch, Sheet, ShieldOff, Shuffle, Table, TextSearch,
 };
 
 /** One muted accent per category (small inline marks). */
@@ -104,6 +106,35 @@ const TOOL_SWATCH: Record<string, Swatch> = {
   "remove-watermark-image": "pink",
   "rotate-image": "teal",
   workflows: "indigo",
+  "alternate-mix": "violet",
+  "pages-per-sheet": "teal",
+  "flip-pdf": "sky",
+  "split-in-half": "rose",
+  "split-by-size": "amber",
+  "split-by-bookmarks": "indigo",
+  "split-by-text": "pink",
+  "pdf-to-zip": "ink",
+  "gst-filing-prep": "orange",
+  "bates-numbering": "ink",
+  "header-footer": "sky",
+  "flatten-pdf": "teal",
+  "edit-metadata": "ink",
+  "invert-colours": "ink",
+  "text-to-handwriting": "blue",
+  "pdf-to-handwriting": "violet",
+  "markdown-to-pdf": "ink",
+  "csv-to-pdf": "green",
+  "ebook-to-pdf": "orange",
+  "pdf-to-html": "orange",
+  "pdf-to-epub": "pink",
+  "pdf-to-csv": "green",
+  "extract-text": "sky",
+  "extract-images": "teal",
+  "remove-restrictions": "emerald",
+  "auto-redact-pii": "red",
+  "privacy-scanner": "indigo",
+  "file-fingerprint": "violet",
+  "thumbmark-maker": "blue",
 };
 
 /** Word, Excel and PowerPoint get their familiar letter marks. */

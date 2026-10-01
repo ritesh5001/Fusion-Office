@@ -12,6 +12,7 @@ import { apiFetch } from "@/lib/api";
 import type { LoadedFile, ToolResult, ToolSpec } from "./ToolRunner";
 import { ColorField, NumberField, PagesField, PositionPicker, Segmented, Slider, TextInput, Toggle } from "./controls";
 import { IMAGE_SPECS } from "./imageSpecs";
+import { MORE_SPECS } from "./moreSpecs";
 
 const pdfOut = (name: string, bytes: Uint8Array): ToolFile => ({ name, bytes, type: PDF });
 
@@ -590,6 +591,7 @@ export const SPECS: Record<string, ToolSpec<never>> = {
   "summarize-pdf": summarize,
   "translate-pdf": translate,
   ...IMAGE_SPECS,
+  ...MORE_SPECS,
 } as unknown as Record<string, ToolSpec<never>>;
 
 export type { ToolResult };

@@ -32,7 +32,9 @@ function steps(tool: ToolDef) {
   return [
     tool.accept
       ? { title: `Add your ${tool.multiple ? "files" : "file"}`, text: `Choose or drop ${what}.` }
-      : { title: "Enter the address", text: "Paste the link of the web page." },
+      : tool.slug === "html-to-pdf"
+        ? { title: "Enter the address", text: "Paste the link of the web page." }
+        : { title: "Type your text", text: "Type or paste what you want to turn into a PDF." },
     { title: "Choose your settings", text: "Pick the options you need, or keep the defaults." },
     { title: "Download", text: "Get the result straight away." },
   ];

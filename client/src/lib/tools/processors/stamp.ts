@@ -127,4 +127,96 @@ export async function addPageNumbers(bytes: Uint8Array, opts: PageNumberOptions,
   return save(doc);
 }
 
+// ─── Bates numbering ───────────────────────────────────────────────
+
+export interface BatesOptions {
+  prefix: string;
+  suffix: string;
+  start: number;
+  /** Zero-padded width of the number, e.g. 6 → 000001. */
+  digits: number;
+  position: Position;
+  fontSize: number;
+  color: string;
+  margin: number;
+}
+
+export const batesLabel = (o: Pick<BatesOptions, "prefix" | "suffix" | "digits">, n: number) => `${o.prefix}${String(n).padStart(o.digits, "0")}${o.suffix}`;
+
+/**
+ * Stamp sequential Bates numbers on every page of every file, continuing from
+ * one file to the next. Returns the stamped files and the last number used.
+ */
+export async function addBatesNumbers(inputs: Uint8Array[], opts: BatesOptions): Promise<{ files: Uint8Array[]; ranges: [string, string][] }> {
+  let n = opts.start;
+  const files: Uint8Array[] = [];
+  const ranges: [string, string][] = [];
+  for (const bytes of inputs) {
+    const doc = await loadPdf(bytes);
+    const font = await doc.embedFont(StandardFonts.HelveticaBold);
+    const first = n;
+    for (const page of doc.getPages()) {
+      const label = batesLabel(opts, n++);
+      inView(page, (VH, VW) => {
+        const w = font.widthOfTextAtSize(label, opts.fontSize);
+        const { cx, cy } = place(opts.position, VW, VH, w, opts.fontSize, opts.margin);
+        page.drawText(label, { x: cx - w / 2, y: VH - cy - opts.fontSize * 0.35, size: opts.fontSize, font, color: color(opts.color) });
+      });
+    }
+    ranges.push([batesLabel(opts, first), batesLabel(opts, n - 1)]);
+    files.push(await save(doc));
+  }
+  return { files, ranges };
+}
+
+// ─── Headers & footers ─────────────────────────────────────────────
+
+export interface HeaderFooterOptions {
+  /** Left, centre and right text of the header and footer. Tokens: {page} {total} {date} {file}. */
+  header: [string, string, string];
+  footer: [string, string, string];
+  fontSize: number;
+  color: string;
+  margin: number;
+  /** Shown for {file}. */
+  fileName: string;
+  /** Shown for {date}. */
+  date: string;
+  /** A thin line under the header and above the footer. */
+  rule: boolean;
+}
+
+export async function addHeaderFooter(bytes: Uint8Array, opts: HeaderFooterOptions, pages?: number[]): Promise<Uint8Array> {
+  const doc = await loadPdf(bytes);
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const targets = pages ?? doc.getPageIndices();
+  const total = doc.getPageCount();
+  const fill = (t: string, i: number) =>
+    t.replaceAll("{page}", String(i + 1)).replaceAll("{total}", String(total)).replaceAll("{date}", opts.date).replaceAll("{file}", opts.fileName);
+  for (const i of targets) {
+    const page = doc.getPage(i);
+    inView(page, (VH, VW) => {
+      const rows: [[string, string, string], number][] = [
+        [opts.header, VH - opts.margin - opts.fontSize * 0.8],
+        [opts.footer, opts.margin],
+      ];
+      for (const [[left, centre, right], y] of rows) {
+        const texts = [left, centre, right].map((t) => fill(t, i));
+        if (!texts.some((t) => t.trim())) continue;
+        texts.forEach((t, k) => {
+          if (!t.trim()) return;
+          const w = font.widthOfTextAtSize(t, opts.fontSize);
+          const x = k === 0 ? opts.margin : k === 1 ? (VW - w) / 2 : VW - opts.margin - w;
+          page.drawText(t, { x, y, size: opts.fontSize, font, color: color(opts.color) });
+        });
+        if (opts.rule) {
+          const ry = y === opts.margin ? y + opts.fontSize * 1.3 : y - opts.fontSize * 0.5;
+          page.drawLine({ start: { x: opts.margin, y: ry }, end: { x: VW - opts.margin, y: ry }, thickness: 0.5, color: color(opts.color), opacity: 0.4 });
+        }
+      }
+    });
+  }
+  return save(doc);
+}
+
 export { degrees };

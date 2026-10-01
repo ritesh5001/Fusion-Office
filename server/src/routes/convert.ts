@@ -1,7 +1,7 @@
 import express, { Router } from "express";
 import { HttpError } from "../lib/http.js";
 import { checkTarget, officeConvert, officeFormat } from "../lib/office.js";
-import { htmlToPdf } from "../lib/html.js";
+import { documentToPdf, htmlToPdf } from "../lib/html.js";
 
 export const convert = Router();
 
@@ -52,8 +52,16 @@ convert.post("/office", express.raw({ type: () => true, limit: `${MAX_MB}mb` }),
 convert.post("/html", async (req, res, next) => {
   try {
     const b = (req.body ?? {}) as Record<string, unknown>;
-    if (typeof b.url !== "string" || !b.url.trim()) throw new HttpError(400, "Enter a web address.");
     const pageSize = b.pageSize === "Letter" ? "Letter" : "A4";
+    // A complete document (Markdown, CSV, eBook converters) instead of a web address.
+    if (typeof b.html === "string") {
+      if (!b.html.trim()) throw new HttpError(400, "The document is empty.");
+      if (Buffer.byteLength(b.html) > MAX_MB * 1024 * 1024) throw new HttpError(413, "This document is too large to convert.");
+      const name = typeof b.name === "string" && b.name.trim() ? b.name.trim().replace(/[\\/:*?"<>|]+/g, "-").slice(0, 120) : "document";
+      const pdf = await documentToPdf({ html: b.html, pageSize, landscape: b.landscape === true });
+      return sendPdf(res, pdf, `${name}.pdf`);
+    }
+    if (typeof b.url !== "string" || !b.url.trim()) throw new HttpError(400, "Enter a web address.");
     const pdf = await htmlToPdf({ url: b.url, pageSize, landscape: b.landscape === true });
     sendPdf(res, pdf, `${new URL(b.url.trim()).hostname.replace(/^www\./, "")}.pdf`);
   } catch (err) {

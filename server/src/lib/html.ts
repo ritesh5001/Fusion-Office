@@ -125,6 +125,42 @@ export async function htmlToPdf(opts: HtmlOptions): Promise<Uint8Array> {
   });
 }
 
+/**
+ * Render a document we were given (Markdown, CSV and eBook converters build
+ * it in the browser) to PDF. Scripts are off and nothing outside the document
+ * may load: only data: and blob: resources (embedded images and fonts).
+ */
+export async function documentToPdf(opts: { html: string; pageSize: "A4" | "Letter"; landscape: boolean }): Promise<Uint8Array> {
+  return queue(async () => {
+    const b = await browser();
+    const context = await b.createBrowserContext();
+    try {
+      const page = await context.newPage();
+      page.setDefaultTimeout(PAGE_TIMEOUT_MS);
+      await page.setJavaScriptEnabled(false);
+      await page.setRequestInterception(true);
+      page.on("request", (req) => {
+        if (req.isInterceptResolutionHandled()) return;
+        const scheme = req.url().slice(0, req.url().indexOf(":"));
+        if (scheme === "data" || scheme === "blob") return void req.continue();
+        void req.abort("blockedbyclient");
+      });
+      await page.setContent(opts.html, { waitUntil: "load", timeout: PAGE_TIMEOUT_MS });
+      const pdf = await page.pdf({
+        format: opts.pageSize,
+        landscape: opts.landscape,
+        printBackground: true,
+        preferCSSPageSize: true,
+        margin: { top: "16mm", bottom: "16mm", left: "14mm", right: "14mm" },
+        timeout: PAGE_TIMEOUT_MS,
+      });
+      return new Uint8Array(pdf);
+    } finally {
+      await context.close().catch(() => {});
+    }
+  });
+}
+
 /** Close the shared browser (tests, shutdown). */
 export async function closeBrowser() {
   const b = await launching?.catch(() => null);

@@ -25,8 +25,11 @@ function spanBox(run: TextRun, from: number, to: number): UserRect | null {
   const u = run.user;
   if (!u) return null;
   const n = Math.max(run.str.length, 1);
-  const s = (u.width * from) / n;
-  const e = (u.width * to) / n;
+  // Character positions are estimated from the run's width (letters differ in
+  // width), so reach half a character further each way: a glyph is removed
+  // when its centre is inside, and the first/last ones must not survive.
+  const s = (u.width * Math.max(0, from - 0.5)) / n;
+  const e = (u.width * Math.min(n, to + 0.5)) / n;
   const pts = [
     [s, -0.25],
     [e, -0.25],
