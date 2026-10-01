@@ -52,7 +52,7 @@ const SWATCH = {
 } as const;
 export type Swatch = keyof typeof SWATCH;
 
-const CATEGORY_SWATCH: Record<Category, Swatch> = {
+export const CATEGORY_SWATCH: Record<Category, Swatch> = {
   office: "blue",
   organize: "orange",
   optimize: "emerald",

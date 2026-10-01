@@ -6,8 +6,8 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronDown, Menu, Search, X } from "lucide-react";
 import { Logo } from "../Logo";
 import { AccountLinks } from "../home/AccountLinks";
-import { ToolTile } from "../tools/icons";
-import { CATEGORIES, TOOLS } from "@/lib/tools/registry";
+import { ToolsMenu } from "./ToolsMenu";
+import { CATEGORIES } from "@/lib/tools/registry";
 import { cn } from "../ui/primitives";
 
 // Absolute paths so the links work from every page, not just the homepage.
@@ -17,8 +17,6 @@ const LINKS = [
   { href: "/#cat-image", label: "Images" },
   { href: "/#cat-intelligence", label: "AI" },
 ];
-
-const toolHref = (t: (typeof TOOLS)[number]) => t.href ?? `/tools/${t.slug}`;
 
 export function Nav() {
   const pathname = usePathname();
@@ -113,24 +111,11 @@ export function Nav() {
       </nav>
 
       {menu === "tools" && (
-        <div id="tools-menu" className="absolute inset-x-0 top-full hidden max-h-[calc(100dvh-4rem)] overflow-y-auto border-b border-rule bg-white shadow-[0_24px_48px_-24px_rgb(16_19_26/0.25)] lg:block">
-          <div className="mx-auto grid max-w-[1280px] grid-cols-5 gap-x-6 gap-y-6 px-8 py-6">
-            {CATEGORIES.map((c) => (
-              <div key={c.id}>
-                <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-ink-soft">{c.label}</p>
-                <ul className="mt-2 space-y-0">
-                  {TOOLS.filter((t) => t.category === c.id && t.status === "ready").map((t) => (
-                    <li key={t.slug}>
-                      <Link href={toolHref(t)} className="-mx-2 flex items-center gap-2.5 rounded-lg px-2 py-1 text-[14px] text-ink hover:bg-paper">
-                        <ToolTile tool={t} size="sm" className="h-7 w-7 rounded-[9px] shadow-md" />
-                        {t.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+        <div
+          id="tools-menu"
+          className="absolute inset-x-0 top-full hidden max-h-[calc(100dvh-4rem)] overflow-y-auto border-b border-rule bg-white shadow-[0_24px_48px_-24px_rgb(16_19_26/0.25)] lg:block"
+        >
+          <ToolsMenu onNavigate={() => setMenu(null)} />
         </div>
       )}
 
