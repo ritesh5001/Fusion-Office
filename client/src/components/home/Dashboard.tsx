@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Cloud, Loader2 } from "lucide-react";
 import { signInUrl, signOutUrl, useCloudConfig } from "@/lib/cloudConfig";
 import { Logo } from "../Logo";
+import { Mascot } from "../mascot/Mascot";
 import { DocumentList, type CloudDoc } from "./DocumentList";
 import { apiFetch } from "@/lib/api";
 
@@ -46,9 +47,19 @@ export function Dashboard() {
     body = <Notice title="Something went wrong">{error}</Notice>;
   } else if (docs && docs.length === 0) {
     body = (
-      <Notice title="No cloud documents yet">
-        Open a PDF in the editor and choose <strong>File → Save to cloud</strong>.
-      </Notice>
+      <div className="mt-6 flex flex-col items-center rounded-xl border border-slate-200 bg-white px-6 py-10 text-center">
+        <Mascot mood="curious" size={120} interactive label="No documents yet" />
+        <h2 className="mt-4 text-lg font-semibold text-slate-900">Nothing up here yet</h2>
+        <p className="mt-1.5 max-w-sm text-[14px] leading-relaxed text-slate-600">
+          Open a PDF in the editor and choose <strong>File → Save to cloud</strong>. Folio will keep it ready for you.
+        </p>
+        <Link
+          href="/editor"
+          className="mt-5 inline-flex h-9 items-center rounded-md bg-brand-600 px-3.5 text-sm font-medium text-white hover:bg-brand-700"
+        >
+          Open editor
+        </Link>
+      </div>
     );
   } else {
     body = <DocumentList docs={docs!} onChange={load} />;

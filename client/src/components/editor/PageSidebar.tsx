@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useEditor } from "@/lib/editor/store";
 import { totalRotation, viewSize, type EditorPage } from "@/lib/editor/types";
-import { renderThumbnail } from "@/lib/pdf/renderer";
+import { renderPreview } from "@/lib/editor/thumbnail";
 import { editorEvents, toast } from "@/lib/editor/events";
 import { extractPages, insertFile } from "@/lib/editor/actions";
 import { pickFiles } from "./filePicker";
@@ -299,17 +299,25 @@ const Thumb = memo(function Thumb({
     return () => io.disconnect();
   }, []);
 
+  // The preview includes your edits and follows them as you work (a short
+  // pause first, so dragging or typing doesn't redraw it on every step).
   useEffect(() => {
     if (!visible) return;
     let alive = true;
-    renderThumbnail(page, THUMB_W)
-      .then((url) => alive && setSrc(url))
-      .catch(() => {});
+    const t = setTimeout(
+      () => {
+        renderPreview(page, THUMB_W)
+          .then((url) => alive && setSrc(url))
+          .catch(() => {});
+      },
+      page.objects.length ? 250 : 0,
+    );
     return () => {
       alive = false;
+      clearTimeout(t);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible, key]);
+  }, [visible, key, page.objects]);
 
   const count = page.objects.length;
 

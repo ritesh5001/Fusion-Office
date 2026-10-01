@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Check, FilePlus2, FolderOpen, Loader2, Trash2, type LucideIcon } from "lucide-react";
+import { FilePlus2, FolderOpen, Loader2, Trash2, type LucideIcon } from "lucide-react";
+import { Mascot } from "@/components/mascot/Mascot";
 import { deleteDraft, listDrafts, saveDraft, type DraftInfo, type DraftKind } from "@/lib/office/drafts";
 import { convertOnServer, extOf, LEGACY } from "@/lib/office/convert";
 import { Logo } from "../Logo";
@@ -45,10 +46,17 @@ export function OfficeHeader({
         <Icon className="h-4 w-4" aria-hidden="true" />
       </span>
       <NameField value={docName} onChange={onRename} />
-      <span className="hidden items-center gap-1 text-[12px] text-slate-400 sm:flex" aria-live="polite">
-        {status === "saving" ? <Loader2 className="h-3 w-3 animate-spin" /> : status === "saved" ? <Check className="h-3 w-3" /> : null}
-        {status === "saving" ? "Saving…" : status === "saved" ? "Saved on this device" : ""}
-      </span>
+      {status !== "idle" && (
+        <span className="hidden items-center gap-1.5 text-[12px] text-slate-400 sm:flex" aria-live="polite">
+          <Mascot
+            mood={status === "saving" ? "working" : "happy"}
+            size={22}
+            label={status === "saving" ? "Saving" : "Saved"}
+            className="shrink-0"
+          />
+          {status === "saving" ? "Saving…" : "Saved on this device"}
+        </span>
+      )}
       <nav className="ml-2 hidden items-center md:flex">
         {menus.map((m) => (
           <Menu key={m.label} label={m.label} items={m.items} />

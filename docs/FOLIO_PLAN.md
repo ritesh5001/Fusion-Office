@@ -56,10 +56,11 @@ Implementation: `client/src/components/mascot/Mascot.tsx` (component) and the "F
 - [x] 404 page: sleepy Folio, "This page is taking a nap".
 - [x] Footer link to "How it works".
 
-### Phase 4: next (proposed)
-- [ ] **Office editors and PDF editor:** a small Folio in the header save indicator (working while saving, happy when saved, oops if saving fails).
+### Phase 4: editors, download wink, empty dashboard (done)
+- [x] **Office editors and PDF editor:** small Folio in the header save indicator — working while saving, happy when saved, oops if save fails, sleepy when offline (`TopBar.SaveStatus`, `OfficeShell` header).
+- [x] **Empty dashboard:** curious Folio + CTA when there are no cloud documents yet.
+- [x] **Download moment:** `Mascot` accepts `winkKey`; tool Results bumps it on download so Folio winks once.
 - [ ] **Custom tools** (image editor, watermark remover, organize, crop…): hook their own progress and results into Folio the same way as the standard tools.
-- [ ] **Download moment:** a wink when the download starts.
 - [ ] **"Make it yours" playground** (AIMO's playground idea): pick Folio's mood and colour, copy a sticker/PNG. Fun, shareable, optional.
 - [ ] **Sound off by default**, optional tiny "pop" on done (only if users ask for it).
 

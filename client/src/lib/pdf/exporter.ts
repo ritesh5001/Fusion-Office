@@ -45,6 +45,7 @@ import {
 } from "../editor/types";
 import { objectBounds } from "../editor/objects";
 import { removeTextInRects, type UserRect } from "./textRemoval";
+import { loadSourcePdf } from "./decrypt";
 import { encodeRun, encoderFor, type FontEncoder } from "./fontEncoder";
 
 export interface ExportOptions {
@@ -109,7 +110,8 @@ class ExportContext {
   source(id: string) {
     let doc = this.sources.get(id);
     if (!doc) {
-      doc = PDFDocument.load(getSourceBytes(id), { ignoreEncryption: true, updateMetadata: false }).then((d) => {
+      // Decrypts owner-protected forms, which would otherwise export as blank pages.
+      doc = loadSourcePdf(getSourceBytes(id)).then((d) => {
         if (this.flatten) {
           try {
             d.getForm().flatten();

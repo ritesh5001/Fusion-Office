@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
-  Check,
-  CloudOff,
   CloudUpload,
   Download,
   FileDown,
@@ -22,6 +20,7 @@ import { toast } from "@/lib/editor/events";
 import { pickFiles } from "./filePicker";
 import { activateTool } from "./ToolBar";
 import { requestDeletePages } from "./PageSidebar";
+import { Mascot } from "@/components/mascot/Mascot";
 import { useCloud, saveToCloud } from "./cloud";
 import { Button, Divider, IconButton, Menu } from "../ui/primitives";
 import { Logo } from "../Logo";
@@ -230,37 +229,28 @@ function DocName() {
 
 function SaveStatus() {
   const status = useEditor((s) => s.saveStatus);
-  const map = {
-    idle: null,
-    saving: (
-      <>
-        <Loader2 className="h-3 w-3 animate-spin" /> Saving…
-      </>
-    ),
-    saved: (
-      <>
-        <Check className="h-3 w-3" /> Saved
-      </>
-    ),
-    error: (
-      <>
-        <CloudOff className="h-3 w-3" /> Not saved
-      </>
-    ),
-    offline: (
-      <>
-        <CloudOff className="h-3 w-3" /> Offline
-      </>
-    ),
-  } as const;
-  const content = map[status];
-  if (!content) return null;
+  if (status === "idle") return null;
+
+  const mood = status === "saving" ? "working" : status === "saved" ? "happy" : status === "error" ? "oops" : "sleepy";
+  const label =
+    status === "saving" ? "Saving…" : status === "saved" ? "Saved" : status === "error" ? "Not saved" : "Offline";
+  const title =
+    status === "saved"
+      ? "Changes are saved in this browser"
+      : status === "error"
+        ? "Could not reach the cloud — your edits are still in this browser"
+        : status === "offline"
+          ? "Changes are saved in this browser"
+          : undefined;
+
   return (
     <span
-      className={`hidden items-center gap-1 whitespace-nowrap text-[11px] sm:flex ${status === "error" ? "text-red-600" : "text-slate-400"}`}
-      title={status === "saved" ? "Changes are saved in this browser" : undefined}
+      className={`hidden items-center gap-1.5 whitespace-nowrap text-[11px] sm:flex ${status === "error" ? "text-red-600" : "text-slate-400"}`}
+      title={title}
+      aria-live="polite"
     >
-      {content}
+      <Mascot mood={mood} size={22} label={label} className="shrink-0" />
+      {label}
     </span>
   );
 }

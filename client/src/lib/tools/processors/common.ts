@@ -1,13 +1,18 @@
-import { PDFDocument, EncryptedPDFError, type PDFPage } from "pdf-lib";
+import { EncryptedPDFError, type PDFDocument, type PDFPage } from "pdf-lib";
+import { loadSourcePdf } from "../../pdf/decrypt";
 import { viewToUserMatrix, type Matrix } from "../../pdf/geometry";
 
-/** Load with a friendly error for password-protected files. */
+/**
+ * Load a PDF for processing. Files protected with an owner password only (they
+ * open without one, typical for forms) are decrypted; files that need a
+ * password to open get a friendly error.
+ */
 export async function loadPdf(bytes: Uint8Array): Promise<PDFDocument> {
   try {
-    return await PDFDocument.load(bytes, { updateMetadata: false });
+    return await loadSourcePdf(bytes);
   } catch (err) {
-    if (err instanceof EncryptedPDFError || /encrypted/i.test((err as Error)?.message ?? ""))
-      throw new Error("This PDF is password-protected. Use Unlock PDF first.");
+    const msg = (err as Error)?.message ?? "";
+    if (err instanceof EncryptedPDFError || /encrypted|password/i.test(msg)) throw new Error("This PDF is password-protected. Use Unlock PDF first.");
     throw new Error("This file could not be read as a PDF. Try Repair PDF.");
   }
 }

@@ -274,12 +274,17 @@ function ImagePreview({ file }: { file: ToolFile }) {
 
 function Results({ result, onReset, anchor }: { result: ToolResult; onReset: () => void; anchor: React.RefObject<HTMLDivElement | null> }) {
   const [copied, setCopied] = useState(false);
+  const [winkKey, setWinkKey] = useState(0);
   const many = result.files.length > 1;
   const total = result.files.reduce((n, f) => n + f.bytes.length, 0);
+  const celebrate = (fn: () => void) => {
+    fn();
+    setWinkKey((k) => k + 1);
+  };
   return (
     <div ref={anchor} className="mx-auto max-w-[760px] scroll-mt-24">
       <div className="rounded-2xl bg-white p-6 text-center ring-1 ring-ink/10 md:p-8">
-        <Mascot mood="happy" size={104} interactive />
+        <Mascot mood="happy" size={104} interactive winkKey={winkKey} label="All done" />
         <h2 className="mt-3 font-display text-[26px] font-bold tracking-[-0.02em]">All done!</h2>
         {result.summary && <div className="mx-auto mt-2 max-w-[56ch] text-[15px] leading-relaxed text-ink-soft">{result.summary}</div>}
         {!many && result.files[0]?.type.startsWith("image/") && <ImagePreview file={result.files[0]} />}
@@ -287,7 +292,7 @@ function Results({ result, onReset, anchor }: { result: ToolResult; onReset: () 
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <button
               type="button"
-              onClick={() => downloadFile(many ? zipFiles(result.files) : result.files[0])}
+              onClick={() => celebrate(() => downloadFile(many ? zipFiles(result.files) : result.files[0]))}
               className="btn inline-flex h-12 items-center gap-2 rounded-full bg-brand-600 px-7 text-[15px] font-medium text-white shadow-sm hover:bg-brand-700"
             >
               <Download className="h-4 w-4" aria-hidden="true" />
@@ -301,7 +306,7 @@ function Results({ result, onReset, anchor }: { result: ToolResult; onReset: () 
               <li key={i} className="flex items-center gap-3 px-4 py-2.5">
                 <span className="min-w-0 flex-1 truncate text-[13px]">{f.name}</span>
                 <span className="text-[12px] tabular-nums text-ink-soft">{formatBytes(f.bytes.length)}</span>
-                <button type="button" onClick={() => downloadFile(f)} className="text-[13px] font-medium text-brand-700 hover:underline">
+                <button type="button" onClick={() => celebrate(() => downloadFile(f))} className="text-[13px] font-medium text-brand-700 hover:underline">
                   Download
                 </button>
               </li>

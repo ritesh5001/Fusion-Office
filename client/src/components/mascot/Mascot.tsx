@@ -65,6 +65,8 @@ export function Mascot({
   size = 120,
   follow = false,
   interactive = false,
+  /** Bump this (e.g. on download) to trigger a one-shot wink without a click. */
+  winkKey = 0,
   label,
   className,
 }: {
@@ -74,6 +76,8 @@ export function Mascot({
   follow?: boolean;
   /** A click makes Folio wink. */
   interactive?: boolean;
+  /** Change to trigger a temporary wink (download celebration, etc.). */
+  winkKey?: number;
   /** Accessible name; omit for decorative use. */
   label?: string;
   className?: string;
@@ -113,6 +117,12 @@ export function Mascot({
     const t = setTimeout(() => setPetted(false), 1400);
     return () => clearTimeout(t);
   }, [petted]);
+
+  // External wink trigger (download, success moments).
+  useEffect(() => {
+    if (!winkKey) return;
+    setPetted(true);
+  }, [winkKey]);
 
   const pet = () => setPetted(true);
   const a11y = interactive
