@@ -95,8 +95,8 @@ single tools, **workflows** (chains of processors), and unit tests.
 1. **Done.** Tool platform + all browser tools (merge through compare above),
    tools hub, navigation, workflows, tests.
 2. **Done.** Server engines: LibreOffice and Chromium conversions (Docker image
-   on Render), Claude-powered summarize and translate. The AI tools need
-   `ANTHROPIC_API_KEY` on the server; without it they answer "not available".
+   on Render), AI summarize, translate and Chat with PDF on Groq. The AI tools
+   need `GROQ_API_KEY` on the server; without it they answer "not available".
 3. **Next.** Archival and deep repair: Ghostscript for PDF/A and heavy repair.
    PDF/A shows as "Coming soon" until then.
 
@@ -110,11 +110,13 @@ single tools, **workflows** (chains of processors), and unit tests.
   every host itself and refuses private, loopback, link-local and metadata
   addresses (covers redirects, sub-resources, fetch, workers and WebSockets;
   WebRTC is disabled). Each page runs in a fresh browser context.
-- **AI:** Claude (`claude-opus-5`) with server-side fallbacks turned on
-  (`fallbacks: "default"`): if Claude's safety checks decline a request, the
-  API retries it on Anthropic's recommended fallback model. Oversized
-  documents get a clear "too long" error instead of being cut short. When
-  sign-in is configured, only signed-in users can use AI tools.
+- **AI:** Groq's OpenAI-compatible API, model `openai/gpt-oss-120b` by default
+  (`AI_MODEL` to change it). Rate limits are waited out automatically (up to
+  30 s at a time); documents over the plan's per-minute token allowance get a
+  clear "too long, try fewer pages" error instead of being cut short. Groq's
+  free plan allows about 8,000 tokens a minute (roughly 8–10 pages per
+  request); the Developer plan allows far more. When sign-in is configured,
+  only signed-in users can use AI tools.
 - All heavy routes: origin check and per-IP rate limits.
 
 ## Quality bar

@@ -58,14 +58,14 @@ Keyboard shortcuts are listed in the editor under **Help → Keyboard shortcuts*
 | --- | --- |
 | In the browser | Merge, Split, Organize, Rotate, Compress, Repair, OCR (Tesseract.js, self-hosted), JPG → PDF, Scan to PDF (camera), PDF → JPG / Word / PowerPoint / Excel / Markdown, Watermark, Page numbers, Crop, Forms, Protect, Unlock, Redact, Compare, Workflows (chain tools and save the recipe) |
 | On the server | Word / PowerPoint / Excel → PDF (LibreOffice), HTML → PDF (headless Chromium) |
-| AI (server + Claude) | AI Summarizer, Translate PDF (Word + Markdown output). Needs `ANTHROPIC_API_KEY` |
+| AI (server + Groq) | AI Summarizer, Translate PDF (Word + Markdown output), Chat with PDF. Needs `GROQ_API_KEY` |
 | In the editor | Edit PDF, Sign PDF |
 | Images (in the browser) | **Image editor** (crop with shapes incl. passport 35×45, rotate, flip, straighten, 10 adjustments, 10 filters, text with fonts/colours/outline/box, undo/redo, resize and save with a KB limit), Compress image (by quality or to a target like 50 KB), Resize image (by %, pixels, print size in cm/mm/in with DPI, optional KB limit), Crop image, Convert image (JPG/PNG/WEBP, incl. HEIC where the browser can open it, GIF, BMP, SVG), Rotate image |
 | Coming soon | PDF → PDF/A (Ghostscript) |
 
 Running the server tools locally: install LibreOffice (`brew install --cask libreoffice`) so `soffice` is on your PATH; Chrome is found automatically. Without them those tools say they aren't available.
 
-**AI tools** use `claude-opus-5` with server-side fallbacks turned on (`fallbacks: "default"`, beta `server-side-fallback-2026-07-01`): if Claude's safety checks decline a request, the API re-runs it on Anthropic's recommended fallback model instead of failing. Remove those two fields in `server/src/lib/ai.ts` to turn that off.
+**AI tools** run on [Groq](https://console.groq.com) with `openai/gpt-oss-120b` (set `AI_MODEL` for another model). Groq's free plan allows about 8,000 tokens a minute, roughly 8–10 pages per request: rate limits are waited out automatically, and longer documents get a "try fewer pages" message. The Developer plan raises the limits.
 
 ## Word, Excel and PowerPoint editors
 
@@ -157,7 +157,7 @@ Steps:
    - `AUTH_URL` = `https://fusion-office-web.onrender.com/api/auth` (the **frontend** address; use your custom domain later)
    - `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET` (and/or Google). The GitHub OAuth app's callback is `https://fusion-office-web.onrender.com/api/auth/callback/github`.
    - `CLIENT_ORIGIN` only if you add custom domains.
-   - `ANTHROPIC_API_KEY` to turn on the AI tools (optional).
+   - `GROQ_API_KEY` to turn on the AI tools (optional; get one at console.groq.com/keys).
 3. `AUTH_SECRET` is generated automatically. Uploaded files survive deploys and restarts because they live on the disk.
 
 Good to know:

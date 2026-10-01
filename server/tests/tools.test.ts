@@ -8,8 +8,7 @@ import { spawnSync } from "node:child_process";
 import express from "express";
 
 // AI must look unconfigured here, whatever the developer's shell has.
-delete process.env.ANTHROPIC_API_KEY;
-delete process.env.ANTHROPIC_AUTH_TOKEN;
+delete process.env.GROQ_API_KEY;
 const { createApp } = await import("../src/app.js");
 const { isPublicAddress, checkPublicUrl, startEgressProxy, BLOCKED_HEADER } = await import("../src/lib/netGuard.js");
 const { officeFormat } = await import("../src/lib/office.js");

@@ -60,8 +60,11 @@ services:
         sync: false
       - key: AUTH_GOOGLE_SECRET
         sync: false
-      # Turns on the AI tools (Summarize, Translate). Get a key at console.anthropic.com.
-      - key: ANTHROPIC_API_KEY
+      # Turns on the AI tools (Summarize, Translate, Chat with PDF). Get a key at console.groq.com/keys.
+      - key: GROQ_API_KEY
+        sync: false
+      # Optional: a different Groq model (default openai/gpt-oss-120b).
+      - key: AI_MODEL
         sync: false
       - key: CONVERT_CONCURRENCY
         value: "1"
