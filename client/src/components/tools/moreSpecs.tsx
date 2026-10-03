@@ -48,7 +48,7 @@ async function printHtml(html: string, name: string, landscape = false): Promise
   return new Uint8Array(await res.arrayBuffer());
 }
 
-const Note = ({ children }: { children: React.ReactNode }) => <p className="text-[12px] leading-relaxed text-ink-soft">{children}</p>;
+const Note = ({ children }: { children: React.ReactNode }) => <p className="text-[12px] leading-relaxed text-fg-muted">{children}</p>;
 
 // ─── Organize ───────────────────────────────────────────────────────
 
@@ -252,7 +252,7 @@ const bates: ToolSpec<BatesOpts> = {
           <NumberField label="Start at" value={o.start} min={0} onChange={(start) => set({ start })} />
           <NumberField label="Digits" value={o.digits} min={1} max={12} onChange={(digits) => set({ digits })} />
         </div>
-        <p className="rounded-md bg-paper px-3 py-2 font-mono text-[13px]">{sample}</p>
+        <p className="rounded-md bg-raised px-3 py-2 font-mono text-[13px]">{sample}</p>
         <PositionPicker value={o.position} onChange={(position) => set({ position })} />
         <NumberField label="Size" value={o.fontSize} min={6} max={24} suffix="pt" onChange={(fontSize) => set({ fontSize })} />
         <Note>Numbering continues from one file to the next, in the order shown.</Note>
@@ -272,7 +272,7 @@ const bates: ToolSpec<BatesOpts> = {
 type HfOpts = { hl: string; hc: string; hr: string; fl: string; fc: string; fr: string; fontSize: number; color: string; margin: number; rule: boolean; pages: string };
 const SlotInputs = ({ title, values, onChange }: { title: string; values: [string, string, string]; onChange: (i: number, v: string) => void }) => (
   <div className="space-y-1.5">
-    <p className="text-[12px] font-medium text-ink">{title}</p>
+    <p className="text-[12px] font-medium text-fg">{title}</p>
     <div className="grid grid-cols-3 gap-1.5">
       {["Left", "Centre", "Right"].map((label, i) => (
         <input
@@ -281,7 +281,7 @@ const SlotInputs = ({ title, values, onChange }: { title: string; values: [strin
           placeholder={label}
           value={values[i]}
           onChange={(e) => onChange(i, e.target.value)}
-          className="h-9 min-w-0 rounded-lg bg-white px-2 text-[13px] ring-1 ring-rule outline-none focus:ring-2 focus:ring-brand-500"
+          className="h-9 min-w-0 rounded-lg bg-sunken text-fg placeholder:text-fg-subtle px-2 text-[13px] ring-1 ring-line-strong outline-none focus:ring-2 focus:ring-brand-500"
         />
       ))}
     </div>

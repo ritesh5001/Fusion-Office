@@ -156,7 +156,7 @@ export function ElementView({ el, theme, textOverride, showHints }: { el: El; th
     );
   if (el.type === "unsupported")
     return (
-      <div className="absolute flex items-center justify-center border border-dashed border-slate-400 bg-slate-100/80 text-center text-[16px] text-slate-500" style={style}>
+      <div className="absolute flex items-center justify-center border border-dashed border-[#9aa1ad] bg-[#f4f5f7]/80 text-center text-[16px] text-[#6b7280]" style={style}>
         {el.label}
       </div>
     );
@@ -182,7 +182,7 @@ export function ElementView({ el, theme, textOverride, showHints }: { el: El; th
 export const SlideView = memo(function SlideView({ slide, deck, showHints = false }: { slide: Slide; deck: Deck; showHints?: boolean }) {
   return (
     <div
-      className="relative overflow-hidden"
+      className="paper relative overflow-hidden"
       style={{
         width: deck.width,
         height: deck.height,

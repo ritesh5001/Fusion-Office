@@ -11,7 +11,7 @@ export function AccountLinks() {
   const docs = (
     <Link
       href="/dashboard"
-      className="hidden h-10 items-center gap-1.5 rounded-full px-4 text-[14px] font-medium text-brand-700 ring-1 ring-brand-200 transition-colors hover:bg-brand-50 md:inline-flex"
+      className="hidden h-10 items-center gap-1.5 rounded-full px-4 text-[14px] font-medium text-brand-300 ring-1 ring-brand-500/35 transition-colors hover:bg-brand-500/15 md:inline-flex"
     >
       <FileText className="h-4 w-4" aria-hidden="true" />
       My Documents
@@ -21,7 +21,7 @@ export function AccountLinks() {
     return (
       <>
         {docs}
-        <a href={signInUrl("/dashboard")} className="h-10 rounded-full px-4 text-[14px] font-medium leading-10 text-ink hover:bg-paper-deep">
+        <a href={signInUrl("/dashboard")} className="h-10 rounded-full px-4 text-[14px] font-medium leading-10 text-fg hover:bg-raised">
           Sign in
         </a>
       </>

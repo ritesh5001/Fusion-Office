@@ -96,10 +96,10 @@ export function WorkflowsTool() {
       <div className="space-y-4">
         {saved.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[13px] text-ink-soft">Saved:</span>
+            <span className="text-[13px] text-fg-muted">Saved:</span>
             {saved.map((w) => (
-              <span key={w.name} className="inline-flex items-center rounded-full bg-white ring-1 ring-rule">
-                <button type="button" onClick={() => (setSteps(w.steps.map((s) => ({ ...s, id: `w${++n}` }))), setName(w.name), setOutput(null))} className="h-8 px-3 text-[13px] hover:text-brand-700">
+              <span key={w.name} className="inline-flex items-center rounded-full bg-sunken ring-1 ring-line">
+                <button type="button" onClick={() => (setSteps(w.steps.map((s) => ({ ...s, id: `w${++n}` }))), setName(w.name), setOutput(null))} className="h-8 px-3 text-[13px] hover:text-brand-300">
                   {w.name}
                 </button>
                 <button
@@ -110,7 +110,7 @@ export function WorkflowsTool() {
                     localStorage.setItem(STORE, JSON.stringify(next));
                     setSaved(next);
                   }}
-                  className="h-8 pr-2.5 text-ink-soft hover:text-red-600"
+                  className="h-8 pr-2.5 text-fg-muted hover:text-red-300"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -125,18 +125,18 @@ export function WorkflowsTool() {
             const spec = SPECS[s.slug];
             const Options = spec.Options;
             return (
-              <li key={s.id} className="rounded-2xl bg-white ring-1 ring-ink/10">
-                <div className="flex items-center gap-3 border-b border-rule px-4 py-3">
-                  <span className="font-mono text-[12px] text-ink-soft">{String(i + 1).padStart(2, "0")}</span>
-                  <ToolIcon name={tool.icon} className="h-4 w-4 text-ink-soft" />
+              <li key={s.id} className="rounded-2xl bg-surface ring-1 ring-line">
+                <div className="flex items-center gap-3 border-b border-line px-4 py-3">
+                  <span className="font-mono text-[12px] text-fg-muted">{String(i + 1).padStart(2, "0")}</span>
+                  <ToolIcon name={tool.icon} className="h-4 w-4 text-fg-muted" />
                   <span className="flex-1 text-[14px] font-medium">{tool.name}</span>
-                  <button type="button" aria-label="Move up" disabled={i === 0} onClick={() => setSteps((all) => { const x = [...all]; [x[i - 1], x[i]] = [x[i], x[i - 1]]; return x; })} className="rounded-md p-1.5 text-ink-soft hover:bg-paper-deep disabled:opacity-30">
+                  <button type="button" aria-label="Move up" disabled={i === 0} onClick={() => setSteps((all) => { const x = [...all]; [x[i - 1], x[i]] = [x[i], x[i - 1]]; return x; })} className="rounded-md p-1.5 text-fg-muted hover:bg-raised disabled:opacity-30">
                     <ArrowUp className="h-4 w-4" />
                   </button>
-                  <button type="button" aria-label="Move down" disabled={i === steps.length - 1} onClick={() => setSteps((all) => { const x = [...all]; [x[i + 1], x[i]] = [x[i], x[i + 1]]; return x; })} className="rounded-md p-1.5 text-ink-soft hover:bg-paper-deep disabled:opacity-30">
+                  <button type="button" aria-label="Move down" disabled={i === steps.length - 1} onClick={() => setSteps((all) => { const x = [...all]; [x[i + 1], x[i]] = [x[i], x[i + 1]]; return x; })} className="rounded-md p-1.5 text-fg-muted hover:bg-raised disabled:opacity-30">
                     <ArrowDown className="h-4 w-4" />
                   </button>
-                  <button type="button" aria-label="Remove step" onClick={() => setSteps((all) => all.filter((x) => x.id !== s.id))} className="rounded-md p-1.5 text-ink-soft hover:bg-red-50 hover:text-red-600">
+                  <button type="button" aria-label="Remove step" onClick={() => setSteps((all) => all.filter((x) => x.id !== s.id))} className="rounded-md p-1.5 text-fg-muted hover:bg-red-500/10 hover:text-red-300">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -150,39 +150,39 @@ export function WorkflowsTool() {
           })}
         </ol>
 
-        <div className="rounded-2xl border-2 border-dashed border-rule-strong/60 p-4">
+        <div className="rounded-2xl border-2 border-dashed border-line-strong/60 p-4">
           <p className="mb-3 flex items-center gap-1.5 text-[13px] font-medium">
             <Plus className="h-4 w-4" aria-hidden="true" /> Add a step
           </p>
           <div className="flex flex-wrap gap-2">
             {CHAINABLE.map((t) => (
-              <button key={t.slug} type="button" onClick={() => addStep(t.slug)} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-white px-3 text-[13px] ring-1 ring-rule hover:ring-brand-500">
-                <ToolIcon name={t.icon} className="h-3.5 w-3.5 text-ink-soft" /> {t.name}
+              <button key={t.slug} type="button" onClick={() => addStep(t.slug)} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-sunken px-3 text-[13px] ring-1 ring-line-strong hover:ring-brand-500">
+                <ToolIcon name={t.icon} className="h-3.5 w-3.5 text-fg-muted" /> {t.name}
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      <aside className="h-fit space-y-4 rounded-2xl bg-white p-5 ring-1 ring-ink/10 lg:sticky lg:top-24">
+      <aside className="h-fit space-y-4 rounded-2xl bg-surface p-5 ring-1 ring-line lg:sticky lg:top-24">
         <div className="flex gap-2">
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Workflow name" aria-label="Workflow name" className="h-10 min-w-0 flex-1 rounded-lg px-3 text-[14px] ring-1 ring-rule outline-none focus:ring-2 focus:ring-brand-500" />
-          <button type="button" onClick={save} className="inline-flex h-10 items-center gap-1.5 rounded-lg px-3 text-[13px] ring-1 ring-rule hover:bg-paper-deep">
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Workflow name" aria-label="Workflow name" className="h-10 min-w-0 flex-1 rounded-lg bg-sunken px-3 text-[14px] text-fg ring-1 ring-line-strong outline-none placeholder:text-fg-subtle focus:ring-2 focus:ring-brand-500" />
+          <button type="button" onClick={save} className="inline-flex h-10 items-center gap-1.5 rounded-lg px-3 text-[13px] ring-1 ring-line hover:bg-raised">
             <Save className="h-4 w-4" aria-hidden="true" /> Save
           </button>
         </div>
         <Dropzone compact accept="application/pdf,.pdf" multiple onFiles={async (list) => setFiles(await Promise.all(list.map(toToolFile)))} label={files.length ? `${files.length} PDF${files.length === 1 ? "" : "s"} selected` : "Choose PDFs"} />
-        {error && <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-[13px] text-red-700">{error}</p>}
-        <button type="button" onClick={run} disabled={!!busy} className="btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-600 text-[15px] font-medium text-white hover:bg-brand-700">
+        {error && <p role="alert" className="rounded-md bg-red-500/10 px-3 py-2 text-[13px] text-red-300">{error}</p>}
+        <button type="button" onClick={run} disabled={!!busy} className="btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-accent text-[15px] font-medium text-on-accent hover:bg-accent-hover">
           {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Play className="h-4 w-4" aria-hidden="true" />} Run workflow
         </button>
-        {busy && <p className="text-[12px] text-ink-soft">{busy}</p>}
+        {busy && <p className="text-[12px] text-fg-muted">{busy}</p>}
         {output && (
           <button type="button" onClick={() => downloadFile(output.length > 1 ? zipFiles(output, "workflow.zip") : output[0])} className="btn inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-emerald-600 text-[14px] font-medium text-white hover:bg-emerald-700">
             <Download className="h-4 w-4" aria-hidden="true" /> Download {output.length > 1 ? `${output.length} files (ZIP)` : `(${formatBytes(output[0].bytes.length)})`}
           </button>
         )}
-        <p className="text-[12px] leading-relaxed text-ink-soft">Workflows are saved in this browser. Passwords and images are never saved.</p>
+        <p className="text-[12px] leading-relaxed text-fg-muted">Workflows are saved in this browser. Passwords and images are never saved.</p>
       </aside>
     </div>
   );

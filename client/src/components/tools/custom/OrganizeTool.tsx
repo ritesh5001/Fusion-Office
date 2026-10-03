@@ -89,7 +89,7 @@ export function OrganizeTool() {
   if (!sources.length) {
     return busy ? (
       <div className="flex justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-ink-soft" aria-label="Loading" />
+        <Loader2 className="h-6 w-6 animate-spin text-fg-muted" aria-label="Loading" />
       </div>
     ) : (
       <Dropzone accept="application/pdf,.pdf" multiple onFiles={add} label="Select PDF files" />
@@ -98,27 +98,27 @@ export function OrganizeTool() {
 
   return (
     <div>
-      <div className="sticky top-16 z-20 -mx-2 mb-6 flex flex-wrap items-center gap-2 rounded-xl bg-paper/90 px-2 py-3 backdrop-blur">
-        <span className="mr-auto text-[13px] text-ink-soft">
+      <div className="sticky top-16 z-20 -mx-2 mb-6 flex flex-wrap items-center gap-2 rounded-xl bg-raised/90 px-2 py-3 backdrop-blur">
+        <span className="mr-auto text-[13px] text-fg-muted">
           {items.length} page{items.length === 1 ? "" : "s"} · drag to reorder
         </span>
-        <button type="button" onClick={undo} disabled={!history.length} className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] ring-1 ring-rule hover:bg-white disabled:opacity-40">
+        <button type="button" onClick={undo} disabled={!history.length} className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] ring-1 ring-line-strong hover:bg-raised disabled:opacity-40">
           <Undo2 className="h-4 w-4" aria-hidden="true" /> Undo
         </button>
-        <button type="button" onClick={() => change((cur) => [...cur].reverse())} className="h-9 rounded-full px-3 text-[13px] ring-1 ring-rule hover:bg-white">
+        <button type="button" onClick={() => change((cur) => [...cur].reverse())} className="h-9 rounded-full px-3 text-[13px] ring-1 ring-line-strong hover:bg-raised">
           Reverse order
         </button>
-        <label className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full px-3 text-[13px] ring-1 ring-rule hover:bg-white">
+        <label className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full px-3 text-[13px] ring-1 ring-line-strong hover:bg-raised">
           <Plus className="h-4 w-4" aria-hidden="true" /> Add PDF
           <input type="file" accept="application/pdf" multiple className="sr-only" onChange={(e) => e.target.files && add(Array.from(e.target.files))} />
         </label>
-        <button type="button" onClick={save} disabled={!!busy} className="btn inline-flex h-10 items-center gap-2 rounded-full bg-brand-600 px-5 text-[14px] font-medium text-white hover:bg-brand-700">
+        <button type="button" onClick={save} disabled={!!busy} className="btn inline-flex h-10 items-center gap-2 rounded-full bg-accent px-5 text-[14px] font-medium text-on-accent hover:bg-accent-hover">
           {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Download className="h-4 w-4" aria-hidden="true" />}
           {busy ?? "Save PDF"}
         </button>
       </div>
       {error && (
-        <p role="alert" className="mb-4 rounded-md bg-red-50 px-3 py-2 text-[13px] text-red-700">
+        <p role="alert" className="mb-4 rounded-md bg-red-500/10 px-3 py-2 text-[13px] text-red-300">
           {error}
         </p>
       )}
@@ -131,18 +131,18 @@ export function OrganizeTool() {
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => drag && moveTo(drag, it.id)}
             onDragEnd={() => setDrag(null)}
-            className={cn("group relative rounded-xl bg-white p-2 ring-1 ring-ink/10 transition", drag === it.id && "opacity-40")}
+            className={cn("group relative rounded-xl bg-surface p-2 ring-1 ring-line transition", drag === it.id && "opacity-40")}
           >
-            <div className="flex aspect-[3/4] items-center justify-center overflow-hidden rounded-md bg-paper-deep">
+            <div className="flex aspect-[3/4] items-center justify-center overflow-hidden rounded-md bg-sunken">
               {it.kind === "page" && it.thumb ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={it.thumb} alt={`Page ${i + 1}`} className="max-h-full max-w-full shadow-sm transition-transform" style={{ transform: `rotate(${it.rotate}deg)` }} draggable={false} />
               ) : (
-                <span className="text-[12px] text-ink-soft">Blank page</span>
+                <span className="text-[12px] text-fg-muted">Blank page</span>
               )}
             </div>
             <div className="mt-2 flex items-center justify-between">
-              <span className="flex items-center gap-1.5 text-[12px] tabular-nums text-ink-soft">
+              <span className="flex items-center gap-1.5 text-[12px] tabular-nums text-fg-muted">
                 {it.kind === "page" && sources.length > 1 && <span className={`h-2 w-2 rounded-full ${FILE_TINTS[it.file % FILE_TINTS.length]}`} title={sources[it.file].name} />}
                 {i + 1}
               </span>
@@ -179,7 +179,7 @@ export function OrganizeTool() {
         ))}
       </ol>
       {sources.length > 1 && (
-        <ul className="mt-6 flex flex-wrap gap-4 text-[12px] text-ink-soft">
+        <ul className="mt-6 flex flex-wrap gap-4 text-[12px] text-fg-muted">
           {sources.map((s, i) => (
             <li key={i} className="flex items-center gap-1.5">
               <span className={`h-2 w-2 rounded-full ${FILE_TINTS[i % FILE_TINTS.length]}`} /> {s.name}
@@ -193,7 +193,7 @@ export function OrganizeTool() {
 
 function Btn({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button type="button" aria-label={label} title={label} onClick={onClick} className="flex h-7 w-7 items-center justify-center rounded-md text-ink-soft hover:bg-paper-deep hover:text-ink">
+    <button type="button" aria-label={label} title={label} onClick={onClick} className="flex h-7 w-7 items-center justify-center rounded-md text-fg-muted hover:bg-raised hover:text-fg">
       {children}
     </button>
   );

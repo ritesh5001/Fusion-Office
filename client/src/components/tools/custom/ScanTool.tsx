@@ -129,7 +129,7 @@ export function ScanTool() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       <div className="space-y-4">
-        <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl bg-ink">
+        <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl bg-fg">
           {stream ? (
             <>
               <video ref={video} autoPlay playsInline muted className="h-full w-full object-contain" />
@@ -145,7 +145,7 @@ export function ScanTool() {
               <Camera className="mx-auto h-10 w-10 opacity-70" aria-hidden="true" />
               <p className="mt-3 text-[15px]">Place the page on a dark surface in good light.</p>
               <div className="mt-5 flex flex-wrap justify-center gap-2">
-                <button type="button" onClick={start} className="btn inline-flex h-11 items-center gap-2 rounded-full bg-white px-5 text-[14px] font-medium text-ink">
+                <button type="button" onClick={start} className="btn btn-primary h-11 rounded-full px-5">
                   <Camera className="h-4 w-4" aria-hidden="true" /> Start camera
                 </button>
                 <label className="btn inline-flex h-11 cursor-pointer items-center gap-2 rounded-full px-5 text-[14px] font-medium text-white ring-1 ring-white/40">
@@ -160,18 +160,18 @@ export function ScanTool() {
         {shots.length > 0 && (
           <ol className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
             {shots.map((s, i) => (
-              <li key={s.id} className="rounded-xl bg-white p-1.5 ring-1 ring-ink/10">
-                <div className="flex aspect-[3/4] items-center justify-center overflow-hidden rounded-md bg-paper-deep">
+              <li key={s.id} className="rounded-xl bg-surface p-1.5 ring-1 ring-line">
+                <div className="flex aspect-[3/4] items-center justify-center overflow-hidden rounded-md bg-sunken">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={s.url} alt={`Scanned page ${i + 1}`} className="max-h-full max-w-full" style={{ transform: `rotate(${s.rotate}deg)`, filter: filter === "color" ? undefined : filter === "gray" ? "grayscale(1) contrast(1.3)" : "grayscale(1) contrast(3)" }} />
                 </div>
                 <div className="mt-1 flex items-center justify-between">
-                  <span className="pl-1 text-[12px] text-ink-soft">{i + 1}</span>
+                  <span className="pl-1 text-[12px] text-fg-muted">{i + 1}</span>
                   <span className="flex">
-                    <button type="button" aria-label="Rotate" onClick={() => setShots((all) => all.map((x) => (x.id === s.id ? { ...x, rotate: (x.rotate + 90) % 360 } : x)))} className="rounded-md p-1.5 text-ink-soft hover:bg-paper-deep">
+                    <button type="button" aria-label="Rotate" onClick={() => setShots((all) => all.map((x) => (x.id === s.id ? { ...x, rotate: (x.rotate + 90) % 360 } : x)))} className="rounded-md p-1.5 text-fg-muted hover:bg-raised">
                       <RotateCw className="h-3.5 w-3.5" />
                     </button>
-                    <button type="button" aria-label="Delete" onClick={() => setShots((all) => all.filter((x) => x.id !== s.id))} className="rounded-md p-1.5 text-ink-soft hover:bg-paper-deep">
+                    <button type="button" aria-label="Delete" onClick={() => setShots((all) => all.filter((x) => x.id !== s.id))} className="rounded-md p-1.5 text-fg-muted hover:bg-raised">
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </span>
@@ -181,8 +181,8 @@ export function ScanTool() {
           </ol>
         )}
       </div>
-      <aside className="h-fit space-y-4 rounded-2xl bg-white p-5 ring-1 ring-ink/10 lg:sticky lg:top-24">
-        <p className="text-[13px] text-ink-soft">
+      <aside className="h-fit space-y-4 rounded-2xl bg-surface p-5 ring-1 ring-line lg:sticky lg:top-24">
+        <p className="text-[13px] text-fg-muted">
           {shots.length} page{shots.length === 1 ? "" : "s"} captured
         </p>
         <Segmented
@@ -195,10 +195,10 @@ export function ScanTool() {
             { value: "bw", label: "Black & white", hint: "Sharpest text" },
           ]}
         />
-        <button type="button" onClick={build} disabled={!shots.length || busy} className="btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-600 text-[15px] font-medium text-white hover:bg-brand-700 disabled:opacity-50">
+        <button type="button" onClick={build} disabled={!shots.length || busy} className="btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-accent text-[15px] font-medium text-on-accent hover:bg-accent-hover disabled:opacity-50">
           {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Download className="h-4 w-4" aria-hidden="true" />} Create PDF
         </button>
-        <p className="text-[12px] leading-relaxed text-ink-soft">Want searchable text? Run the result through OCR PDF.</p>
+        <p className="text-[12px] leading-relaxed text-fg-muted">Want searchable text? Run the result through OCR PDF.</p>
       </aside>
     </div>
   );

@@ -16,15 +16,15 @@ const ICONS: Record<string, LucideIcon> = {
 
 /** One muted accent per category (small inline marks). */
 export const CATEGORY_TINT: Record<Category, string> = {
-  office: "bg-blue-50 text-blue-700",
-  organize: "bg-orange-50 text-orange-600",
-  optimize: "bg-emerald-50 text-emerald-600",
-  "convert-to": "bg-amber-50 text-amber-700",
-  "convert-from": "bg-sky-50 text-sky-600",
-  edit: "bg-violet-50 text-violet-600",
-  security: "bg-slate-100 text-slate-700",
-  intelligence: "bg-rose-50 text-rose-600",
-  image: "bg-cyan-50 text-cyan-700",
+  office: "bg-blue-500/10 text-blue-300",
+  organize: "bg-orange-500/10 text-orange-300",
+  optimize: "bg-emerald-500/10 text-emerald-300",
+  "convert-to": "bg-amber-500/10 text-amber-300",
+  "convert-from": "bg-sky-500/10 text-sky-300",
+  edit: "bg-violet-500/10 text-violet-300",
+  security: "bg-raised text-fg-muted",
+  intelligence: "bg-rose-500/10 text-rose-300",
+  image: "bg-cyan-500/10 text-cyan-300",
 };
 
 export function ToolIcon({ name, className, strokeWidth }: { name: string; className?: string; strokeWidth?: number }) {
@@ -34,21 +34,25 @@ export function ToolIcon({ name, className, strokeWidth }: { name: string; class
 
 /* ── App-style tiles ─────────────────────────────────────────────── */
 
-/** Saturated gradients with a matching glow; literal classes so Tailwind keeps them. */
+/**
+ * Flat, slightly desaturated fills with a dark glyph: calm on a dark UI and
+ * still easy to tell apart. Literal classes so Tailwind keeps them.
+ */
 const SWATCH = {
-  red: "from-[#ff6b5f] to-[#e3262f] shadow-red-500/35",
-  rose: "from-[#ff6f91] to-[#e11d5a] shadow-rose-500/35",
-  orange: "from-[#ffa24a] to-[#f25c05] shadow-orange-500/35",
-  amber: "from-[#ffcd4a] to-[#f59e0b] shadow-amber-500/35",
-  green: "from-[#3ddc84] to-[#12a150] shadow-green-500/35",
-  emerald: "from-[#34d6a0] to-[#059669] shadow-emerald-500/35",
-  teal: "from-[#2dd4bf] to-[#0d9488] shadow-teal-500/35",
-  sky: "from-[#4cc3ff] to-[#0284c7] shadow-sky-500/35",
-  blue: "from-[#5b8cff] to-[#2447e6] shadow-blue-600/35",
-  indigo: "from-[#8a8cff] to-[#4f46e5] shadow-indigo-500/35",
-  violet: "from-[#b18cff] to-[#7c3aed] shadow-violet-500/35",
-  pink: "from-[#ff7ad9] to-[#db2777] shadow-pink-500/35",
-  ink: "from-[#4b5563] to-[#111827] shadow-slate-700/35",
+  red: "bg-[#ff7b70]",
+  rose: "bg-[#ff86a6]",
+  orange: "bg-[#ffa365]",
+  amber: "bg-[#ffcb66]",
+  lime: "bg-[#cdf564]",
+  green: "bg-[#79e29a]",
+  emerald: "bg-[#62dbb2]",
+  teal: "bg-[#63d5cf]",
+  sky: "bg-[#72c6ff]",
+  blue: "bg-[#80a6ff]",
+  indigo: "bg-[#a3a3ff]",
+  violet: "bg-[#b7a2ff]",
+  pink: "bg-[#f592dc]",
+  ink: "bg-[#c4cad6]",
 } as const;
 export type Swatch = keyof typeof SWATCH;
 
@@ -67,13 +71,13 @@ export const CATEGORY_SWATCH: Record<Category, Swatch> = {
 /** Per-tool colours, so neighbouring tiles differ and file types keep their usual colour. */
 const TOOL_SWATCH: Record<string, Swatch> = {
   "merge-pdf": "red",
-  "split-pdf": "rose",
+  "split-pdf": "violet",
   "organize-pdf": "violet",
   "rotate-pdf": "orange",
-  "compress-pdf": "red",
+  "compress-pdf": "lime",
   "repair-pdf": "amber",
-  "ocr-pdf": "green",
-  "jpg-to-pdf": "amber",
+  "ocr-pdf": "amber",
+  "jpg-to-pdf": "orange",
   "scan-to-pdf": "teal",
   "word-to-pdf": "blue",
   "powerpoint-to-pdf": "orange",
@@ -85,7 +89,7 @@ const TOOL_SWATCH: Record<string, Swatch> = {
   "pdf-to-excel": "green",
   "pdf-to-markdown": "ink",
   "pdf-to-pdfa": "ink",
-  "edit-pdf": "violet",
+  "edit-pdf": "teal",
   "sign-pdf": "indigo",
   "watermark-pdf": "sky",
   "page-numbers": "teal",
@@ -98,8 +102,8 @@ const TOOL_SWATCH: Record<string, Swatch> = {
   "compare-pdf": "sky",
   "summarize-pdf": "violet",
   "translate-pdf": "indigo",
-  "image-editor": "pink",
-  "compress-image": "emerald",
+  "image-editor": "violet",
+  "compress-image": "lime",
   "resize-image": "sky",
   "crop-image": "orange",
   "convert-image": "violet",
@@ -148,15 +152,16 @@ const LETTER: Record<string, { letter: string; swatch: Swatch }> = {
 };
 
 const SIZES = {
-  sm: { box: "h-8 w-8 rounded-[10px]", icon: "h-4 w-4", letter: "text-[15px]" },
-  md: { box: "h-11 w-11 rounded-[13px]", icon: "h-[22px] w-[22px]", letter: "text-[21px]" },
-  lg: { box: "h-14 w-14 rounded-[16px]", icon: "h-7 w-7", letter: "text-[27px]" },
+  sm: { box: "h-8 w-8 rounded-[9px]", icon: "h-4 w-4", letter: "text-[14px]" },
+  md: { box: "h-10 w-10 rounded-[11px]", icon: "h-5 w-5", letter: "text-[18px]" },
+  lg: { box: "h-12 w-12 rounded-[13px]", icon: "h-6 w-6", letter: "text-[22px]" },
+  xl: { box: "h-14 w-14 rounded-[15px]", icon: "h-7 w-7", letter: "text-[26px]" },
 } as const;
 
 export const swatchFor = (tool: Pick<ToolDef, "slug" | "category">): Swatch =>
   LETTER[tool.slug]?.swatch ?? TOOL_SWATCH[tool.slug] ?? CATEGORY_SWATCH[tool.category];
 
-/** A glossy gradient tile with a white glyph, like an app icon. */
+/** A flat colour tile with a dark glyph, like an app icon. */
 export function Tile({
   swatch,
   icon,
@@ -177,20 +182,18 @@ export function Tile({
     <span
       aria-hidden="true"
       className={cn(
-        // Callers may position the tile themselves (absolute); otherwise it anchors its own highlight.
-        /\b(absolute|fixed)\b/.test(className ?? "") ? "" : "relative",
-        "inline-flex shrink-0 items-center justify-center overflow-hidden bg-gradient-to-br text-white shadow-lg ring-1 ring-inset ring-white/25",
+        // Callers may position the tile themselves (absolute); otherwise it anchors itself.
+        /(absolute|fixed)/.test(className ?? "") ? "" : "relative",
+        "inline-flex shrink-0 items-center justify-center text-[#0d0f14] ring-1 ring-inset ring-black/10",
         SWATCH[swatch],
         s.box,
         className,
       )}
     >
-      {/* Top highlight gives the tile a little depth. */}
-      <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/30 to-transparent" />
       {letter ? (
-        <span className={cn("relative font-display font-extrabold leading-none tracking-tight drop-shadow-sm", s.letter, letterClassName)}>{letter}</span>
+        <span className={cn("relative font-display font-extrabold leading-none tracking-tight", s.letter, letterClassName)}>{letter}</span>
       ) : (
-        <ToolIcon name={icon ?? "FileText"} strokeWidth={2.4} className={cn("relative drop-shadow-sm", s.icon)} />
+        <ToolIcon name={icon ?? "FileText"} strokeWidth={2} className={cn("relative", s.icon)} />
       )}
     </span>
   );

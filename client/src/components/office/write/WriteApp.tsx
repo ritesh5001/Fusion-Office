@@ -25,7 +25,7 @@ import { Button, Modal, Select, cn } from "../../ui/primitives";
 import { OfficeHeader, StartScreen, readOfficeFile, useAutosave, type AppIdentity } from "../OfficeShell";
 import { ColorPick, Sep, TB, TSelect } from "../controls";
 
-const APP: AppIdentity = { kind: "doc", name: "Fusion Write", icon: FileText, tint: "bg-blue-50 text-blue-700" };
+const APP: AppIdentity = { kind: "doc", name: "Fusion Write", icon: FileText, tint: "bg-[#80a6ff] text-[#0d0f14]" };
 const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const ACCEPT = ".docx,.doc,.odt,.rtf,.txt,.md,.html,.htm";
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
@@ -109,9 +109,9 @@ export default function WriteApp() {
 }
 
 function DocPreview({ id }: { id: string }) {
-  const line = (w: string, extra = "") => <span className={cn("block h-1 rounded-full bg-slate-300", extra)} style={{ width: w }} />;
+  const line = (w: string, extra = "") => <span className={cn("block h-1 rounded-full bg-line-strong", extra)} style={{ width: w }} />;
   return (
-    <span className="mx-auto my-3 flex w-[58%] flex-col gap-1.5 bg-white p-3 shadow-sm">
+    <span className="paper mx-auto my-3 flex w-[58%] flex-col gap-1.5 p-3 shadow-sm">
       {id === "blank" ? null : id === "letter" ? (
         <>
           {line("40%", "bg-slate-500")}
@@ -127,7 +127,7 @@ function DocPreview({ id }: { id: string }) {
           {line("35%")}
           {line("90%")}
           {line("80%")}
-          <span className="grid grid-cols-3 gap-0.5">{Array.from({ length: 6 }, (_, i) => <span key={i} className="h-1.5 bg-slate-200" />)}</span>
+          <span className="grid grid-cols-3 gap-0.5">{Array.from({ length: 6 }, (_, i) => <span key={i} className="h-1.5 bg-line" />)}</span>
         </>
       )}
     </span>
@@ -257,7 +257,7 @@ function WriteEditor({ session, onExit, onOpen }: { session: Session; onExit: ()
     return () => window.removeEventListener("keydown", onKey);
   });
 
-  if (!editor) return <div className="flex h-dvh items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>;
+  if (!editor) return <div className="flex h-dvh items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-fg-subtle" /></div>;
   const c = () => editor.chain().focus();
 
   const menus = [
@@ -318,7 +318,7 @@ function WriteEditor({ session, onExit, onOpen }: { session: Session; onExit: ()
   ];
 
   return (
-    <div className="flex h-dvh flex-col bg-[#eef0f3]">
+    <div className="flex h-dvh flex-col bg-canvas">
       <div className="print:hidden">
         <OfficeHeader
           app={APP}
@@ -346,13 +346,13 @@ function WriteEditor({ session, onExit, onOpen }: { session: Session; onExit: ()
 
       <div className="relative min-h-0 flex-1 overflow-auto print:overflow-visible">
         {warnings.length > 0 && (
-          <div className="mx-auto mt-4 flex max-w-[760px] items-start gap-3 rounded-lg bg-amber-50 px-4 py-2.5 text-[13px] text-amber-900 ring-1 ring-amber-200 print:hidden">
+          <div className="mx-auto mt-4 flex max-w-[760px] items-start gap-3 rounded-lg bg-amber-500/10 px-4 py-2.5 text-[13px] text-amber-200 ring-1 ring-amber-500/30 print:hidden">
             <ul className="flex-1 list-disc pl-4">
               {warnings.map((w) => (
                 <li key={w}>{w}</li>
               ))}
             </ul>
-            <button type="button" aria-label="Dismiss" onClick={() => setWarnings([])} className="rounded p-0.5 hover:bg-amber-100">
+            <button type="button" aria-label="Dismiss" onClick={() => setWarnings([])} className="rounded p-0.5 hover:bg-amber-500/20">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -360,7 +360,7 @@ function WriteEditor({ session, onExit, onOpen }: { session: Session; onExit: ()
         {find && <FindPanel editor={editor} replace={find.replace} onClose={() => (editor.commands.setSearchTerm(""), setFind(null))} />}
         <div className="flex justify-center px-4 py-8 print:p-0">
           <div
-            className="fo-doc fo-print-root bg-white shadow-[0_1px_3px_rgb(16_19_26/0.12),0_12px_40px_-12px_rgb(16_19_26/0.18)] print:shadow-none"
+            className="paper fo-doc fo-print-root shadow-[0_0_0_1px_rgb(255_255_255/0.04),0_16px_48px_-16px_rgb(0_0_0/0.8)] print:shadow-none"
             style={{
               zoom,
               width: meta.page.width * PT_TO_PX,
@@ -419,7 +419,7 @@ function Toolbar({ editor, meta, onLink, onImage }: { editor: Editor; meta: DocM
   const sizes = s.size && !SIZES.includes(Number(s.size)) ? [Number(s.size), ...SIZES].sort((a, b) => a - b) : SIZES;
 
   return (
-    <div className="border-b border-slate-200 bg-white">
+    <div className="border-b border-line bg-surface">
       <div className="thin-scroll flex items-center gap-0.5 overflow-x-auto px-2 py-1">
         <TB label="Undo" shortcut={`${MOD}Z`} disabled={!s.canUndo} onClick={() => c().undo().run()}>
           <Undo2 className="h-4 w-4" />
@@ -535,8 +535,8 @@ function Toolbar({ editor, meta, onLink, onImage }: { editor: Editor; meta: DocM
         </TB>
       </div>
       {s.table && (
-        <div className="thin-scroll flex items-center gap-0.5 overflow-x-auto border-t border-slate-100 bg-slate-50/70 px-2 py-1 text-[12px]">
-          <span className="mr-1 font-medium text-slate-500">Table</span>
+        <div className="thin-scroll flex items-center gap-0.5 overflow-x-auto border-t border-line bg-sunken px-2 py-1 text-[12px]">
+          <span className="mr-1 font-medium text-fg-muted">Table</span>
           {(
             [
               ["Row above", () => c().addRowBefore().run()],
@@ -555,7 +555,7 @@ function Toolbar({ editor, meta, onLink, onImage }: { editor: Editor; meta: DocM
             </TB>
           ))}
           <ColorPick label="Cell colour" icon={<span className="text-[12px]">Fill</span>} value={(editor.getAttributes("tableCell").backgroundColor as string) ?? null} resetLabel="No fill" onChange={(v) => c().setCellAttribute("backgroundColor", v).run()} />
-          <TB label="Delete table" onClick={() => c().deleteTable().run()} className="text-red-600">
+          <TB label="Delete table" onClick={() => c().deleteTable().run()} className="text-red-300">
             <Trash2 className="h-4 w-4" />
           </TB>
         </div>
@@ -603,7 +603,7 @@ function FindPanel({ editor, replace, onClose }: { editor: Editor; replace: bool
   };
 
   return (
-    <div className="sticky top-3 z-30 float-right mr-4 mt-3 w-[340px] rounded-xl bg-white p-3 shadow-lg ring-1 ring-slate-200 print:hidden" role="search">
+    <div className="sticky top-3 z-30 float-right mr-4 mt-3 w-[340px] rounded-xl bg-surface p-3 shadow-lg ring-1 ring-line print:hidden" role="search">
       <div className="flex items-center gap-1.5">
         <input
           ref={input}
@@ -615,9 +615,9 @@ function FindPanel({ editor, replace, onClose }: { editor: Editor; replace: bool
           }}
           placeholder="Find in document"
           aria-label="Find"
-          className="h-8 min-w-0 flex-1 rounded-md border border-slate-200 px-2 text-[13px] outline-none focus:border-brand-500"
+          className="h-8 min-w-0 flex-1 rounded-md border border-line-strong px-2 text-[13px] outline-none focus:border-brand-500 bg-sunken text-fg"
         />
-        <span className="w-14 text-center text-[12px] tabular-nums text-slate-500">{term ? `${matches.length ? i + 1 : 0}/${matches.length}` : ""}</span>
+        <span className="w-14 text-center text-[12px] tabular-nums text-fg-muted">{term ? `${matches.length ? i + 1 : 0}/${matches.length}` : ""}</span>
         <TB label="Previous" onClick={() => go(-1)}>
           <ChevronUp className="h-4 w-4" />
         </TB>
@@ -630,7 +630,7 @@ function FindPanel({ editor, replace, onClose }: { editor: Editor; replace: bool
       </div>
       {replace && (
         <div className="mt-2 flex items-center gap-1.5">
-          <input value={by} onChange={(e) => setBy(e.target.value)} placeholder="Replace with" aria-label="Replace with" className="h-8 min-w-0 flex-1 rounded-md border border-slate-200 px-2 text-[13px] outline-none focus:border-brand-500" />
+          <input value={by} onChange={(e) => setBy(e.target.value)} placeholder="Replace with" aria-label="Replace with" className="h-8 min-w-0 flex-1 rounded-md border border-line-strong px-2 text-[13px] outline-none focus:border-brand-500 bg-sunken text-fg" />
           <Button size="sm" onClick={replaceOne} disabled={!matches.length}>
             Replace
           </Button>
@@ -639,8 +639,8 @@ function FindPanel({ editor, replace, onClose }: { editor: Editor; replace: bool
           </Button>
         </div>
       )}
-      <label className="mt-2 flex items-center gap-2 text-[12px] text-slate-600">
-        <input type="checkbox" checked={cs} onChange={(e) => setCs(e.target.checked)} className="accent-brand-600" /> Match case
+      <label className="mt-2 flex items-center gap-2 text-[12px] text-fg-muted">
+        <input type="checkbox" checked={cs} onChange={(e) => setCs(e.target.checked)} className="accent-brand-500" /> Match case
       </label>
     </div>
   );
@@ -686,7 +686,7 @@ function LinkDialog({ editor, open, onClose }: { editor: Editor; open: boolean; 
         onKeyDown={(e) => e.key === "Enter" && apply()}
         placeholder="https://example.com"
         aria-label="Link address"
-        className="h-9 w-full rounded-md border border-slate-200 px-2.5 text-[14px] outline-none focus:border-brand-500"
+        className="h-9 w-full rounded-md border border-line-strong px-2.5 text-[14px] outline-none focus:border-brand-500 bg-sunken text-fg"
       />
     </Modal>
   );
@@ -716,7 +716,7 @@ function PageSetupDialog({ open, meta, onClose, onChange }: { open: boolean; met
     <Modal open={open} onClose={onClose} title="Page setup" width={420} footer={<Button variant="primary" onClick={onClose}>Done</Button>}>
       <div className="grid gap-3 text-[13px]">
         <label className="grid gap-1">
-          <span className="text-slate-500">Paper size</span>
+          <span className="text-fg-muted">Paper size</span>
           <Select
             value={sizeKey}
             onChange={(k) => PAGE_SIZES[k] && setPage(PAGE_SIZES[k].size, landscape)}
@@ -724,11 +724,11 @@ function PageSetupDialog({ open, meta, onClose, onChange }: { open: boolean; met
           />
         </label>
         <label className="grid gap-1">
-          <span className="text-slate-500">Orientation</span>
+          <span className="text-fg-muted">Orientation</span>
           <Select value={landscape ? "landscape" : "portrait"} onChange={(o) => setPage([w, h], o === "landscape")} options={[{ value: "portrait", label: "Portrait" }, { value: "landscape", label: "Landscape" }]} />
         </label>
         <label className="grid gap-1">
-          <span className="text-slate-500">Margins</span>
+          <span className="text-fg-muted">Margins</span>
           <Select
             value={marginKey}
             onChange={(k) => MARGINS[k] && setPage([w, h], landscape, MARGINS[k].m)}
@@ -737,11 +737,11 @@ function PageSetupDialog({ open, meta, onClose, onChange }: { open: boolean; met
         </label>
         <div className="grid grid-cols-[1fr_90px] gap-2">
           <label className="grid gap-1">
-            <span className="text-slate-500">Body font</span>
+            <span className="text-fg-muted">Body font</span>
             <Select value={meta.font} onChange={(font) => onChange({ ...meta, font })} options={[...new Set([meta.font, ...FONTS])].map((f) => ({ value: f, label: f }))} />
           </label>
           <label className="grid gap-1">
-            <span className="text-slate-500">Size</span>
+            <span className="text-fg-muted">Size</span>
             <Select value={String(meta.fontSize)} onChange={(v) => onChange({ ...meta, fontSize: Number(v) })} options={[...new Set([meta.fontSize, ...SIZES.slice(0, 10)])].map((z) => ({ value: String(z), label: `${z} pt` }))} />
           </label>
         </div>
@@ -768,7 +768,7 @@ function StatusBar({ editor, meta, zoom, setZoom }: { editor: Editor; meta: DocM
     setPages(Math.max(1 + breaks, Math.ceil(el.scrollHeight / perPage)));
   }, [counts.doc, editor, meta]);
   return (
-    <footer className="flex h-8 shrink-0 items-center gap-4 border-t border-slate-200 bg-white px-3 text-[12px] text-slate-500 print:hidden">
+    <footer className="flex h-8 shrink-0 items-center gap-4 border-t border-line bg-surface px-3 text-[12px] text-fg-muted print:hidden">
       <span>About {pages} page{pages === 1 ? "" : "s"}</span>
       <span>
         {counts.words.toLocaleString()} word{counts.words === 1 ? "" : "s"}
@@ -776,7 +776,7 @@ function StatusBar({ editor, meta, zoom, setZoom }: { editor: Editor; meta: DocM
       <span className="hidden sm:inline">{counts.chars.toLocaleString()} characters</span>
       <label className="ml-auto flex items-center gap-2">
         Zoom
-        <input type="range" min={50} max={200} step={10} value={Math.round(zoom * 100)} onChange={(e) => setZoom(Number(e.target.value) / 100)} className="w-28 accent-brand-600" aria-label="Zoom" />
+        <input type="range" min={50} max={200} step={10} value={Math.round(zoom * 100)} onChange={(e) => setZoom(Number(e.target.value) / 100)} className="w-28 accent-brand-500" aria-label="Zoom" />
         <span className="w-9 tabular-nums">{Math.round(zoom * 100)}%</span>
       </label>
     </footer>

@@ -88,8 +88,8 @@ function SignatureDialog({ open, onClose }: { open: boolean; onClose: () => void
       width={560}
       footer={
         <>
-          <label className="mr-auto flex items-center gap-2 text-[12px] text-slate-600">
-            <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="accent-brand-600" />
+          <label className="mr-auto flex items-center gap-2 text-[12px] text-fg-muted">
+            <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="accent-brand-500" />
             Remember on this device
           </label>
           <Button onClick={onClose}>Cancel</Button>
@@ -101,14 +101,14 @@ function SignatureDialog({ open, onClose }: { open: boolean; onClose: () => void
     >
       {saved.length > 0 && (
         <div className="mb-4">
-          <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Saved</div>
+          <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-fg-subtle">Saved</div>
           <div className="flex flex-wrap gap-2">
             {saved.map((src) => (
               <div key={src} className="group relative">
                 <button
                   type="button"
                   onClick={() => placeDataUrl(src)}
-                  className="flex h-14 w-32 items-center justify-center rounded-lg border border-slate-200 bg-white p-1.5 hover:border-brand-500"
+                  className="flex h-14 w-32 items-center justify-center paper rounded-lg border border-line p-1.5 hover:border-brand-500"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={src} alt="Saved signature" className="max-h-full max-w-full object-contain" />
@@ -121,7 +121,7 @@ function SignatureDialog({ open, onClose }: { open: boolean; onClose: () => void
                     persistSaved(next);
                     setSaved(next);
                   }}
-                  className="absolute -right-1.5 -top-1.5 hidden h-5 w-5 items-center justify-center rounded-full bg-white text-slate-500 shadow ring-1 ring-slate-200 hover:text-red-600 group-hover:flex"
+                  className="absolute -right-1.5 -top-1.5 hidden h-5 w-5 items-center justify-center rounded-full bg-sunken text-fg-muted shadow ring-1 ring-line-strong hover:text-red-300 group-hover:flex"
                 >
                   <Trash2 className="h-3 w-3" />
                 </button>
@@ -131,13 +131,13 @@ function SignatureDialog({ open, onClose }: { open: boolean; onClose: () => void
         </div>
       )}
 
-      <div className="mb-3 flex gap-1 rounded-lg bg-slate-100 p-0.5">
+      <div className="mb-3 flex gap-1 rounded-lg bg-sunken p-0.5 ring-1 ring-line">
         {(["draw", "type", "upload"] as SigTab[]).map((t) => (
           <button
             key={t}
             type="button"
             onClick={() => setTab(t)}
-            className={cn("flex-1 rounded-md py-1.5 text-[13px] capitalize", tab === t ? "bg-white font-medium text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700")}
+            className={cn("flex-1 rounded-md py-1.5 text-[13px] capitalize", tab === t ? "bg-raised font-medium text-fg shadow-sm ring-1 ring-line-strong" : "text-fg-muted hover:text-fg")}
           >
             {t}
           </button>
@@ -152,7 +152,7 @@ function SignatureDialog({ open, onClose }: { open: boolean; onClose: () => void
               type="button"
               aria-label={`Ink ${c}`}
               onClick={() => setColor(c)}
-              className={cn("h-5 w-5 rounded-full ring-offset-1", color === c ? "ring-2 ring-brand-500" : "ring-1 ring-black/10")}
+              className={cn("h-5 w-5 rounded-full ring-offset-1 ring-offset-overlay", color === c ? "ring-2 ring-brand-500" : "ring-1 ring-white/15")}
               style={{ background: c }}
             />
           ))}
@@ -168,7 +168,7 @@ function SignatureDialog({ open, onClose }: { open: boolean; onClose: () => void
             value={typed}
             onChange={(e) => setTyped(e.target.value)}
             placeholder="Type your name"
-            className="h-10 w-full rounded-md border border-slate-200 px-3 text-[14px] outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+            className="h-10 w-full rounded-md border border-line-strong px-3 text-[14px] outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25 bg-sunken text-fg"
           />
           <div className="grid grid-cols-2 gap-2">
             {SIG_FONTS.map((f, i) => (
@@ -176,7 +176,7 @@ function SignatureDialog({ open, onClose }: { open: boolean; onClose: () => void
                 key={f.name}
                 type="button"
                 onClick={() => setTypedFont(i)}
-                className={cn("h-20 truncate rounded-lg border px-3 text-3xl", typedFont === i ? "border-brand-500 bg-brand-50/40" : "border-slate-200 hover:border-slate-300")}
+                className={cn("paper h-20 truncate rounded-lg border px-3 text-3xl", typedFont === i ? "border-brand-500 ring-2 ring-brand-500/40" : "border-line hover:border-line-strong")}
                 style={{ fontFamily: f.css(), color }}
               >
                 {typed || "Your Name"}
@@ -250,7 +250,7 @@ const SignaturePad = forwardRef<SignaturePadHandle, { color: string }>(function 
 
   return (
     <div>
-      <div className="relative rounded-lg border border-dashed border-slate-300 bg-slate-50/50">
+      <div className="paper relative rounded-lg border border-dashed border-line-strong">
         <canvas
           ref={canvasRef}
           width={512 * ratio}
@@ -282,8 +282,8 @@ const SignaturePad = forwardRef<SignaturePadHandle, { color: string }>(function 
             last.current = null;
           }}
         />
-        {empty && <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-[13px] text-slate-400">Draw your signature here</div>}
-        <div className="pointer-events-none absolute bottom-10 left-8 right-8 border-b border-slate-300" />
+        {empty && <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-[13px] text-[#8a93a3]">Draw your signature here</div>}
+        <div className="pointer-events-none absolute bottom-10 left-8 right-8 border-b border-[#d0d5dd]" />
       </div>
       <div className="mt-2 flex justify-end">
         <Button size="sm" variant="ghost" onClick={clear} disabled={empty}>
@@ -341,19 +341,19 @@ function UploadSignature({ value, onChange }: { value: string | null; onChange: 
             toast((e as Error).message, "error");
           }
         }}
-        className="flex h-[180px] w-full items-center justify-center rounded-lg border border-dashed border-slate-300 bg-[repeating-conic-gradient(#f1f5f9_0_25%,#fff_0_50%)] bg-[length:16px_16px] hover:border-brand-500"
+        className="flex h-[180px] w-full items-center justify-center rounded-lg border border-dashed border-line-strong bg-[repeating-conic-gradient(#f1f5f9_0_25%,#fff_0_50%)] bg-[length:16px_16px] hover:border-brand-500"
       >
         {value ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={value} alt="Uploaded signature" className="max-h-[160px] max-w-[90%] object-contain" />
         ) : (
-          <span className="flex flex-col items-center gap-1.5 text-[13px] text-slate-500">
+          <span className="flex flex-col items-center gap-1.5 text-[13px] text-[#5b6170]">
             <Upload className="h-5 w-5" /> Choose a signature image
           </span>
         )}
       </button>
-      <label className="mt-2 flex items-center gap-2 text-[12px] text-slate-600">
-        <input type="checkbox" checked={removeBg} onChange={(e) => setRemoveBg(e.target.checked)} className="accent-brand-600" />
+      <label className="mt-2 flex items-center gap-2 text-[12px] text-fg-muted">
+        <input type="checkbox" checked={removeBg} onChange={(e) => setRemoveBg(e.target.checked)} className="accent-brand-500" />
         Remove white background
       </label>
     </div>
@@ -404,7 +404,7 @@ function ExportDialog({ open, onClose }: { open: boolean; onClose: () => void })
         />
         <Option checked={comments} onChange={setComments} title="Include comments" text="Keep sticky notes. They open in Acrobat, Preview, Chrome and other readers." />
         {hasRedactions && (
-          <p className="rounded-md bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-900">
+          <p className="rounded-md bg-amber-500/10 px-3 py-2 text-[12px] leading-relaxed text-amber-200">
             Pages with redactions are rasterized on export so the redacted content is permanently removed. Their text won&apos;t be selectable afterwards.
           </p>
         )}
@@ -415,11 +415,11 @@ function ExportDialog({ open, onClose }: { open: boolean; onClose: () => void })
 
 function Option({ checked, onChange, title, text }: { checked: boolean; onChange: (v: boolean) => void; title: string; text: string }) {
   return (
-    <label className="flex cursor-pointer gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50">
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="mt-0.5 accent-brand-600" />
+    <label className="flex cursor-pointer gap-3 rounded-lg border border-line p-3 hover:bg-raised">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="mt-0.5 accent-brand-500" />
       <span>
-        <span className="block text-[13px] font-medium text-slate-800">{title}</span>
-        <span className="block text-[12px] leading-relaxed text-slate-500">{text}</span>
+        <span className="block text-[13px] font-medium text-fg">{title}</span>
+        <span className="block text-[12px] leading-relaxed text-fg-muted">{text}</span>
       </span>
     </label>
   );
@@ -476,7 +476,7 @@ function SplitDialog({ open, onClose }: { open: boolean; onClose: () => void }) 
     >
       <div className="space-y-3 text-[13px]">
         <label className="flex items-center gap-2">
-          <input type="radio" checked={mode === "every"} onChange={() => setMode("every")} className="accent-brand-600" />
+          <input type="radio" checked={mode === "every"} onChange={() => setMode("every")} className="accent-brand-500" />
           Every
           <input
             type="number"
@@ -485,12 +485,12 @@ function SplitDialog({ open, onClose }: { open: boolean; onClose: () => void }) 
             value={every}
             onChange={(e) => setEvery(Number(e.target.value))}
             onFocus={() => setMode("every")}
-            className="h-8 w-16 rounded-md border border-slate-200 px-2 tabular-nums outline-none focus:border-brand-500"
+            className="h-8 w-16 rounded-md border border-line-strong px-2 tabular-nums outline-none focus:border-brand-500 bg-sunken text-fg"
           />
           page(s)
         </label>
         <label className="flex items-center gap-2">
-          <input type="radio" checked={mode === "ranges"} onChange={() => setMode("ranges")} className="accent-brand-600" />
+          <input type="radio" checked={mode === "ranges"} onChange={() => setMode("ranges")} className="accent-brand-500" />
           Custom ranges
         </label>
         <input
@@ -498,10 +498,10 @@ function SplitDialog({ open, onClose }: { open: boolean; onClose: () => void }) 
           onChange={(e) => setRanges(e.target.value)}
           onFocus={() => setMode("ranges")}
           placeholder={`e.g. 1-3, 4-${Math.max(4, pageCount)}`}
-          className="h-9 w-full rounded-md border border-slate-200 px-2.5 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+          className="h-9 w-full rounded-md border border-line-strong px-2.5 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25 bg-sunken text-fg"
         />
-        {error && <p className="text-[12px] text-red-600">{error}</p>}
-        <p className="text-[12px] text-slate-500">Each part downloads as a separate PDF with your edits applied. Your browser may ask to allow multiple downloads.</p>
+        {error && <p className="text-[12px] text-red-300">{error}</p>}
+        <p className="text-[12px] text-fg-muted">Each part downloads as a separate PDF with your edits applied. Your browser may ask to allow multiple downloads.</p>
       </div>
     </Modal>
   );
@@ -535,9 +535,9 @@ function ShortcutsDialog({ open, onClose }: { open: boolean; onClose: () => void
         {rows.map(([k, v]) => (
           <div key={k} className="contents">
             <dt>
-              <kbd className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-sans text-[12px] text-slate-700">{k}</kbd>
+              <kbd className="rounded border border-line bg-sunken px-1.5 py-0.5 font-sans text-[12px] text-fg">{k}</kbd>
             </dt>
-            <dd className="text-slate-600">{v}</dd>
+            <dd className="text-fg-muted">{v}</dd>
           </div>
         ))}
       </dl>
@@ -572,7 +572,7 @@ function ConfirmDeletePages({ dialog, onClose }: { dialog: ReturnType<typeof use
         </>
       }
     >
-      <p className="text-[13px] text-slate-600">You can undo this with {MOD}Z.</p>
+      <p className="text-[13px] text-fg-muted">You can undo this with {MOD}Z.</p>
     </Modal>
   );
 }

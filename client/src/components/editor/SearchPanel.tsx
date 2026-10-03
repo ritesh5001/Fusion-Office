@@ -70,8 +70,8 @@ export function SearchPanel() {
   });
 
   return (
-    <div className="absolute right-4 top-3 z-30 flex max-h-[70%] w-80 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
-      <div className="flex items-center gap-1 border-b border-slate-100 p-2">
+    <div className="absolute right-4 top-3 z-30 flex max-h-[70%] w-80 flex-col overflow-hidden rounded-xl border border-line-strong bg-overlay shadow-pop">
+      <div className="flex items-center gap-1 border-b border-line p-2">
         <input
           ref={inputRef}
           value={query}
@@ -82,9 +82,9 @@ export function SearchPanel() {
           }}
           placeholder="Find in document"
           aria-label="Find in document"
-          className="h-8 min-w-0 flex-1 rounded-md bg-slate-50 px-2.5 text-[13px] outline-none ring-brand-100 focus:bg-white focus:ring-2"
+          className="h-8 min-w-0 flex-1 rounded-md bg-sunken px-2.5 text-[13px] text-fg outline-none ring-brand-500/25 focus:ring-2"
         />
-        <span className="w-14 text-center text-[11px] tabular-nums text-slate-500">
+        <span className="w-14 text-center text-[11px] tabular-nums text-fg-muted">
           {busy ? <Loader2 className="mx-auto h-3.5 w-3.5 animate-spin" /> : hits.length ? `${active + 1}/${hits.length}` : searched ? "0" : ""}
         </span>
         <IconButton size="sm" label="Previous match" disabled={!hits.length} onClick={() => goTo(active - 1)}>
@@ -98,7 +98,7 @@ export function SearchPanel() {
         </IconButton>
       </div>
       {searched && !busy && hits.length === 0 && (
-        <p className="px-3 py-3 text-[12px] text-slate-500">
+        <p className="px-3 py-3 text-[12px] text-fg-muted">
           No matches for “{searched}”. Scanned pages without a text layer can&apos;t be searched until OCR is added.
         </p>
       )}
@@ -106,7 +106,7 @@ export function SearchPanel() {
         <div className="thin-scroll overflow-y-auto py-1">
           {[...byPage].map(([pageNumber, items]) => (
             <div key={pageNumber}>
-              <div className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+              <div className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-fg-subtle">
                 Page {pageNumber} · {items.length}
               </div>
               {items.slice(0, 50).map(({ i, snippet }) => (
@@ -114,7 +114,7 @@ export function SearchPanel() {
                   key={i}
                   type="button"
                   onClick={() => goTo(i)}
-                  className={`block w-full truncate px-3 py-1 text-left text-[12px] ${i === active ? "bg-brand-50 text-brand-800" : "text-slate-600 hover:bg-slate-50"}`}
+                  className={`block w-full truncate px-3 py-1 text-left text-[12px] ${i === active ? "bg-brand-500/15 text-brand-200" : "text-fg-muted hover:bg-raised"}`}
                 >
                   <Snippet text={snippet} query={searched} />
                 </button>
@@ -133,7 +133,7 @@ function Snippet({ text, query }: { text: string; query: string }) {
   return (
     <>
       {text.slice(0, at)}
-      <mark className="rounded-sm bg-yellow-200 px-0.5 text-slate-900">{text.slice(at, at + query.length)}</mark>
+      <mark className="rounded-sm bg-yellow-200 px-0.5 text-[#111827]">{text.slice(at, at + query.length)}</mark>
       {text.slice(at + query.length)}
     </>
   );

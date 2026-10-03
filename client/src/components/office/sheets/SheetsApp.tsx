@@ -24,7 +24,7 @@ import { OfficeHeader, StartScreen, readOfficeFile, useAutosave, type AppIdentit
 import { ColorPick, Sep, TB, TSelect } from "../controls";
 import { display, Grid, rawText, type GridMenu } from "./Grid";
 
-const APP: AppIdentity = { kind: "sheet", name: "Fusion Sheets", icon: FileSpreadsheet, tint: "bg-emerald-50 text-emerald-700" };
+const APP: AppIdentity = { kind: "sheet", name: "Fusion Sheets", icon: FileSpreadsheet, tint: "bg-[#79e29a] text-[#0d0f14]" };
 const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 const ACCEPT = ".xlsx,.xlsm,.xls,.ods,.csv,.tsv,.txt";
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
@@ -117,7 +117,7 @@ export default function SheetsApp() {
 
 function SheetPreview({ id }: { id: string }) {
   return (
-    <span className="m-3 grid flex-1 grid-cols-4 gap-px self-stretch bg-slate-200 p-px">
+    <span className="m-3 grid flex-1 grid-cols-4 gap-px self-stretch bg-line p-px">
       {Array.from({ length: 24 }, (_, i) => (
         <span key={i} className={cn("bg-white", id !== "blank" && i < 4 && "bg-emerald-100", id === "invoice" && i === 23 && "bg-emerald-200")} />
       ))}
@@ -287,10 +287,10 @@ function SheetsEditor({ session, onExit, onOpen }: { session: Session; onExit: (
     },
   ];
 
-  if (!loaded || !sheet) return <div className="flex h-dvh items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>;
+  if (!loaded || !sheet) return <div className="flex h-dvh items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-fg-subtle" /></div>;
 
   return (
-    <div className="flex h-dvh flex-col bg-white">
+    <div className="flex h-dvh flex-col bg-surface">
       <OfficeHeader
         app={APP}
         docName={name}
@@ -311,7 +311,7 @@ function SheetsEditor({ session, onExit, onOpen }: { session: Session; onExit: (
       />
 
       {/* Toolbar */}
-      <div className="thin-scroll flex items-center gap-0.5 overflow-x-auto border-b border-slate-200 px-2 py-1">
+      <div className="thin-scroll flex items-center gap-0.5 overflow-x-auto border-b border-line px-2 py-1">
         <TB label="Undo" shortcut={`${MOD}Z`} disabled={!canUndo} onClick={() => st().undo()}>
           <Undo2 className="h-4 w-4" />
         </TB>
@@ -392,13 +392,13 @@ function SheetsEditor({ session, onExit, onOpen }: { session: Session; onExit: (
       <FormulaBar />
 
       {warnings.length > 0 && (
-        <div className="flex items-start gap-3 border-b border-amber-200 bg-amber-50 px-4 py-2 text-[12px] text-amber-900">
+        <div className="flex items-start gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-[12px] text-amber-200">
           <ul className="flex-1 list-disc pl-4">
             {warnings.map((w) => (
               <li key={w}>{w}</li>
             ))}
           </ul>
-          <button type="button" aria-label="Dismiss" onClick={() => setWarnings([])} className="rounded p-0.5 hover:bg-amber-100">
+          <button type="button" aria-label="Dismiss" onClick={() => setWarnings([])} className="rounded p-0.5 hover:bg-amber-500/20">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -409,7 +409,7 @@ function SheetsEditor({ session, onExit, onOpen }: { session: Session; onExit: (
         <Grid engine={engine} onMenu={setMenu} />
       </div>
 
-      <footer className="flex h-9 shrink-0 items-center border-t border-slate-200 bg-slate-50">
+      <footer className="flex h-9 shrink-0 items-center border-t border-line bg-sunken">
         <SheetTabs />
         <Stats engine={engine} />
       </footer>
@@ -435,7 +435,7 @@ function FormulaBar() {
   const value = edit && edit.r === sel.ar && edit.c === sel.ac ? edit.text : rawText(cell);
 
   return (
-    <div className="flex h-9 shrink-0 items-center gap-2 border-b border-slate-200 px-2" data-formula-bar>
+    <div className="flex h-9 shrink-0 items-center gap-2 border-b border-line px-2" data-formula-bar>
       <input
         aria-label="Name box"
         value={name}
@@ -448,9 +448,9 @@ function FormulaBar() {
           (document.querySelector(".fo-grid") as HTMLElement | null)?.focus();
         }}
         onBlur={() => setName(label)}
-        className="h-7 w-24 rounded border border-slate-200 px-2 text-[13px] tabular-nums outline-none focus:border-brand-500"
+        className="h-7 w-24 rounded border border-line-strong px-2 text-[13px] tabular-nums outline-none focus:border-brand-500 bg-sunken text-fg"
       />
-      <span className="font-serif text-[15px] italic text-slate-400">fx</span>
+      <span className="font-serif text-[15px] italic text-fg-subtle">fx</span>
       <input
         aria-label="Formula bar"
         value={value}
@@ -469,7 +469,7 @@ function FormulaBar() {
             (document.querySelector(".fo-grid") as HTMLElement | null)?.focus();
           }
         }}
-        className="h-7 min-w-0 flex-1 rounded border border-transparent px-2 font-mono text-[13px] outline-none hover:border-slate-200 focus:border-brand-500"
+        className="h-7 min-w-0 flex-1 rounded border border-transparent px-2 font-mono text-[13px] outline-none hover:border-line-strong focus:border-brand-500 bg-sunken text-fg"
       />
     </div>
   );
@@ -497,7 +497,7 @@ function BorderMenu() {
         <ChevronDown className="h-3 w-3 opacity-60" />
       </TB>
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-1 w-44 rounded-lg border border-slate-200 bg-white py-1 text-[13px] shadow-lg">
+        <div className="absolute left-0 top-full z-50 mt-1 w-44 rounded-xl border border-line-strong bg-overlay py-1 text-[13px] shadow-pop">
           {(
             [
               ["all", "All borders"],
@@ -506,7 +506,7 @@ function BorderMenu() {
               ["none", "No borders"],
             ] as const
           ).map(([k, l]) => (
-            <button key={k} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => pick(k)} className="block w-full px-3 py-1.5 text-left hover:bg-slate-50">
+            <button key={k} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => pick(k)} className="block w-full px-3 py-1.5 text-left hover:bg-raised">
               {l}
             </button>
           ))}
@@ -544,7 +544,7 @@ function SheetTabs() {
               if (e.key === "Enter") e.currentTarget.blur();
               if (e.key === "Escape") setRenaming(null);
             }}
-            className="h-7 w-28 rounded border border-brand-500 px-2 text-[13px] outline-none"
+            className="h-7 w-28 rounded-md border border-brand-500 bg-sunken px-2 text-[13px] text-fg outline-none"
           />
         ) : (
           <button
@@ -556,7 +556,7 @@ function SheetTabs() {
               e.preventDefault();
               setMenu({ i, x: e.clientX, y: e.clientY });
             }}
-            className={cn("h-7 shrink-0 rounded-md px-3 text-[13px]", i === active ? "bg-white font-medium text-emerald-700 shadow-sm ring-1 ring-slate-200" : "text-slate-600 hover:bg-white/70")}
+            className={cn("h-7 shrink-0 rounded-md px-3 text-[13px]", i === active ? "bg-raised font-medium text-emerald-300 shadow-sm ring-1 ring-line-strong" : "text-fg-muted hover:bg-raised")}
           >
             {s.name}
           </button>
@@ -603,10 +603,10 @@ function Stats({ engine }: { engine: Engine }) {
   if (!count) return null;
   const fmt = (n: number) => formatValue(Number(n.toPrecision(12)), undefined);
   return (
-    <div className="flex shrink-0 gap-4 px-3 text-[12px] text-slate-600">
-      {nums > 0 && <span>Sum: <b className="font-medium text-slate-800">{fmt(sum)}</b></span>}
-      {nums > 0 && <span>Average: <b className="font-medium text-slate-800">{fmt(sum / nums)}</b></span>}
-      <span>Count: <b className="font-medium text-slate-800">{count}</b></span>
+    <div className="flex shrink-0 gap-4 px-3 text-[12px] text-fg-muted">
+      {nums > 0 && <span>Sum: <b className="font-medium text-fg">{fmt(sum)}</b></span>}
+      {nums > 0 && <span>Average: <b className="font-medium text-fg">{fmt(sum / nums)}</b></span>}
+      <span>Count: <b className="font-medium text-fg">{count}</b></span>
     </div>
   );
 }
@@ -634,7 +634,7 @@ function FindBar({ engine, onClose }: { engine: Engine; onClose: () => void }) {
     useSheets.getState().select({ ar: r, ac: c, fr: r, fc: c });
   };
   return (
-    <div className="absolute right-4 top-2 z-40 flex items-center gap-1.5 rounded-xl bg-white p-2 shadow-lg ring-1 ring-slate-200" role="search">
+    <div className="absolute right-4 top-2 z-40 flex items-center gap-1.5 rounded-xl bg-overlay p-2 shadow-pop ring-1 ring-line-strong" role="search">
       <input
         autoFocus
         value={term}
@@ -645,9 +645,9 @@ function FindBar({ engine, onClose }: { engine: Engine; onClose: () => void }) {
         }}
         placeholder="Find in sheet"
         aria-label="Find in sheet"
-        className="h-8 w-52 rounded-md border border-slate-200 px-2 text-[13px] outline-none focus:border-brand-500"
+        className="h-8 w-52 rounded-md border border-line-strong px-2 text-[13px] outline-none focus:border-brand-500 bg-sunken text-fg"
       />
-      <span className="w-12 text-center text-[12px] tabular-nums text-slate-500">{term ? `${matches.length ? Math.max(0, i) + 1 : 0}/${matches.length}` : ""}</span>
+      <span className="w-12 text-center text-[12px] tabular-nums text-fg-muted">{term ? `${matches.length ? Math.max(0, i) + 1 : 0}/${matches.length}` : ""}</span>
       <Button size="sm" onClick={() => go(1)} disabled={!matches.length}>
         Next
       </Button>
@@ -675,10 +675,10 @@ function ContextMenu({ x, y, items, onClose }: { x: number; y: number; items: { 
   const left = Math.min(x, (typeof window !== "undefined" ? window.innerWidth : 1200) - 230);
   const top = Math.max(8, Math.min(y, (typeof window !== "undefined" ? window.innerHeight : 800) - items.length * 32 - 16));
   return (
-    <div ref={root} role="menu" className="fixed z-50 w-56 rounded-lg border border-slate-200 bg-white py-1 text-[13px] shadow-xl" style={{ left, top }}>
+    <div ref={root} role="menu" className="fixed z-50 w-56 rounded-xl border border-line-strong bg-overlay py-1 text-[13px] shadow-pop" style={{ left, top }}>
       {items.map((it, i) => (
         <div key={i}>
-          {it.divider && <div className="my-1 h-px bg-slate-100" />}
+          {it.divider && <div className="mx-2 my-1 h-px bg-line" />}
           <button
             type="button"
             role="menuitem"
@@ -687,7 +687,7 @@ function ContextMenu({ x, y, items, onClose }: { x: number; y: number; items: { 
               onClose();
               it.onSelect();
             }}
-            className={cn("block w-full px-3 py-1.5 text-left hover:bg-slate-50 disabled:opacity-40", it.danger && "text-red-600")}
+            className={cn("block w-full px-3 py-1.5 text-left hover:bg-raised disabled:opacity-40", it.danger && "text-red-300")}
           >
             {it.label}
           </button>

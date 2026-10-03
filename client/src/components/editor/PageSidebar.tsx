@@ -80,8 +80,8 @@ export function PageSidebar() {
   const multi = selectedPageIds.length > 1;
 
   return (
-    <aside className="flex h-full w-[208px] shrink-0 flex-col border-r border-slate-200 bg-slate-50/70">
-      <div className="flex h-10 items-center justify-between border-b border-slate-200 pl-1.5 pr-1.5">
+    <aside className="flex h-full w-[208px] shrink-0 flex-col border-r border-line bg-surface">
+      <div className="flex h-10 items-center justify-between border-b border-line pl-1.5 pr-1.5">
         <div role="tablist" aria-label="Sidebar" className="flex gap-0.5">
           {(
             [
@@ -98,11 +98,11 @@ export function PageSidebar() {
               className={cn(
                 "h-7 rounded-md px-2 text-[12px] font-semibold transition-colors",
                 tab === id
-                  ? "bg-white text-slate-800 shadow-sm ring-1 ring-slate-200"
-                  : "text-slate-500 hover:text-slate-700",
+                  ? "bg-raised text-fg shadow-sm ring-1 ring-line-strong"
+                  : "text-fg-muted hover:text-fg",
               )}
             >
-              {label} <span className="font-normal text-slate-400">{n}</span>
+              {label} <span className="font-normal text-fg-subtle">{n}</span>
             </button>
           ))}
         </div>
@@ -186,8 +186,8 @@ export function PageSidebar() {
             <DropLine show={dropIndex === pages.length} />
           </div>
 
-          <div className="flex items-center justify-between border-t border-slate-200 px-2 py-1.5">
-            <span className="pl-1 text-[11px] text-slate-500">
+          <div className="flex items-center justify-between border-t border-line px-2 py-1.5">
+            <span className="pl-1 text-[11px] text-fg-muted">
               {multi ? `${selectedPageIds.length} selected` : "Page"}
             </span>
             <div className="flex">
@@ -226,7 +226,7 @@ export function PageSidebar() {
               <IconButton
                 size="sm"
                 label="Delete"
-                className="hover:bg-red-50 hover:text-red-600"
+                className="hover:bg-red-500/10 hover:text-red-300"
                 onClick={() => requestDeletePages(selection)}
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -341,17 +341,17 @@ const Thumb = memo(function Thumb({
       className={cn(
         "group my-1.5 flex w-full flex-col items-center gap-1 rounded-lg p-1.5 outline-none transition",
         dragging && "opacity-40",
-        selected ? "bg-brand-50" : "hover:bg-slate-100",
+        selected ? "bg-brand-500/15" : "hover:bg-raised",
       )}
       aria-label={`Page ${index + 1}`}
       aria-current={current ? "page" : undefined}
     >
       <div
         className={cn(
-          "relative overflow-hidden rounded-[3px] bg-white shadow-sm ring-1",
+          "paper relative overflow-hidden rounded-[3px] shadow-sm ring-1",
           current || selected
             ? "ring-2 ring-brand-500"
-            : "ring-slate-200 group-hover:ring-slate-300",
+            : "ring-line group-hover:ring-line-strong",
         )}
         style={{ width: THUMB_W, height: h }}
       >
@@ -376,7 +376,7 @@ const Thumb = memo(function Thumb({
       <span
         className={cn(
           "text-[11px] tabular-nums",
-          current ? "font-semibold text-brand-700" : "text-slate-500",
+          current ? "font-semibold text-brand-300" : "text-fg-muted",
         )}
       >
         {index + 1}

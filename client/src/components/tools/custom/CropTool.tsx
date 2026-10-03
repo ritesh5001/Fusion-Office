@@ -87,7 +87,7 @@ export function CropTool() {
   if (!file) {
     return busy ? (
       <div className="flex justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-ink-soft" aria-label="Loading" />
+        <Loader2 className="h-6 w-6 animate-spin text-fg-muted" aria-label="Loading" />
       </div>
     ) : (
       <Dropzone accept="application/pdf,.pdf" multiple={false} onFiles={load} label="Select PDF file" />
@@ -105,7 +105,7 @@ export function CropTool() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-      <div className="flex justify-center rounded-2xl bg-paper-deep p-6">
+      <div className="flex justify-center rounded-2xl bg-sunken p-6">
         <div ref={box} className="relative w-full max-w-[520px] select-none" style={{ aspectRatio: file.ratio }} onPointerMove={onPointerMove} onPointerUp={() => (dragging.current = null)}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={file.preview} alt="First page" className="absolute inset-0 h-full w-full shadow-md" draggable={false} />
@@ -122,8 +122,8 @@ export function CropTool() {
           {handle("se", { left: pct(rect.x + rect.w), top: pct(rect.y + rect.h) })}
         </div>
       </div>
-      <aside className="h-fit space-y-4 rounded-2xl bg-white p-5 ring-1 ring-ink/10">
-        <p className="text-[13px] leading-relaxed text-ink-soft">Drag the box or its corners. Content outside it is hidden on the cropped pages.</p>
+      <aside className="h-fit space-y-4 rounded-2xl bg-surface p-5 ring-1 ring-line">
+        <p className="text-[13px] leading-relaxed text-fg-muted">Drag the box or its corners. Content outside it is hidden on the cropped pages.</p>
         <Segmented
           label="Quick margins"
           value={-1}
@@ -137,11 +137,11 @@ export function CropTool() {
         <Segmented label="Apply to" value={scope} onChange={setScope} options={[{ value: "all", label: "All pages" }, { value: "first", label: "First page" }, { value: "custom", label: "Choose" }]} />
         {scope === "custom" && <PagesField value={pages} onChange={setPages} />}
         {error && (
-          <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-[13px] text-red-700">
+          <p role="alert" className="rounded-md bg-red-500/10 px-3 py-2 text-[13px] text-red-300">
             {error}
           </p>
         )}
-        <button type="button" onClick={save} disabled={busy} className="btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-600 text-[15px] font-medium text-white hover:bg-brand-700">
+        <button type="button" onClick={save} disabled={busy} className="btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-accent text-[15px] font-medium text-on-accent hover:bg-accent-hover">
           {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Download className="h-4 w-4" aria-hidden="true" />} Crop and download
         </button>
       </aside>

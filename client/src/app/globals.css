@@ -3,26 +3,57 @@
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-signature: var(--font-signature-face), cursive;
-  --font-display: var(--font-display-face), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display-face), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-mono-face), ui-monospace, "SFMono-Regular", monospace;
 
-  /* Marketing site palette: cool paper, ink, one cobalt accent, two proof marks. */
-  --color-paper: #f4f5f6;
-  --color-paper-deep: #eceef1;
-  --color-ink: #10131a;
-  --color-ink-soft: #5b6170;
-  --color-rule: #dcdfe4;
-  --color-rule-strong: #b3b9c3;
-  --color-marker: #ffe066;
-  --color-pen: #d92d20;
-  /* Cobalt: the one accent. Used for primary actions, focus and selection. */
-  --color-brand-50: #eef3ff;
-  --color-brand-100: #dde6ff;
-  --color-brand-200: #bccbff;
-  --color-brand-500: #4a6cf7;
-  --color-brand-600: #2f54eb;
-  --color-brand-700: #2442c4;
-  --color-canvas: #e9ebef;
+  /* ── Fusion Office design tokens ────────────────────────────────────
+     A dark, neutral workspace. Surfaces step up in lightness as they
+     come forward; one lime accent marks the primary action; violet marks
+     selection, focus and links. Documents themselves stay on white paper. */
+
+  /* Surfaces, back to front */
+  --color-app: #0a0c11; /* page background */
+  --color-sunken: #0d1016; /* wells, thumbnails, inset fields */
+  --color-surface: #12151c; /* cards, panels, bars */
+  --color-raised: #191d26; /* hover, chips, nested controls */
+  --color-overlay: #1d212b; /* menus, popovers, dialogs */
+  --color-canvas: #08090d; /* editor workspace behind pages */
+
+  /* Lines */
+  --color-line: #232834;
+  --color-line-strong: #323846;
+
+  /* Text */
+  --color-fg: #eef0f5;
+  --color-fg-muted: #a1a8b8;
+  --color-fg-subtle: #6c7385;
+
+  /* Primary action */
+  --color-accent: #cdf564;
+  --color-accent-hover: #dcfb8a;
+  --color-on-accent: #0c0f06;
+
+  /* Violet: selection, focus, links, highlights */
+  --color-brand-50: #f3f1ff;
+  --color-brand-100: #e7e3ff;
+  --color-brand-200: #d2ccff;
+  --color-brand-300: #b6adff;
+  --color-brand-400: #9d91fb;
+  --color-brand-500: #8b7cf6;
+  --color-brand-600: #7462e8;
+  --color-brand-700: #5c4dcc;
+  --color-brand-800: #463b9e;
+  --color-brand-900: #2b2563;
+
+  --radius-control: 10px;
+  --radius-card: 16px;
+
+  --shadow-pop: 0 1px 0 0 rgb(255 255 255 / 0.04) inset, 0 16px 40px -12px rgb(0 0 0 / 0.6), 0 2px 6px -2px rgb(0 0 0 / 0.4);
+  --shadow-card: 0 1px 0 0 rgb(255 255 255 / 0.03) inset, 0 12px 32px -20px rgb(0 0 0 / 0.7);
+}
+
+:root {
+  color-scheme: dark;
 }
 
 html,
@@ -31,9 +62,104 @@ body {
 }
 
 body {
-  background: #ffffff;
-  color: #0f172a;
+  background: var(--color-app);
+  color: var(--color-fg);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgb(139 124 246 / 0.4);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-400);
+  outline-offset: 2px;
+}
+
+/* ── Components ───────────────────────────────────────────────────── */
+@layer components {
+  /* Document surfaces (PDF pages, the Word page, the sheet grid, slides,
+     signature pads, template previews) are real paper: light scheme and
+     dark ink inside. Utilities can still override it. */
+  .paper {
+    color-scheme: light;
+    background-color: #fff;
+    color: #111827;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 40px;
+    padding: 0 16px;
+    border-radius: var(--radius-control);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    transition: background-color 150ms, color 150ms, box-shadow 150ms, opacity 150ms;
+  }
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .btn-sm { height: 32px; padding: 0 12px; font-size: 13px; border-radius: 8px; }
+  .btn-lg { height: 48px; padding: 0 22px; font-size: 15px; }
+
+  .btn-primary { background: var(--color-accent); color: var(--color-on-accent); }
+  .btn-primary:hover { background: var(--color-accent-hover); }
+
+  .btn-secondary { background: var(--color-raised); color: var(--color-fg); box-shadow: inset 0 0 0 1px var(--color-line-strong); }
+  .btn-secondary:hover { background: #20242f; }
+
+  .btn-ghost { color: var(--color-fg-muted); }
+  .btn-ghost:hover { background: var(--color-raised); color: var(--color-fg); }
+
+  .btn-danger { background: #e5484d; color: #fff; }
+  .btn-danger:hover { background: #f2555a; }
+
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+  }
+
+  .field {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: var(--radius-control);
+    background: var(--color-sunken);
+    border: 1px solid var(--color-line-strong);
+    color: var(--color-fg);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 150ms, box-shadow 150ms;
+  }
+  .field::placeholder { color: var(--color-fg-subtle); }
+  .field:hover { border-color: #3d4453; }
+  .field:focus,
+  .field:focus-visible {
+    border-color: var(--color-brand-500);
+    box-shadow: 0 0 0 3px rgb(139 124 246 / 0.22);
+    outline: none;
+  }
+  textarea.field { height: auto; padding: 10px 12px; line-height: 1.6; }
+  select.field { cursor: pointer; }
+
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-fg-subtle);
+  }
 }
 
 /* Fabric wraps its canvases in .canvas-container; keep it on top of the PDF. */
@@ -44,7 +170,7 @@ body {
 
 .thin-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #c3c7cf transparent;
+  scrollbar-color: #343a48 transparent;
 }
 
 input[type="color"] {
@@ -59,11 +185,11 @@ input[type="color"]::-webkit-color-swatch-wrapper {
   padding: 0;
 }
 input[type="color"]::-webkit-color-swatch {
-  border: 1px solid rgb(0 0 0 / 0.15);
+  border: 1px solid rgb(255 255 255 / 0.18);
   border-radius: 6px;
 }
 input[type="color"]::-moz-color-swatch {
-  border: 1px solid rgb(0 0 0 / 0.15);
+  border: 1px solid rgb(255 255 255 / 0.18);
   border-radius: 6px;
 }
 
@@ -74,96 +200,39 @@ input[type="color"]::-moz-color-swatch {
 .animate-toast { animation: toast-in 160ms ease-out; }
 
 @keyframes hit-pulse {
-  0% { box-shadow: 0 0 0 0 rgb(47 84 235 / 0.55); }
-  100% { box-shadow: 0 0 0 10px rgb(47 84 235 / 0); }
+  0% { box-shadow: 0 0 0 0 rgb(139 124 246 / 0.6); }
+  100% { box-shadow: 0 0 0 10px rgb(139 124 246 / 0); }
 }
 .search-hit-active { animation: hit-pulse 900ms ease-out 2; }
 
-/* ─────────────────────────────────────────────────────────────────
-   Marketing site
-   Direction: "the proofed page". Swiss grid on cool paper; the one
-   signature is editing marks made on the page itself (highlighter
-   sweep, red pen circle, numbered proof notes).
-   ───────────────────────────────────────────────────────────────── */
-
-.landing {
-  background: var(--color-paper);
-  color: var(--color-ink);
+/* Indeterminate progress: a short bar sliding across its track. */
+@keyframes fo-indeterminate {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(300%); }
 }
-
-.landing ::selection {
-  background: var(--color-marker);
-  color: var(--color-ink);
-}
-
-.landing :focus-visible {
-  outline: 2px solid var(--color-brand-600);
-  outline-offset: 3px;
-  border-radius: 4px;
-}
-
-/* One fixed environment layer: a faint 12-column grid that drifts slowly. */
-.landing-env {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(to right, rgb(16 19 26 / 0.035) 1px, transparent 1px),
-    radial-gradient(circle at 20% 0%, rgb(47 84 235 / 0.06), transparent 45%);
-  background-size: calc((min(100vw, 1280px) - 40px) / 12) 100%, 100% 100%;
-  background-position: 50% 0, 0 0;
-  mask-image: linear-gradient(to bottom, black, transparent 85%);
-  animation: env-drift 90s ease-in-out infinite alternate;
-}
-@keyframes env-drift {
-  to { background-position: calc(50% + 24px) 0, 0 0; }
-}
-
-/* Hero artwork: tiles drift gently, each on its own rhythm. */
-.float-a { animation: float 6s ease-in-out infinite; }
-.float-b { animation: float 7.5s ease-in-out -2s infinite; }
-.float-c { animation: float 5.5s ease-in-out -1s infinite; }
-.float-slow { animation: float 9s ease-in-out -3s infinite; }
-@keyframes float {
-  0%, 100% { translate: 0 0; }
-  50% { translate: 0 -10px; }
-}
-
-@media (pointer: coarse) {
-  .landing .btn {
-    min-height: 44px;
-  }
-}
-
+.fo-indeterminate { animation: fo-indeterminate 1.2s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
-  .landing-env,
-  .float-a,
-  .float-b,
-  .float-c,
-  .float-slow {
-    animation: none !important;
-  }
+  .fo-indeterminate { animation: none; width: 100%; opacity: 0.5; }
 }
 
 /* ── Folio, the mascot (components/mascot/Mascot.tsx) ───────────── */
-@property --m-a { syntax: "<color>"; inherits: true; initial-value: #7ea6ff; }
-@property --m-b { syntax: "<color>"; inherits: true; initial-value: #2f54eb; }
-@property --m-c { syntax: "<color>"; inherits: true; initial-value: #9fe8ff; }
+@property --m-a { syntax: "<color>"; inherits: true; initial-value: #b3a8ff; }
+@property --m-b { syntax: "<color>"; inherits: true; initial-value: #6a58e6; }
+@property --m-c { syntax: "<color>"; inherits: true; initial-value: #dff99a; }
 
 .mascot {
-  --m-a: #7ea6ff; --m-b: #2f54eb; --m-c: #9fe8ff;
+  --m-a: #b3a8ff; --m-b: #6a58e6; --m-c: #dff99a;
   transition: --m-a 500ms ease, --m-b 500ms ease, --m-c 500ms ease;
 }
-.mascot[data-mood="curious"] { --m-a: #7cc8ff; --m-b: #1d6fe0; --m-c: #c3f5ff; }
-.mascot[data-mood="working"] { --m-a: #a79bff; --m-b: #4f46e5; --m-c: #8fd6ff; }
+.mascot[data-mood="curious"] { --m-a: #c4bbff; --m-b: #7a68f0; --m-c: #ecffb8; }
+.mascot[data-mood="working"] { --m-a: #a79bff; --m-b: #5646d6; --m-c: #cdf564; }
 .mascot[data-mood="happy"],
 .mascot[data-mood="wink"] { --m-a: #6fe3a8; --m-b: #0f9f6e; --m-c: #d4ff9e; }
 .mascot[data-mood="oops"] { --m-a: #ff9a8f; --m-b: #e0344b; --m-c: #ffd0a6; }
 .mascot[data-mood="sleepy"] { --m-a: #c4b8ff; --m-b: #7c6fd6; --m-c: #e6e0ff; }
 .mascot[data-mood="confused"] { --m-a: #ffd27a; --m-b: #f08c00; --m-c: #fff1b8; }
 
-.mascot .m-svg { filter: drop-shadow(0 14px 22px color-mix(in srgb, var(--m-b) 32%, transparent)); }
+.mascot .m-svg { filter: drop-shadow(0 12px 18px rgb(0 0 0 / 0.45)); }
 .mascot .m-part,
 .mascot .m-body,
 .mascot .m-shadow,
@@ -223,9 +292,9 @@ input[type="color"]::-moz-color-swatch {
 .chat-answer ul, .chat-answer ol { padding-left: 1.2em; }
 .chat-answer ul { list-style: disc; } .chat-answer ol { list-style: decimal; }
 .chat-answer table { border-collapse: collapse; font-size: 13px; }
-.chat-answer th, .chat-answer td { border: 1px solid var(--color-rule); padding: 4px 8px; text-align: left; }
-.chat-answer code { background: #fff; padding: 0.1em 0.3em; border-radius: 4px; font-size: 0.92em; }
-.chat-answer a { color: var(--color-brand-700); text-decoration: underline; }
+.chat-answer th, .chat-answer td { border: 1px solid var(--color-line-strong); padding: 4px 8px; text-align: left; }
+.chat-answer code { background: var(--color-sunken); padding: 0.1em 0.3em; border-radius: 4px; font-size: 0.92em; }
+.chat-answer a { color: var(--color-brand-300); text-decoration: underline; }
 
 /* ── Office editors: Word document page ───────────────────────── */
 .fo-doc .ProseMirror {
@@ -263,15 +332,15 @@ input[type="color"]::-moz-color-swatch {
 .fo-doc td, .fo-doc th { border: 1px solid #b7bec9; padding: 3pt 6pt; vertical-align: top; position: relative; min-width: 1em; box-sizing: border-box; }
 .fo-doc th { background: #f2f4f7; font-weight: 700; text-align: left; }
 .fo-doc td p, .fo-doc th p { margin: 0; }
-.fo-doc .selectedCell::after { content: ""; position: absolute; inset: 0; background: rgb(47 84 235 / 0.12); pointer-events: none; }
-.fo-doc .column-resize-handle { position: absolute; right: -2px; top: 0; bottom: -2px; width: 4px; background: #4a6cf7; pointer-events: none; }
+.fo-doc .selectedCell::after { content: ""; position: absolute; inset: 0; background: rgb(116 98 232 / 0.14); pointer-events: none; }
+.fo-doc .column-resize-handle { position: absolute; right: -2px; top: 0; bottom: -2px; width: 4px; background: #7462e8; pointer-events: none; }
 .fo-doc .resize-cursor { cursor: col-resize; }
 .fo-doc .tableWrapper { overflow-x: auto; }
 .fo-doc .fo-page-break { position: relative; height: 0; margin: 18pt -1px; border-top: 2px dashed #b3b9c3; }
 .fo-doc .fo-page-break::after { content: "Page break"; position: absolute; left: 50%; top: -9px; transform: translateX(-50%); background: #fff; padding: 0 8px; font: 11px/16px system-ui, sans-serif; color: #8a93a3; }
-.fo-doc .fo-page-break.ProseMirror-selectednode { border-top-color: #2f54eb; }
-.fo-doc .ProseMirror-selectednode img, .fo-doc [data-resize-state="true"] img { outline: 2px solid #2f54eb; }
-.fo-doc [data-resize-handle] { width: 10px; height: 10px; background: #2f54eb; border: 2px solid #fff; border-radius: 2px; opacity: 0; z-index: 2; }
+.fo-doc .fo-page-break.ProseMirror-selectednode { border-top-color: #6a58e6; }
+.fo-doc .ProseMirror-selectednode img, .fo-doc [data-resize-state="true"] img { outline: 2px solid #6a58e6; }
+.fo-doc [data-resize-handle] { width: 10px; height: 10px; background: #6a58e6; border: 2px solid #fff; border-radius: 2px; opacity: 0; z-index: 2; }
 .fo-doc [data-resize-handle="top-left"], .fo-doc [data-resize-handle="bottom-right"] { cursor: nwse-resize; }
 .fo-doc [data-resize-handle="top-right"], .fo-doc [data-resize-handle="bottom-left"] { cursor: nesw-resize; }
 .fo-doc [data-resize-container]:hover [data-resize-handle], .fo-doc .ProseMirror-selectednode [data-resize-handle], .fo-doc [data-resize-state="true"] [data-resize-handle] { opacity: 1; }
@@ -292,10 +361,10 @@ input[type="color"]::-moz-color-swatch {
 /* ── Office editors: spreadsheet ───────────────────────────────── */
 .fo-marquee {
   background:
-    linear-gradient(90deg, #2f54eb 50%, transparent 0) repeat-x top / 8px 2px,
-    linear-gradient(90deg, #2f54eb 50%, transparent 0) repeat-x bottom / 8px 2px,
-    linear-gradient(0deg, #2f54eb 50%, transparent 0) repeat-y left / 2px 8px,
-    linear-gradient(0deg, #2f54eb 50%, transparent 0) repeat-y right / 2px 8px;
+    linear-gradient(90deg, #6a58e6 50%, transparent 0) repeat-x top / 8px 2px,
+    linear-gradient(90deg, #6a58e6 50%, transparent 0) repeat-x bottom / 8px 2px,
+    linear-gradient(0deg, #6a58e6 50%, transparent 0) repeat-y left / 2px 8px,
+    linear-gradient(0deg, #6a58e6 50%, transparent 0) repeat-y right / 2px 8px;
   animation: fo-ants 0.6s linear infinite;
 }
 @keyframes fo-ants {

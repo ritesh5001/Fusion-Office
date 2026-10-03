@@ -114,7 +114,7 @@ const HINTS: Partial<Record<ToolId, string>> = {
 export function ToolBar() {
   const tool = useEditor((s) => s.tool);
   return (
-    <div className="flex h-11 shrink-0 items-center gap-0.5 overflow-x-auto border-b border-slate-200 bg-white px-2 [scrollbar-width:none]">
+    <div className="flex h-11 shrink-0 items-center gap-0.5 overflow-x-auto border-b border-line bg-surface px-2 [scrollbar-width:none]">
       {GROUPS.map((group, gi) => (
         <div key={gi} className="flex items-center gap-0.5">
           {gi > 0 && <Divider />}
@@ -127,10 +127,10 @@ export function ToolBar() {
       ))}
       <Divider />
       <ToolOptions />
-      <div className="ml-auto hidden shrink-0 pl-3 pr-1 text-[12px] text-slate-400 xl:block">
+      <div className="ml-auto hidden shrink-0 pl-3 pr-1 text-[12px] text-fg-subtle xl:block">
         {HINTS[tool]}
         {/* Tools stay on until another tool is picked. */}
-        {tool !== "select" && <span className="text-slate-300"> · Esc to stop</span>}
+        {tool !== "select" && <span className="text-fg-subtle"> · Esc to stop</span>}
       </div>
     </div>
   );
@@ -141,7 +141,7 @@ function ToolOptions() {
   const o = useEditor((s) => s.toolOptions);
   const set = useEditor((s) => s.setToolOptions);
 
-  const label = (text: string) => <span className="text-[11px] text-slate-500">{text}</span>;
+  const label = (text: string) => <span className="text-[11px] text-fg-muted">{text}</span>;
 
   if (["rect", "ellipse", "triangle", "line", "arrow"].includes(tool)) {
     const hasFill = tool !== "line" && tool !== "arrow";
@@ -179,7 +179,7 @@ function ToolOptions() {
           max={pen ? 24 : 40}
           value={pen ? o.penWidth : o.highlighterWidth}
           onChange={(e) => set(pen ? { penWidth: +e.target.value } : { highlighterWidth: +e.target.value })}
-          className="w-24 accent-brand-600"
+          className="w-24 accent-brand-500"
         />
       </div>
     );
@@ -195,7 +195,7 @@ function ToolOptions() {
             title={c.name}
             aria-label={c.name}
             onClick={() => set({ markupColor: c.value })}
-            className={cn("h-5 w-5 rounded-full ring-offset-1 transition", o.markupColor === c.value ? "ring-2 ring-brand-500" : "ring-1 ring-black/10")}
+            className={cn("h-5 w-5 rounded-full ring-offset-1 ring-offset-surface transition", o.markupColor === c.value ? "ring-2 ring-brand-500" : "ring-1 ring-white/15")}
             style={{ background: c.value }}
           />
         ))}

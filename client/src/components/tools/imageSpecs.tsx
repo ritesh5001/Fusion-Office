@@ -49,7 +49,7 @@ function SizeSummary({ rows }: { rows: Row[] }) {
   return (
     <div className="space-y-1.5">
       <p>
-        {formatBytes(before)} → <span className="font-medium text-ink">{formatBytes(after)}</span>
+        {formatBytes(before)} → <span className="font-medium text-fg">{formatBytes(after)}</span>
         {change > 0 ? ` (${change}% smaller)` : change < 0 ? ` (${-change}% larger)` : ""}
         {rows.length === 1 && rows[0].from !== rows[0].to ? ` · ${rows[0].from} → ${rows[0].to} px` : rows.length === 1 ? ` · ${rows[0].to} px` : ""}
       </p>
@@ -82,13 +82,13 @@ export function TargetSize({ value, onChange, label = "Target size" }: { value: 
             key={p}
             type="button"
             onClick={() => onChange(p)}
-            className={cn("h-7 rounded-full px-2.5 text-[12px] ring-1", parseSize(p) === bytes ? "bg-brand-50 font-medium text-brand-700 ring-brand-500" : "bg-white ring-rule hover:ring-rule-strong")}
+            className={cn("h-7 rounded-full px-2.5 text-[12px] ring-1", parseSize(p) === bytes ? "bg-brand-500/15 font-medium text-brand-300 ring-brand-500" : "bg-sunken ring-line-strong hover:ring-line-strong")}
           >
             {/mb/i.test(p) ? p : `${p} KB`}
           </button>
         ))}
       </div>
-      {value && !bytes && <p className="text-[12px] text-red-700">Enter a size of at least 1 KB, like 50 or 1.5 MB.</p>}
+      {value && !bytes && <p className="text-[12px] text-red-300">Enter a size of at least 1 KB, like 50 or 1.5 MB.</p>}
     </div>
   );
 }
@@ -130,7 +130,7 @@ const compressImage: ToolSpec<CompressOpts> = {
       )}
       <Segmented label="Save as" value={o.format} onChange={(format) => set({ format })} options={FORMAT_OPTIONS()} />
       {files.some((f) => resolveFormat(f, o.format) === "png") && (
-        <p className="rounded-lg bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-800">
+        <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-[12px] leading-relaxed text-amber-200">
           PNG is lossless, so PNG files get smaller only by shrinking their dimensions. Choose JPG or WEBP for much smaller photos.
         </p>
       )}
@@ -209,7 +209,7 @@ export function Chips<T>({ items, label, onPick }: { items: T[]; label: (t: T) =
   return (
     <div className="flex flex-wrap gap-1.5">
       {items.map((t) => (
-        <button key={label(t)} type="button" onClick={() => onPick(t)} className="h-7 rounded-full bg-white px-2.5 text-[12px] ring-1 ring-rule hover:ring-brand-500">
+        <button key={label(t)} type="button" onClick={() => onPick(t)} className="h-7 rounded-full bg-sunken px-2.5 text-[12px] ring-1 ring-line-strong hover:ring-brand-500">
           {label(t)}
         </button>
       ))}
@@ -288,9 +288,9 @@ const resizeImage: ToolSpec<ResizeOpts> = {
           </>
         )}
         {out && (
-          <p className="rounded-lg bg-paper-deep px-3 py-2 text-[12px] text-ink-soft">
+          <p className="rounded-lg bg-sunken px-3 py-2 text-[12px] text-fg-muted">
             {files.length > 1 ? "First image: " : ""}
-            {first!.width} × {first!.height} → <span className="font-medium text-ink">{out.width} × {out.height} px</span>
+            {first!.width} × {first!.height} → <span className="font-medium text-fg">{out.width} × {out.height} px</span>
           </p>
         )}
         <Toggle label="Limit the file size" hint="For upload forms that need, say, under 50 KB." checked={o.limit} onChange={(limit) => set({ limit })} />

@@ -29,14 +29,14 @@ export function Toaster() {
         <div
           key={t.id}
           role={t.kind === "error" ? "alert" : "status"}
-          className="animate-toast flex max-w-md items-center gap-2 rounded-lg bg-slate-900 px-3.5 py-2 text-[13px] text-white shadow-lg"
+          className="animate-toast flex max-w-[calc(100vw-32px)] items-center gap-2.5 rounded-xl border border-line-strong bg-overlay px-3.5 py-2.5 text-[13px] text-fg shadow-pop sm:max-w-md"
         >
           {t.kind === "error" ? (
             <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
           ) : t.kind === "success" ? (
             <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
           ) : (
-            <Info className="h-4 w-4 shrink-0 text-slate-400" />
+            <Info className="h-4 w-4 shrink-0 text-brand-300" />
           )}
           {t.message}
         </div>

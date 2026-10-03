@@ -671,7 +671,7 @@ export function Grid({ engine, onMenu }: { engine: Engine; onMenu: (m: Menu | nu
         {selRect && multi && <div className="pointer-events-none absolute border border-brand-600 bg-brand-600/[0.08]" style={selRect} />}
         {activeRect && <div className="pointer-events-none absolute border-2 border-brand-600" style={{ ...activeRect, left: activeRect.left - 1, top: activeRect.top - 1, width: activeRect.width + 1, height: activeRect.height + 1 }} />}
         {clipRect && <div className="fo-marquee pointer-events-none absolute" style={clipRect} />}
-        {fillRect && <div className="pointer-events-none absolute border border-dashed border-slate-500" style={fillRect} />}
+        {fillRect && <div className="pointer-events-none absolute border border-dashed border-[#6b7280]" style={fillRect} />}
         {selRect && !edit && selExp.r2 <= r2 && selExp.c2 <= c2 && (
           <div className="pointer-events-none absolute h-[7px] w-[7px] border border-white bg-brand-600" style={{ left: selRect.left + selRect.width - 4, top: selRect.top + selRect.height - 4 }} />
         )}
@@ -687,7 +687,7 @@ export function Grid({ engine, onMenu }: { engine: Engine; onMenu: (m: Menu | nu
     colHeads.push(
       <div
         key={`c${c}`}
-        className={`absolute flex items-center justify-center border-b border-r border-slate-200 text-[11px] ${whole ? "bg-brand-600 text-white" : on ? "bg-brand-50 font-semibold text-brand-700" : "bg-slate-50 text-slate-500"}`}
+        className={`absolute flex items-center justify-center border-b border-r border-[#dfe2e7] text-[11px] ${whole ? "bg-brand-600 text-white" : on ? "bg-brand-100 font-semibold text-brand-800" : "bg-[#f4f5f7] text-[#5b6170]"}`}
         style={{ left: frozen ? colX[c] : frozenW + colX[c] - colX[fc] - view.x, top: 0, width: colSize(c), height: HH }}
       >
         {colName(c)}
@@ -703,7 +703,7 @@ export function Grid({ engine, onMenu }: { engine: Engine; onMenu: (m: Menu | nu
     rowHeads.push(
       <div
         key={`r${r}`}
-        className={`absolute flex items-center justify-center border-b border-r border-slate-200 text-[11px] tabular-nums ${whole ? "bg-brand-600 text-white" : on ? "bg-brand-50 font-semibold text-brand-700" : "bg-slate-50 text-slate-500"}`}
+        className={`absolute flex items-center justify-center border-b border-r border-[#dfe2e7] text-[11px] tabular-nums ${whole ? "bg-brand-600 text-white" : on ? "bg-brand-100 font-semibold text-brand-800" : "bg-[#f4f5f7] text-[#5b6170]"}`}
         style={{ left: 0, top: frozen ? rowY[r] : frozenH + rowY[r] - rowY[fr] - view.y, width: HW, height: rowSize(r) }}
       >
         {r + 1}
@@ -734,7 +734,7 @@ export function Grid({ engine, onMenu }: { engine: Engine; onMenu: (m: Menu | nu
         }}
         onKeyDown={onEditorKey}
         spellCheck={false}
-        className="absolute z-30 resize-none overflow-hidden border-2 border-brand-600 bg-white px-[3px] py-0 leading-[1.25] outline-none shadow-lg"
+        className="absolute z-30 resize-none overflow-hidden border-2 border-brand-600 bg-white text-[#111827] px-[3px] py-0 leading-[1.25] outline-none shadow-lg"
         style={{
           left: x - 1,
           top: rowTop(edit.r) - 1,
@@ -759,7 +759,7 @@ export function Grid({ engine, onMenu }: { engine: Engine; onMenu: (m: Menu | nu
       aria-colcount={colCount}
       onScroll={onScroll}
       onKeyDown={onGridKey}
-      className="fo-grid relative min-h-0 flex-1 overflow-auto bg-white outline-none"
+      className="paper fo-grid relative min-h-0 flex-1 overflow-auto outline-none"
       style={{ fontFamily: FONT, fontSize: "11pt", color: "#111" }}
     >
       <div
@@ -786,8 +786,8 @@ export function Grid({ engine, onMenu }: { engine: Engine; onMenu: (m: Menu | nu
         {panes.map(renderPane)}
         {(fr > 0 || fc > 0) && (
           <>
-            {fr > 0 && <div className="pointer-events-none absolute z-10 h-[2px] bg-slate-400/70" style={{ left: HW, top: HH + frozenH - 1, width: view.w - HW }} />}
-            {fc > 0 && <div className="pointer-events-none absolute z-10 w-[2px] bg-slate-400/70" style={{ left: HW + frozenW - 1, top: HH, height: view.h - HH }} />}
+            {fr > 0 && <div className="pointer-events-none absolute z-10 h-[2px] bg-[#9aa1ad]" style={{ left: HW, top: HH + frozenH - 1, width: view.w - HW }} />}
+            {fc > 0 && <div className="pointer-events-none absolute z-10 w-[2px] bg-[#9aa1ad]" style={{ left: HW + frozenW - 1, top: HH, height: view.h - HH }} />}
           </>
         )}
         <div className="absolute overflow-hidden" style={{ left: HW, top: 0, width: view.w - HW, height: HH }}>
@@ -796,7 +796,7 @@ export function Grid({ engine, onMenu }: { engine: Engine; onMenu: (m: Menu | nu
         <div className="absolute overflow-hidden" style={{ left: 0, top: HH, width: HW, height: view.h - HH }}>
           {rowHeads}
         </div>
-        <div className="absolute left-0 top-0 border-b border-r border-slate-300 bg-slate-100" style={{ width: HW, height: HH }} title="Select all" />
+        <div className="absolute left-0 top-0 border-b border-r border-[#cfd3da] bg-[#eceef1]" style={{ width: HW, height: HH }} title="Select all" />
         {editorBox}
       </div>
       {/* Scroll area: as big as the sheet so the scrollbars are right. */}

@@ -300,19 +300,19 @@ export function ImageUnwatermarkTool() {
       <div>
         {busy ? (
           <div className="flex justify-center py-20">
-            <Loader2 className="h-6 w-6 animate-spin text-ink-soft" aria-label="Loading" />
+            <Loader2 className="h-6 w-6 animate-spin text-fg-muted" aria-label="Loading" />
           </div>
         ) : (
           <Dropzone accept={ACCEPT} multiple={false} onFiles={load} label="Select image" />
         )}
-        {error && <p role="alert" className="mt-4 rounded-md bg-red-50 px-3 py-2 text-center text-[13px] text-red-700">{error}</p>}
-        <p className="mt-4 text-center text-[12px] text-ink-soft">For photos and images you own or have permission to edit.</p>
+        {error && <p role="alert" className="mt-4 rounded-md bg-red-500/10 px-3 py-2 text-center text-[13px] text-red-300">{error}</p>}
+        <p className="mt-4 text-center text-[12px] text-fg-muted">For photos and images you own or have permission to edit.</p>
       </div>
     );
   }
 
   const ToolBtn = ({ m, label, icon }: { m: Mode; label: string; icon: React.ReactNode }) => (
-    <button type="button" aria-pressed={mode === m} onClick={() => setMode(m)} className={cn("flex h-10 flex-col items-center justify-center gap-0.5 rounded-lg text-[11px] ring-1", mode === m ? "bg-brand-50 text-brand-700 ring-brand-500" : "ring-rule hover:bg-paper")}>
+    <button type="button" aria-pressed={mode === m} onClick={() => setMode(m)} className={cn("flex h-10 flex-col items-center justify-center gap-0.5 rounded-lg text-[11px] ring-1", mode === m ? "bg-brand-500/15 text-brand-300 ring-brand-500" : "ring-line hover:bg-raised")}>
       {icon}
       {label}
     </button>
@@ -321,9 +321,9 @@ export function ImageUnwatermarkTool() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       <div className="min-w-0 space-y-2">
-        <p className="text-[13px] text-ink-soft">
-          <span className="font-medium text-ink">{file.name}</span> · {size.w} × {size.h} px · {formatBytes(file.bytes.length)}
-          {note && <span className="ml-2 text-amber-700">{note}</span>}
+        <p className="text-[13px] text-fg-muted">
+          <span className="font-medium text-fg">{file.name}</span> · {size.w} × {size.h} px · {formatBytes(file.bytes.length)}
+          {note && <span className="ml-2 text-amber-300">{note}</span>}
         </p>
         <div className="flex justify-center rounded-2xl bg-[repeating-conic-gradient(#ebe8e1_0%_25%,#f6f4ef_0%_50%)] bg-[length:20px_20px] p-3">
           <div className="relative" style={{ width: Math.round(size.w * scale), height: Math.round(size.h * scale) }}>
@@ -352,15 +352,15 @@ export function ImageUnwatermarkTool() {
             {box && <div className="pointer-events-none absolute border-2 border-dashed border-red-500 bg-red-500/20" style={{ left: Math.min(box.x0, box.x1), top: Math.min(box.y0, box.y1), width: Math.abs(box.x1 - box.x0), height: Math.abs(box.y1 - box.y0) }} />}
             {busy && (
               <div className="absolute inset-0 flex items-center justify-center bg-white/40">
-                <Loader2 className="h-7 w-7 animate-spin text-ink" aria-label={busy} />
+                <Loader2 className="h-7 w-7 animate-spin text-fg" aria-label={busy} />
               </div>
             )}
           </div>
         </div>
       </div>
 
-      <aside className="h-fit space-y-4 rounded-2xl bg-white p-5 ring-1 ring-ink/10 lg:sticky lg:top-24">
-        <ol className="list-decimal space-y-1 pl-4 text-[13px] text-ink-soft">
+      <aside className="h-fit space-y-4 rounded-2xl bg-surface p-5 ring-1 ring-line lg:sticky lg:top-24">
+        <ol className="list-decimal space-y-1 pl-4 text-[13px] text-fg-muted">
           <li>Paint over the watermark (it turns red).</li>
           <li>Optional: pick its colour to select just the mark.</li>
           <li>Press Remove. Repeat for any leftovers.</li>
@@ -373,12 +373,12 @@ export function ImageUnwatermarkTool() {
         </div>
         <Slider label="Brush size" value={brush} onChange={setBrush} min={4} max={200} format={(v) => `${v}px`} />
         {pick && (
-          <div className="space-y-2 rounded-lg bg-paper px-3 py-2.5">
+          <div className="space-y-2 rounded-lg bg-raised px-3 py-2.5">
             <div className="flex items-center gap-2 text-[13px]">
-              <span className="h-5 w-5 rounded ring-1 ring-ink/20" style={{ background: `rgb(${pick.join(",")})` }} /> Watermark colour
+              <span className="h-5 w-5 rounded ring-1 ring-line-strong" style={{ background: `rgb(${pick.join(",")})` }} /> Watermark colour
             </div>
             <Slider label="Tolerance" value={tolerance} onChange={setTolerance} min={2} max={60} format={(v) => `${v}%`} />
-            <button type="button" onClick={refine} disabled={!masked} className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg text-[13px] ring-1 ring-rule hover:bg-white disabled:opacity-40">
+            <button type="button" onClick={refine} disabled={!masked} className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg text-[13px] ring-1 ring-line hover:bg-raised disabled:opacity-40">
               <Wand2 className="h-4 w-4" aria-hidden="true" /> Keep only this colour in the red area
             </button>
           </div>
@@ -393,22 +393,22 @@ export function ImageUnwatermarkTool() {
           ]}
         />
         <details className="text-[13px]">
-          <summary className="cursor-pointer text-ink-soft">Fine-tune</summary>
+          <summary className="cursor-pointer text-fg-muted">Fine-tune</summary>
           <div className="mt-3 space-y-3">
             <Slider label="Cover edges" value={grow} onChange={setGrow} min={0} max={6} format={(v) => `${v}px`} />
             {method === "smooth" && <Slider label="Texture" value={grain} onChange={setGrain} min={0} max={100} format={(v) => `${v}%`} />}
           </div>
         </details>
-        {error && <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-[13px] text-red-700">{error}</p>}
-        <button type="button" onClick={remove} disabled={!masked || !!busy} className="btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-600 text-[15px] font-medium text-white hover:bg-brand-700 disabled:opacity-50">
+        {error && <p role="alert" className="rounded-md bg-red-500/10 px-3 py-2 text-[13px] text-red-300">{error}</p>}
+        <button type="button" onClick={remove} disabled={!masked || !!busy} className="btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-accent text-[15px] font-medium text-on-accent hover:bg-accent-hover disabled:opacity-50">
           {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Wand2 className="h-4 w-4" aria-hidden="true" />}
           {busy ?? (masked ? "Remove" : "Paint over the watermark first")}
         </button>
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={stepBack} disabled={!undo.current.length} className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] ring-1 ring-rule hover:bg-paper disabled:opacity-40">
+          <button type="button" onClick={stepBack} disabled={!undo.current.length} className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] ring-1 ring-line hover:bg-raised disabled:opacity-40">
             <Undo2 className="h-4 w-4" aria-hidden="true" /> Undo
           </button>
-          <button type="button" onClick={clearMask} disabled={!masked} className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] ring-1 ring-rule hover:bg-paper disabled:opacity-40">
+          <button type="button" onClick={clearMask} disabled={!masked} className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] ring-1 ring-line hover:bg-raised disabled:opacity-40">
             Clear red
           </button>
           <button
@@ -416,7 +416,7 @@ export function ImageUnwatermarkTool() {
             onPointerDown={() => setComparing(true)}
             onPointerUp={() => setComparing(false)}
             onPointerLeave={() => setComparing(false)}
-            className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] ring-1 ring-rule hover:bg-paper"
+            className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] ring-1 ring-line hover:bg-raised"
             title="Hold to see the original"
           >
             <Eye className="h-4 w-4" aria-hidden="true" /> Hold to compare
@@ -425,10 +425,10 @@ export function ImageUnwatermarkTool() {
         <button type="button" onClick={download} disabled={!!busy} className="btn inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-emerald-600 text-[14px] font-medium text-white hover:bg-emerald-700">
           <Download className="h-4 w-4" aria-hidden="true" /> Download image
         </button>
-        <button type="button" onClick={() => setFile(null)} className="inline-flex items-center gap-1.5 text-[13px] text-ink-soft hover:text-ink">
+        <button type="button" onClick={() => setFile(null)} className="inline-flex items-center gap-1.5 text-[13px] text-fg-muted hover:text-fg">
           <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" /> Another image
         </button>
-        <p className="text-[12px] leading-relaxed text-ink-soft">Works best on marks over plain or gently textured areas. Only use it on images you own or have permission to edit.</p>
+        <p className="text-[12px] leading-relaxed text-fg-muted">Works best on marks over plain or gently textured areas. Only use it on images you own or have permission to edit.</p>
       </aside>
     </div>
   );

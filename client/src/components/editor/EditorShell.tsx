@@ -35,7 +35,7 @@ export function EditorShell() {
   }, []);
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-white">
+    <div className="flex h-dvh flex-col overflow-hidden bg-app">
       <TopBar onToggleSidebar={() => setSidebar((s) => !s)} onTogglePanel={() => setPanel((p) => !p)} />
       <ToolBar />
       <div className="flex min-h-0 flex-1">

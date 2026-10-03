@@ -1,9 +1,7 @@
-import { FileCheck2, Plus } from "lucide-react";
-import { Nav } from "@/components/landing/Nav";
-import { Footer } from "@/components/landing/Footer";
+import { Plus, Server, ShieldCheck, Sparkles } from "lucide-react";
+import { SiteShell } from "@/components/site/SiteShell";
+import { HomeWorkspace } from "@/components/home/HomeWorkspace";
 import { HowItWorks } from "@/components/landing/HowItWorks";
-import { ToolsHub } from "@/components/tools/ToolsHub";
-import { Tile, type Swatch } from "@/components/tools/icons";
 import { TOOLS } from "@/lib/tools/registry";
 
 const FAQ = [
@@ -27,94 +25,87 @@ const FAQ = [
 
 export default function Home() {
   const ready = TOOLS.filter((t) => t.status === "ready");
-  const inBrowser = ready.filter((t) => t.runs === "browser").length;
+  const count = (runs: string) => ready.filter((t) => t.runs === runs).length;
 
-  const strip: { icon: string; swatch: Swatch; title: string; text: string }[] = [
-    { icon: "BadgeCheck", swatch: "green", title: "100% free", text: "No sign‑up, no watermarks" },
-    { icon: "ShieldCheck", swatch: "emerald", title: "Private by design", text: "Files stay on your device" },
-    { icon: "LayoutGrid", swatch: "blue", title: `${TOOLS.length} tools`, text: "PDF, Office and images" },
-    { icon: "MonitorSmartphone", swatch: "sky", title: "Works on any device", text: "Desktop, tablet and mobile" },
+  const privacy = [
+    {
+      icon: ShieldCheck,
+      title: "On your device",
+      count: count("browser"),
+      text: "The file is opened, changed and saved inside your browser. It never reaches our server.",
+    },
+    {
+      icon: Server,
+      title: "Converted on our server",
+      count: count("server"),
+      text: "Formats browsers can't handle (like Word to PDF) are converted on our server and deleted straight after.",
+    },
+    {
+      icon: Sparkles,
+      title: "With AI",
+      count: count("ai"),
+      text: "Only the document's text is sent to our AI provider to answer you. Nothing is stored.",
+    },
   ];
 
   return (
-    <div className="landing relative min-h-dvh overflow-x-clip" style={{ background: "#fff" }}>
-      <a
-        href="#all-tools"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-ink focus:px-4 focus:py-2 focus:text-paper"
-      >
-        Skip to tools
-      </a>
-      {/* Soft blue wash behind the hero. */}
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-[820px] bg-[radial-gradient(55%_55%_at_78%_30%,rgb(91_140_255/0.16),transparent_70%),linear-gradient(180deg,#eef3ff_0%,#f5f8ff_55%,#ffffff_100%)]"
-        aria-hidden="true"
-      />
-      <div className="relative z-10">
-        <Nav />
-        <main id="main">
-          <ToolsHub
-            intro={
-              <header>
-                <p className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3.5 py-1.5 text-[13px] font-medium text-brand-700 shadow-sm ring-1 ring-brand-100">
-                  <FileCheck2 className="h-4 w-4" aria-hidden="true" />
-                  {TOOLS.length} free tools · {inBrowser} work without uploading
-                </p>
-                <h1 className="mx-auto mt-5 max-w-[600px] text-balance font-display text-[clamp(2.25rem,4.6vw,3.6rem)] font-extrabold leading-[1.04] tracking-[-0.04em] text-ink lg:mx-0">
-                  Every tool for your{" "}
-                  <span className="bg-gradient-to-r from-brand-600 via-[#3b6cff] to-[#1aa3ff] bg-clip-text text-transparent">PDFs, documents and images</span>
-                </h1>
-                <p className="mx-auto mt-5 max-w-[540px] text-pretty text-[17px] leading-relaxed text-ink-soft lg:mx-0">
-                  Pick a tool, add your file, download the result. Free, no sign‑up, and your files stay on your device.
-                </p>
-              </header>
-            }
-            art
-            strip={
-              <div className="mx-auto max-w-[1280px] px-5 pb-16 md:px-8">
-                {/* One bar, four equal cells: reads as a single unit under the hero. */}
-                <ul
-                  aria-label="Why Fusion Office"
-                  className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-rule/80 shadow-[0_20px_40px_-30px_rgb(36_71_230/0.45)] ring-1 ring-rule xl:grid-cols-4"
-                >
-                {strip.map((s) => (
-                  <li key={s.title} className="flex flex-col items-start gap-3 bg-white px-5 py-5 sm:flex-row sm:items-center sm:gap-3.5 lg:px-6">
-                    <Tile swatch={s.swatch} icon={s.icon} size="md" />
-                    <span>
-                      <span className="block text-[15px] font-bold text-ink">{s.title}</span>
-                      <span className="block text-[13px] text-ink-soft">{s.text}</span>
-                    </span>
-                  </li>
-                ))}
-                </ul>
-              </div>
-            }
-          />
+    <SiteShell>
+      <main id="main">
+        <HomeWorkspace />
 
-          <HowItWorks />
-
-          <section id="faq" aria-labelledby="faq-title" className="scroll-mt-20 border-t border-rule bg-paper">
-            <div className="mx-auto max-w-[820px] px-5 py-20 md:px-8">
-              <h2 id="faq-title" className="text-center font-display text-[clamp(1.6rem,3vw,2.25rem)] font-bold tracking-[-0.03em]">
-                Frequently asked questions
+        <section id="privacy" aria-labelledby="privacy-title" className="scroll-mt-20 border-t border-line">
+          <div className="px-4 py-16 sm:px-6 md:py-20 lg:px-8">
+            <div className="max-w-[640px]">
+              <p className="eyebrow">Privacy</p>
+              <h2 id="privacy-title" className="mt-3 text-balance font-display text-[clamp(1.75rem,3.4vw,2.5rem)] font-bold leading-[1.1] tracking-[-0.035em] text-fg">
+                Your files stay yours.
               </h2>
-              <div className="mt-8 divide-y divide-rule rounded-2xl bg-white shadow-sm ring-1 ring-ink/10">
-                {FAQ.map((f) => (
-                  <details key={f.q} className="group px-5 md:px-6">
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-5 text-left [&::-webkit-details-marker]:hidden">
-                      <span className="text-[16px] font-semibold">{f.q}</span>
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700 transition-transform duration-200 group-open:rotate-45">
-                        <Plus className="h-4 w-4" aria-hidden="true" />
-                      </span>
-                    </summary>
-                    <p className="max-w-[64ch] pb-5 text-[15px] leading-relaxed text-ink-soft">{f.a}</p>
-                  </details>
-                ))}
-              </div>
+              <p className="mt-3 max-w-[56ch] text-[15px] leading-relaxed text-fg-muted">
+                Every tool says where it runs before you use it. No account, no tracking of your documents, no watermarks.
+              </p>
             </div>
-          </section>
-        </main>
-        <Footer />
-      </div>
-    </div>
+            <ul className="mt-10 grid gap-3 md:grid-cols-3">
+              {privacy.map((p) => (
+                <li key={p.title} className="card p-5">
+                  <div className="flex items-center justify-between">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-raised text-fg ring-1 ring-inset ring-line-strong">
+                      <p.icon className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <span className="text-[13px] tabular-nums text-fg-subtle">
+                      {p.count} tool{p.count === 1 ? "" : "s"}
+                    </span>
+                  </div>
+                  <h3 className="mt-5 text-[16px] font-semibold tracking-[-0.01em] text-fg">{p.title}</h3>
+                  <p className="mt-1.5 text-[14px] leading-relaxed text-fg-muted">{p.text}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <HowItWorks />
+
+        <section id="faq" aria-labelledby="faq-title" className="scroll-mt-20 border-t border-line">
+          <div className="mx-auto max-w-[820px] px-4 py-16 sm:px-6 md:py-20 lg:px-8">
+            <h2 id="faq-title" className="text-center font-display text-[clamp(1.6rem,3vw,2.25rem)] font-bold tracking-[-0.03em] text-fg">
+              Frequently asked questions
+            </h2>
+            <div className="card mt-8 divide-y divide-line">
+              {FAQ.map((f) => (
+                <details key={f.q} className="group px-5 md:px-6">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-5 text-left [&::-webkit-details-marker]:hidden">
+                    <span className="text-[15px] font-semibold text-fg">{f.q}</span>
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-raised text-fg-muted ring-1 ring-inset ring-line transition-transform duration-200 group-open:rotate-45">
+                      <Plus className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                  </summary>
+                  <p className="max-w-[64ch] pb-5 text-[14.5px] leading-relaxed text-fg-muted">{f.a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+      </main>
+    </SiteShell>
   );
 }

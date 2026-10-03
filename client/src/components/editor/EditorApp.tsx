@@ -53,7 +53,7 @@ export default function EditorApp() {
     <CloudContext.Provider value={cloud}>
       {booting ? (
         <div className="flex h-dvh items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+          <Loader2 className="h-6 w-6 animate-spin text-fg-subtle" />
         </div>
       ) : hasDoc ? (
         <EditorShell />

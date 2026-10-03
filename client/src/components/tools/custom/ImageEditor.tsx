@@ -228,14 +228,14 @@ export function ImageEditor({ mode = "editor" }: { mode?: "editor" | "crop" }) {
       <div>
         {loading ? (
           <div className="flex justify-center py-20">
-            <Loader2 className="h-6 w-6 animate-spin text-ink-soft" aria-label="Loading image" />
+            <Loader2 className="h-6 w-6 animate-spin text-fg-muted" aria-label="Loading image" />
           </div>
         ) : (
           <Dropzone accept={ACCEPT} multiple={false} onFiles={load} label="Select image" />
         )}
-        <p className="mt-3 text-center text-[13px] text-ink-soft">JPG, PNG, WEBP, GIF, AVIF, SVG or HEIC. You can also paste an image.</p>
+        <p className="mt-3 text-center text-[13px] text-fg-muted">JPG, PNG, WEBP, GIF, AVIF, SVG or HEIC. You can also paste an image.</p>
         {error && (
-          <p role="alert" className="mt-4 rounded-md bg-red-50 px-3 py-2 text-center text-[13px] text-red-700">
+          <p role="alert" className="mt-4 rounded-md bg-red-500/10 px-3 py-2 text-center text-[13px] text-red-300">
             {error}
           </p>
         )}
@@ -252,8 +252,8 @@ export function ImageEditor({ mode = "editor" }: { mode?: "editor" | "crop" }) {
     <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
       <div className="min-w-0 space-y-3">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="mr-auto min-w-0 truncate text-[13px] text-ink-soft">
-            <span className="font-medium text-ink">{file.name}</span> · {size.width} × {size.height} px
+          <span className="mr-auto min-w-0 truncate text-[13px] text-fg-muted">
+            <span className="font-medium text-fg">{file.name}</span> · {size.width} × {size.height} px
           </span>
           <ToolbarBtn label="Undo (Ctrl+Z)" onClick={history.undo} disabled={!history.canUndo}>
             <Undo2 className="h-4 w-4" />
@@ -261,10 +261,10 @@ export function ImageEditor({ mode = "editor" }: { mode?: "editor" | "crop" }) {
           <ToolbarBtn label="Redo (Ctrl+Shift+Z)" onClick={history.redo} disabled={!history.canRedo}>
             <Redo2 className="h-4 w-4" />
           </ToolbarBtn>
-          <button type="button" onClick={() => (setEdit(EMPTY_EDIT), setSelected(null))} className="h-9 rounded-full px-3 text-[13px] ring-1 ring-rule hover:bg-white">
+          <button type="button" onClick={() => (setEdit(EMPTY_EDIT), setSelected(null))} className="h-9 rounded-full px-3 text-[13px] ring-1 ring-line-strong hover:bg-raised">
             Reset all
           </button>
-          <label className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full px-3 text-[13px] ring-1 ring-rule hover:bg-white">
+          <label className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full px-3 text-[13px] ring-1 ring-line-strong hover:bg-raised">
             <ImagePlus className="h-4 w-4" aria-hidden="true" /> Open another
             <input type="file" accept={ACCEPT} className="sr-only" onChange={(e) => e.target.files && load([...e.target.files])} />
           </label>
@@ -284,14 +284,14 @@ export function ImageEditor({ mode = "editor" }: { mode?: "editor" | "crop" }) {
           />
         </div>
         {cropping && t.crop && (
-          <p className="text-center text-[12px] text-ink-soft">
+          <p className="text-center text-[12px] text-fg-muted">
             Crop: {cropPixels(orientedSize, t.crop).width} × {cropPixels(orientedSize, t.crop).height} px · drag the box or its corners
           </p>
         )}
       </div>
 
-      <aside className="h-fit rounded-2xl bg-white ring-1 ring-ink/10 lg:sticky lg:top-24">
-        <div role="tablist" aria-label="Editor panels" className="grid border-b border-rule" style={{ gridTemplateColumns: `repeat(${panels.length}, minmax(0, 1fr))` }}>
+      <aside className="h-fit rounded-2xl bg-surface ring-1 ring-line lg:sticky lg:top-24">
+        <div role="tablist" aria-label="Editor panels" className="grid border-b border-line" style={{ gridTemplateColumns: `repeat(${panels.length}, minmax(0, 1fr))` }}>
           {panels.map((p) => (
             <button
               key={p.id}
@@ -299,7 +299,7 @@ export function ImageEditor({ mode = "editor" }: { mode?: "editor" | "crop" }) {
               role="tab"
               aria-selected={panel === p.id}
               onClick={() => setPanel(p.id)}
-              className={cn("flex flex-col items-center gap-1 px-1 py-2.5 text-[11px] transition-colors", panel === p.id ? "text-brand-700 shadow-[inset_0_-2px_0] shadow-brand-600" : "text-ink-soft hover:text-ink")}
+              className={cn("flex flex-col items-center gap-1 px-1 py-2.5 text-[11px] transition-colors", panel === p.id ? "text-brand-300 shadow-[inset_0_-2px_0] shadow-brand-600" : "text-fg-muted hover:text-fg")}
             >
               {p.icon}
               {p.id === "save" && !cropOnly ? "Save" : p.label}
@@ -321,7 +321,7 @@ export function ImageEditor({ mode = "editor" }: { mode?: "editor" | "crop" }) {
                         setAspect(a.id);
                         if (a.ratio) setCrop(centeredCrop(orientedSize, a.ratio, 0.9));
                       }}
-                      className={cn("h-8 rounded-full px-3 text-[12px] ring-1", aspect === a.id ? "bg-brand-50 font-medium text-brand-700 ring-brand-500" : "bg-white ring-rule hover:ring-rule-strong")}
+                      className={cn("h-8 rounded-full px-3 text-[12px] ring-1", aspect === a.id ? "bg-brand-500/15 font-medium text-brand-300 ring-brand-500" : "bg-sunken ring-line-strong hover:ring-line-strong")}
                     >
                       {a.label}
                     </button>
@@ -352,7 +352,7 @@ export function ImageEditor({ mode = "editor" }: { mode?: "editor" | "crop" }) {
                   setAspect("free");
                   setEdit((s) => ({ ...s, transform: { ...s.transform, crop: null, straighten: 0 } }));
                 }}
-                className="text-[13px] font-medium text-brand-700 hover:underline"
+                className="text-[13px] font-medium text-brand-300 hover:underline"
               >
                 Reset crop and straighten
               </button>
@@ -372,7 +372,7 @@ export function ImageEditor({ mode = "editor" }: { mode?: "editor" | "crop" }) {
                   format={(v) => (v > 0 && s.min < 0 ? `+${v}` : `${v}`)}
                 />
               ))}
-              <button type="button" onClick={() => setEdit((e) => ({ ...e, adjust: NO_ADJUSTMENTS }))} className="text-[13px] font-medium text-brand-700 hover:underline">
+              <button type="button" onClick={() => setEdit((e) => ({ ...e, adjust: NO_ADJUSTMENTS }))} className="text-[13px] font-medium text-brand-300 hover:underline">
                 Reset adjustments
               </button>
             </>
@@ -382,11 +382,11 @@ export function ImageEditor({ mode = "editor" }: { mode?: "editor" | "crop" }) {
             <div className="grid grid-cols-3 gap-2">
               {filterThumbs?.map((f) => (
                 <button key={f.id} type="button" aria-pressed={edit.filter === f.id} onClick={() => setEdit((e) => ({ ...e, filter: f.id }))} className="group text-center">
-                  <span className={cn("flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-paper-deep ring-2", edit.filter === f.id ? "ring-brand-600" : "ring-transparent group-hover:ring-rule-strong")}>
+                  <span className={cn("flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-sunken ring-2", edit.filter === f.id ? "ring-brand-600" : "ring-transparent group-hover:ring-line-strong")}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={f.url} alt="" className="max-h-full max-w-full" />
                   </span>
-                  <span className={cn("mt-1 block text-[12px]", edit.filter === f.id ? "font-medium text-brand-700" : "text-ink-soft")}>{f.label}</span>
+                  <span className={cn("mt-1 block text-[12px]", edit.filter === f.id ? "font-medium text-brand-300" : "text-fg-muted")}>{f.label}</span>
                 </button>
               ))}
             </div>
@@ -569,31 +569,31 @@ function TextPanel({
   const t = texts.find((x) => x.id === selected);
   return (
     <>
-      <button type="button" onClick={onAdd} className="btn inline-flex h-10 w-full items-center justify-center gap-2 rounded-full bg-ink text-[14px] font-medium text-paper hover:bg-ink/85">
+      <button type="button" onClick={onAdd} className="btn inline-flex h-10 w-full items-center justify-center gap-2 rounded-full bg-fg text-[14px] font-medium text-app hover:bg-fg/85">
         <Plus className="h-4 w-4" aria-hidden="true" /> Add text
       </button>
       {texts.length > 1 && (
         <div className="flex flex-wrap gap-1.5">
           {texts.map((x, i) => (
-            <button key={x.id} type="button" onClick={() => onSelect(x.id)} className={cn("h-7 max-w-[140px] truncate rounded-full px-2.5 text-[12px] ring-1", x.id === selected ? "bg-brand-50 text-brand-700 ring-brand-500" : "bg-white ring-rule")}>
+            <button key={x.id} type="button" onClick={() => onSelect(x.id)} className={cn("h-7 max-w-[140px] truncate rounded-full px-2.5 text-[12px] ring-1", x.id === selected ? "bg-brand-500/15 text-brand-300 ring-brand-500" : "bg-sunken ring-line-strong")}>
               {x.text.split("\n")[0] || `Text ${i + 1}`}
             </button>
           ))}
         </div>
       )}
       {!t ? (
-        <p className="text-[13px] leading-relaxed text-ink-soft">{texts.length ? "Click a text on the image to edit it. Drag to move it." : "Add a caption, a title or a label. Drag it into place on the image."}</p>
+        <p className="text-[13px] leading-relaxed text-fg-muted">{texts.length ? "Click a text on the image to edit it. Drag to move it." : "Add a caption, a title or a label. Drag it into place on the image."}</p>
       ) : (
         <>
           <label className="block space-y-1.5">
             <span className="text-[13px] font-medium">Text</span>
-            <textarea value={t.text} onChange={(e) => onChange(t.id, { text: e.target.value })} rows={2} className="w-full resize-y rounded-lg px-3 py-2 text-[14px] ring-1 ring-rule outline-none focus:ring-2 focus:ring-brand-500" />
+            <textarea value={t.text} onChange={(e) => onChange(t.id, { text: e.target.value })} rows={2} className="w-full resize-y rounded-lg bg-sunken px-3 py-2 text-[14px] text-fg ring-1 ring-line-strong outline-none focus:ring-2 focus:ring-brand-500" />
           </label>
           <fieldset>
             <legend className="mb-1.5 text-[13px] font-medium">Font</legend>
             <div className="flex flex-wrap gap-1.5">
               {FONTS.map((f) => (
-                <button key={f.id} type="button" aria-pressed={t.font === f.id} onClick={() => onChange(t.id, { font: f.id })} className={cn("h-8 rounded-lg px-2.5 text-[13px] ring-1", t.font === f.id ? "bg-brand-50 text-brand-700 ring-brand-500" : "bg-white ring-rule")} style={{ fontFamily: f.css }}>
+                <button key={f.id} type="button" aria-pressed={t.font === f.id} onClick={() => onChange(t.id, { font: f.id })} className={cn("h-8 rounded-lg px-2.5 text-[13px] ring-1", t.font === f.id ? "bg-brand-500/15 text-brand-300 ring-brand-500" : "bg-sunken ring-line-strong")} style={{ fontFamily: f.css }}>
                   {f.label}
                 </button>
               ))}
@@ -607,7 +607,7 @@ function TextPanel({
             <ToggleBtn label="Italic" on={t.italic} onClick={() => onChange(t.id, { italic: !t.italic })}>
               <Italic className="h-4 w-4" />
             </ToggleBtn>
-            <span className="mx-1 h-5 w-px bg-rule" />
+            <span className="mx-1 h-5 w-px bg-line" />
             {(["left", "center", "right"] as const).map((a) => (
               <ToggleBtn key={a} label={`Align ${a}`} on={t.align === a} onClick={() => onChange(t.id, { align: a })}>
                 {a === "left" ? <AlignLeft className="h-4 w-4" /> : a === "center" ? <AlignCenter className="h-4 w-4" /> : <AlignRight className="h-4 w-4" />}
@@ -618,10 +618,10 @@ function TextPanel({
             <legend className="mb-1.5 text-[13px] font-medium">Colour</legend>
             <div className="flex flex-wrap items-center gap-1.5">
               {SWATCHES.map((c) => (
-                <button key={c} type="button" aria-label={`Colour ${c}`} aria-pressed={t.color === c} onClick={() => onChange(t.id, { color: c })} className={cn("h-7 w-7 rounded-full ring-1 ring-ink/15", t.color === c && "ring-2 ring-brand-600 ring-offset-2")} style={{ background: c }} />
+                <button key={c} type="button" aria-label={`Colour ${c}`} aria-pressed={t.color === c} onClick={() => onChange(t.id, { color: c })} className={cn("h-7 w-7 rounded-full ring-1 ring-line", t.color === c && "ring-2 ring-brand-400 ring-offset-2 ring-offset-surface")} style={{ background: c }} />
               ))}
-              <label className="relative flex h-7 w-7 cursor-pointer items-center justify-center rounded-full ring-1 ring-rule" title="Custom colour">
-                <Palette className="h-3.5 w-3.5 text-ink-soft" aria-hidden="true" />
+              <label className="relative flex h-7 w-7 cursor-pointer items-center justify-center rounded-full ring-1 ring-line" title="Custom colour">
+                <Palette className="h-3.5 w-3.5 text-fg-muted" aria-hidden="true" />
                 <input type="color" value={t.color} onChange={(e) => onChange(t.id, { color: e.target.value })} className="absolute inset-0 cursor-pointer opacity-0" aria-label="Custom colour" />
               </label>
             </div>
@@ -632,7 +632,7 @@ function TextPanel({
             <Toggle label="Background box" checked={!!t.background} onChange={(on) => onChange(t.id, { background: on ? (t.color.toLowerCase() === "#ffffff" ? "#111111" : "#ffffff") : null })} />
             {t.background && <input type="color" value={t.background} onChange={(e) => onChange(t.id, { background: e.target.value })} className="h-8 w-10 cursor-pointer rounded" aria-label="Background colour" />}
           </div>
-          <button type="button" onClick={() => onDelete(t.id)} className="inline-flex items-center gap-1.5 text-[13px] font-medium text-red-700 hover:underline">
+          <button type="button" onClick={() => onDelete(t.id)} className="inline-flex items-center gap-1.5 text-[13px] font-medium text-red-300 hover:underline">
             <Trash2 className="h-4 w-4" aria-hidden="true" /> Delete this text
           </button>
         </>
@@ -707,8 +707,8 @@ function SavePanel({ img, file, edit, size, suffix }: { img: Decoded; file: Tool
           <NumberField label="Height" value={dims.height} onChange={(h) => setDims({ height: h, width: Math.round(h * ratio) })} min={1} suffix="px" />
         </div>
       )}
-      <p className="rounded-lg bg-paper-deep px-3 py-2 text-[12px] text-ink-soft">
-        Output: <span className="font-medium text-ink">{out.width} × {out.height} px</span>
+      <p className="rounded-lg bg-sunken px-3 py-2 text-[12px] text-fg-muted">
+        Output: <span className="font-medium text-fg">{out.width} × {out.height} px</span>
       </p>
       <Segmented
         label="Format"
@@ -723,16 +723,16 @@ function SavePanel({ img, file, edit, size, suffix }: { img: Decoded; file: Tool
       <Toggle label="Limit the file size" hint="Finds the best quality under your limit, e.g. 50 KB for a form." checked={limit} onChange={setLimit} />
       {limit ? <TargetSize label="Maximum size" value={target} onChange={setTarget} /> : lossy && <Slider label="Quality" value={quality} onChange={setQuality} min={30} max={100} format={(v) => `${v}%`} />}
       {error && (
-        <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-[13px] text-red-700">
+        <p role="alert" className="rounded-md bg-red-500/10 px-3 py-2 text-[13px] text-red-300">
           {error}
         </p>
       )}
-      <button type="button" onClick={save} disabled={busy} className="btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-600 text-[15px] font-medium text-white shadow-sm hover:bg-brand-700 disabled:opacity-80">
+      <button type="button" onClick={save} disabled={busy} className="btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-accent text-[15px] font-medium text-on-accent shadow-sm hover:bg-accent-hover disabled:opacity-80">
         {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Download className="h-4 w-4" aria-hidden="true" />}
         {busy ? "Saving…" : "Download image"}
       </button>
       {saved && (
-        <p role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-[12px] leading-relaxed text-emerald-800">
+        <p role="status" className="rounded-lg bg-emerald-500/10 px-3 py-2 text-[12px] leading-relaxed text-emerald-200">
           Saved <span className="font-medium">{saved.name}</span> · {saved.width} × {saved.height} px · {formatBytes(saved.bytes)}
           {!saved.fits && ". It couldn't get under the limit without becoming unusable, so this is the smallest version."}
         </p>
@@ -745,7 +745,7 @@ function SavePanel({ img, file, edit, size, suffix }: { img: Decoded; file: Tool
 
 function ToolbarBtn({ label, onClick, disabled, children }: { label: string; onClick: () => void; disabled?: boolean; children: ReactNode }) {
   return (
-    <button type="button" aria-label={label} title={label} onClick={onClick} disabled={disabled} className="flex h-9 w-9 items-center justify-center rounded-full ring-1 ring-rule hover:bg-white disabled:opacity-35">
+    <button type="button" aria-label={label} title={label} onClick={onClick} disabled={disabled} className="flex h-9 w-9 items-center justify-center rounded-full ring-1 ring-line-strong hover:bg-raised disabled:opacity-35">
       {children}
     </button>
   );
@@ -753,7 +753,7 @@ function ToolbarBtn({ label, onClick, disabled, children }: { label: string; onC
 
 function PanelBtn({ label, onClick, children }: { label: string; onClick: () => void; children: ReactNode }) {
   return (
-    <button type="button" aria-label={label} title={label} onClick={onClick} className="flex h-10 items-center justify-center rounded-lg ring-1 ring-rule hover:bg-paper-deep">
+    <button type="button" aria-label={label} title={label} onClick={onClick} className="flex h-10 items-center justify-center rounded-lg ring-1 ring-line hover:bg-raised">
       {children}
     </button>
   );
@@ -761,7 +761,7 @@ function PanelBtn({ label, onClick, children }: { label: string; onClick: () => 
 
 function ToggleBtn({ label, on, onClick, children }: { label: string; on: boolean; onClick: () => void; children: ReactNode }) {
   return (
-    <button type="button" aria-label={label} aria-pressed={on} title={label} onClick={onClick} className={cn("flex h-9 w-9 items-center justify-center rounded-lg ring-1", on ? "bg-brand-50 text-brand-700 ring-brand-500" : "ring-rule hover:bg-paper-deep")}>
+    <button type="button" aria-label={label} aria-pressed={on} title={label} onClick={onClick} className={cn("flex h-9 w-9 items-center justify-center rounded-lg ring-1", on ? "bg-brand-500/15 text-brand-300 ring-brand-500" : "ring-line hover:bg-raised")}>
       {children}
     </button>
   );

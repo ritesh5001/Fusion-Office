@@ -16,12 +16,12 @@ const STATE_OPTIONS = Object.entries(STATES).sort((a, b) => a[1].localeCompare(b
 /** Next invoice number: keep the prefix, increase the number, keep its width (INV-0007 → INV-0008). */
 const nextNumber = (n: string) => n.replace(/(\d+)(?!.*\d)/, (d) => String(Number(d) + 1).padStart(d.length, "0"));
 
-const input = "h-9 w-full min-w-0 rounded-lg bg-white px-2.5 text-[14px] ring-1 ring-rule outline-none focus:ring-2 focus:ring-brand-500";
+const input = "h-9 w-full min-w-0 rounded-lg bg-sunken text-fg placeholder:text-fg-subtle px-2.5 text-[14px] ring-1 ring-line-strong outline-none focus:ring-2 focus:ring-brand-500";
 
 function Field({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
   return (
     <label className={cn("block space-y-1", className)}>
-      <span className="text-[12px] font-medium text-ink-soft">{label}</span>
+      <span className="text-[12px] font-medium text-fg-muted">{label}</span>
       {children}
     </label>
   );
@@ -37,16 +37,16 @@ function GstinField({ value, onChange }: { value: string; onChange: (v: string, 
           const c = checkGstin(v);
           onChange(v, c.ok ? c.stateCode : undefined);
         }} />
-        {check && (check.ok ? <CheckCircle2 className="absolute right-2 top-2.5 h-4 w-4 text-emerald-600" aria-label="Valid GSTIN" /> : <XCircle className="absolute right-2 top-2.5 h-4 w-4 text-red-500" aria-hidden="true" />)}
+        {check && (check.ok ? <CheckCircle2 className="absolute right-2 top-2.5 h-4 w-4 text-emerald-300" aria-label="Valid GSTIN" /> : <XCircle className="absolute right-2 top-2.5 h-4 w-4 text-red-400" aria-hidden="true" />)}
       </div>
-      {check && !check.ok && value.length >= 15 && <span className="block text-[11px] text-red-600">{check.reason}</span>}
+      {check && !check.ok && value.length >= 15 && <span className="block text-[11px] text-red-300">{check.reason}</span>}
     </Field>
   );
 }
 
 function PartyForm({ title, party, set, optionalGstin }: { title: string; party: Party; set: (p: Partial<Party>) => void; optionalGstin?: boolean }) {
   return (
-    <section className="space-y-3 rounded-2xl bg-white p-5 ring-1 ring-ink/10">
+    <section className="space-y-3 rounded-2xl bg-surface p-5 ring-1 ring-line">
       <h2 className="text-[15px] font-bold">{title}</h2>
       <Field label="Name">
         <input className={input} value={party.name} onChange={(e) => set({ name: e.target.value })} />
@@ -73,7 +73,7 @@ function PartyForm({ title, party, set, optionalGstin }: { title: string; party:
           <input className={input} type="email" value={party.email} onChange={(e) => set({ email: e.target.value })} />
         </Field>
       </div>
-      {optionalGstin && <p className="text-[12px] text-ink-soft">Leave GSTIN empty for an unregistered customer (B2C).</p>}
+      {optionalGstin && <p className="text-[12px] text-fg-muted">Leave GSTIN empty for an unregistered customer (B2C).</p>}
     </section>
   );
 }
@@ -143,7 +143,7 @@ export function GstInvoiceTool() {
           <PartyForm title="Bill to" party={buyer} set={(p) => setBuyer((s) => ({ ...s, ...p }))} optionalGstin />
         </div>
 
-        <section className="grid gap-3 rounded-2xl bg-white p-5 ring-1 ring-ink/10 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="grid gap-3 rounded-2xl bg-surface p-5 ring-1 ring-line sm:grid-cols-2 lg:grid-cols-4">
           <Field label="Invoice no.">
             <input className={input} value={meta.number} onChange={(e) => setMeta({ ...meta, number: e.target.value })} />
           </Field>
@@ -164,17 +164,17 @@ export function GstInvoiceTool() {
             </select>
           </Field>
           <label className="flex items-center gap-2 text-[13px] sm:col-span-2">
-            <input type="checkbox" checked={meta.reverseCharge} onChange={(e) => setMeta({ ...meta, reverseCharge: e.target.checked })} className="h-4 w-4 accent-brand-600" />
+            <input type="checkbox" checked={meta.reverseCharge} onChange={(e) => setMeta({ ...meta, reverseCharge: e.target.checked })} className="h-4 w-4 accent-brand-500" />
             Tax payable on reverse charge
           </label>
         </section>
 
-        <section className="rounded-2xl bg-white p-5 ring-1 ring-ink/10">
+        <section className="rounded-2xl bg-surface p-5 ring-1 ring-line">
           <h2 className="text-[15px] font-bold">Items</h2>
           <div className="mt-3 overflow-x-auto">
             <table className="w-full min-w-[760px] text-[13px]">
               <thead>
-                <tr className="text-left text-[12px] text-ink-soft">
+                <tr className="text-left text-[12px] text-fg-muted">
                   <th className="pb-2 font-medium">Description</th>
                   <th className="w-24 pb-2 font-medium">HSN/SAC</th>
                   <th className="w-16 pb-2 font-medium">Qty</th>
@@ -225,7 +225,7 @@ export function GstInvoiceTool() {
                           aria-label={`Remove item ${i + 1}`}
                           disabled={items.length === 1}
                           onClick={() => setItems((l) => l.filter((_, k) => k !== i))}
-                          className="flex h-9 w-8 items-center justify-center rounded-md text-ink-soft hover:bg-red-50 hover:text-red-600 disabled:opacity-30"
+                          className="flex h-9 w-8 items-center justify-center rounded-md text-fg-muted hover:bg-red-500/10 hover:text-red-300 disabled:opacity-30"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -236,13 +236,13 @@ export function GstInvoiceTool() {
               </tbody>
             </table>
           </div>
-          <button type="button" onClick={() => setItems((l) => [...l, blankItem()])} className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-[13px] font-semibold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50">
+          <button type="button" onClick={() => setItems((l) => [...l, blankItem()])} className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-[13px] font-semibold text-brand-300 ring-1 ring-brand-500/35 hover:bg-brand-500/15">
             <Plus className="h-4 w-4" /> Add item
           </button>
         </section>
 
         <div className="grid gap-5 lg:grid-cols-2">
-          <section className="space-y-3 rounded-2xl bg-white p-5 ring-1 ring-ink/10">
+          <section className="space-y-3 rounded-2xl bg-surface p-5 ring-1 ring-line">
             <h2 className="text-[15px] font-bold">Bank details (optional)</h2>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Bank">
@@ -259,7 +259,7 @@ export function GstInvoiceTool() {
               </Field>
             </div>
           </section>
-          <section className="space-y-3 rounded-2xl bg-white p-5 ring-1 ring-ink/10">
+          <section className="space-y-3 rounded-2xl bg-surface p-5 ring-1 ring-line">
             <h2 className="text-[15px] font-bold">Notes & signature</h2>
             <Field label="Notes and terms">
               <textarea className={cn(input, "h-auto py-2")} rows={3} value={meta.notes} onChange={(e) => setMeta({ ...meta, notes: e.target.value })} />
@@ -272,47 +272,47 @@ export function GstInvoiceTool() {
       </div>
 
       {/* Live totals */}
-      <aside className="h-fit space-y-4 rounded-2xl bg-white p-5 ring-1 ring-ink/10 xl:sticky xl:top-24">
+      <aside className="h-fit space-y-4 rounded-2xl bg-surface p-5 ring-1 ring-line xl:sticky xl:top-24">
         <h2 className="text-[15px] font-bold">Summary</h2>
-        <p className={cn("rounded-lg px-3 py-2 text-[12px]", totals.interState ? "bg-sky-50 text-sky-800" : "bg-emerald-50 text-emerald-800")}>
+        <p className={cn("rounded-lg px-3 py-2 text-[12px]", totals.interState ? "bg-sky-500/10 text-sky-200" : "bg-emerald-500/10 text-emerald-200")}>
           {!seller.stateCode || !place ? "Choose both states to work out the tax type." : totals.interState ? "Different states: IGST applies." : "Same state: CGST + SGST apply."}
         </p>
         <dl className="space-y-1.5 text-[14px]">
           <div className="flex justify-between">
-            <dt className="text-ink-soft">Taxable value</dt>
+            <dt className="text-fg-muted">Taxable value</dt>
             <dd className="tabular-nums">{inr(totals.taxable)}</dd>
           </div>
           {totals.interState ? (
             <div className="flex justify-between">
-              <dt className="text-ink-soft">IGST</dt>
+              <dt className="text-fg-muted">IGST</dt>
               <dd className="tabular-nums">{inr(totals.igst)}</dd>
             </div>
           ) : (
             <>
               <div className="flex justify-between">
-                <dt className="text-ink-soft">CGST</dt>
+                <dt className="text-fg-muted">CGST</dt>
                 <dd className="tabular-nums">{inr(totals.cgst)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-ink-soft">SGST</dt>
+                <dt className="text-fg-muted">SGST</dt>
                 <dd className="tabular-nums">{inr(totals.sgst)}</dd>
               </div>
             </>
           )}
           {totals.roundOff !== 0 && (
             <div className="flex justify-between">
-              <dt className="text-ink-soft">Round off</dt>
+              <dt className="text-fg-muted">Round off</dt>
               <dd className="tabular-nums">{inr(totals.roundOff)}</dd>
             </div>
           )}
-          <div className="flex justify-between border-t border-rule pt-2 text-[17px] font-bold">
+          <div className="flex justify-between border-t border-line pt-2 text-[17px] font-bold">
             <dt>Total</dt>
             <dd className="tabular-nums">₹ {inr(totals.total)}</dd>
           </div>
         </dl>
-        <p className="text-[12px] leading-relaxed text-ink-soft">{rupeesInWords(totals.total)}</p>
+        <p className="text-[12px] leading-relaxed text-fg-muted">{rupeesInWords(totals.total)}</p>
         {error && (
-          <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-[13px] text-red-700">
+          <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-[13px] text-red-300">
             {error}
           </p>
         )}
@@ -320,11 +320,11 @@ export function GstInvoiceTool() {
           type="button"
           onClick={download}
           disabled={busy}
-          className="btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 text-[15px] font-semibold text-white shadow-[0_10px_24px_-10px_rgb(47_84_235/0.8)] hover:bg-brand-700 disabled:opacity-70"
+          className="btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-accent text-[15px] font-semibold text-on-accent hover:bg-accent-hover disabled:opacity-70"
         >
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} Download invoice PDF
         </button>
-        <p className="text-[12px] leading-relaxed text-ink-soft">Made on your device. Your business and bank details are remembered in this browser for next time, and the invoice number moves up after each download.</p>
+        <p className="text-[12px] leading-relaxed text-fg-muted">Made on your device. Your business and bank details are remembered in this browser for next time, and the invoice number moves up after each download.</p>
       </aside>
     </div>
   );

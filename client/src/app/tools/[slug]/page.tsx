@@ -20,9 +20,9 @@ export default async function ToolPage({ params }: { params: Promise<{ slug: str
   return (
     <ToolLayout tool={tool}>
       {tool.status === "soon" ? (
-        <div className="mx-auto max-w-[520px] rounded-2xl bg-white p-8 text-center ring-1 ring-ink/10">
-          <h2 className="font-display text-[22px] font-semibold">Coming soon</h2>
-          <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">This tool needs a new processing engine on our server. It&apos;s on the roadmap.</p>
+        <div className="card mx-auto max-w-[520px] p-8 text-center">
+          <h2 className="font-display text-[22px] font-semibold text-fg">Coming soon</h2>
+          <p className="mt-2 text-[15px] leading-relaxed text-fg-muted">This tool needs a new processing engine on our server. It&apos;s on the roadmap.</p>
         </div>
       ) : (
         <ToolClient slug={tool.slug} />

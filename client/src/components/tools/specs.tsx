@@ -37,7 +37,7 @@ const merge: ToolSpec<Record<string, never>> = {
   minFiles: 2,
   reorderable: true,
   Options: ({ files }) => (
-    <p className="text-[13px] leading-relaxed text-ink-soft">
+    <p className="text-[13px] leading-relaxed text-fg-muted">
       {files.length} files will be combined in the order shown. Use the arrows to change the order.
     </p>
   ),
@@ -130,7 +130,7 @@ const compress: ToolSpec<CompressOpts> = {
       />
       <Toggle label="Grayscale images" checked={o.grayscale} onChange={(grayscale) => set({ grayscale })} />
       <Toggle label="Remove metadata" hint="Author, title, creator and hidden XMP data" checked={o.stripMetadata} onChange={(stripMetadata) => set({ stripMetadata })} />
-      <p className="text-[12px] leading-relaxed text-ink-soft">Only images are re-encoded. Text and drawings stay sharp and selectable.</p>
+      <p className="text-[12px] leading-relaxed text-fg-muted">Only images are re-encoded. Text and drawings stay sharp and selectable.</p>
     </>
   ),
   run: async (files, o) => {
@@ -152,7 +152,7 @@ const compress: ToolSpec<CompressOpts> = {
       files: out,
       summary: (
         <>
-          <strong className="text-ink">{saved > 0 ? `${saved}% smaller` : "Already optimized"}</strong> · {formatBytes(before)} → {formatBytes(after)}
+          <strong className="text-fg">{saved > 0 ? `${saved}% smaller` : "Already optimized"}</strong> · {formatBytes(before)} → {formatBytes(after)}
           {unchanged > 0 && saved > 0 && <span className="block text-[13px]">{unchanged} file(s) were already as small as they can get.</span>}
         </>
       ),
@@ -180,7 +180,7 @@ const ocr: ToolSpec<{ skipTextPages: boolean }> = {
   Options: ({ options: o, set }) => (
     <>
       <Toggle label="Skip pages that already have text" checked={o.skipTextPages} onChange={(skipTextPages) => set({ skipTextPages })} />
-      <p className="text-[12px] leading-relaxed text-ink-soft">
+      <p className="text-[12px] leading-relaxed text-fg-muted">
         Recognises English text. The first run downloads the recognition engine (about 15 MB) from this site; after that it's cached.
       </p>
     </>
@@ -256,7 +256,7 @@ const officeFrom = (kind: "word" | "powerpoint" | "excel" | "markdown"): ToolSpe
     kind === "markdown"
       ? ({ options: o, set }) => <Toggle label="Separate pages with ---" checked={o.pageBreaks} onChange={(pageBreaks) => set({ pageBreaks })} />
       : () => (
-          <p className="text-[13px] leading-relaxed text-ink-soft">
+          <p className="text-[13px] leading-relaxed text-fg-muted">
             {kind === "word" && "Headings, paragraphs, lists and tables become editable Word content."}
             {kind === "powerpoint" && "Each page becomes a slide. The page's text goes into the speaker notes."}
             {kind === "excel" && "Each page becomes a sheet. Columns are detected from how the text lines up."}
@@ -359,7 +359,7 @@ const watermark: ToolSpec<WmOpts> = {
                 const f = e.target.files?.[0];
                 if (f) set({ image: { bytes: new Uint8Array(await f.arrayBuffer()), type: f.type, name: f.name } });
               }}
-              className="block w-full text-[13px] file:mr-3 file:rounded-full file:border-0 file:bg-paper-deep file:px-3 file:py-1.5 file:text-[13px]"
+              className="block w-full text-[13px] file:mr-3 file:rounded-full file:border-0 file:bg-sunken file:px-3 file:py-1.5 file:text-[13px]"
             />
           </label>
           <Slider label="Width" value={Math.round(o.scale * 100)} min={5} max={100} onChange={(v) => set({ scale: v / 100 })} format={(v) => `${v}% of page`} />
@@ -430,7 +430,7 @@ const protect: ToolSpec<ProtectOpts> = {
       <Toggle label="Allow printing" checked={o.allowPrinting} onChange={(allowPrinting) => set({ allowPrinting })} />
       <Toggle label="Allow copying text" checked={o.allowCopying} onChange={(allowCopying) => set({ allowCopying })} />
       <Toggle label="Allow editing" checked={o.allowEditing} onChange={(allowEditing) => set({ allowEditing })} />
-      <p className="text-[12px] leading-relaxed text-ink-soft">Encrypted with AES-256. Keep the password safe: it can't be recovered.</p>
+      <p className="text-[12px] leading-relaxed text-fg-muted">Encrypted with AES-256. Keep the password safe: it can't be recovered.</p>
     </>
   ),
   validate: (_f, o) => (o.password.length < 4 ? "Use at least 4 characters." : o.password !== o.confirm ? "The passwords don't match." : null),
@@ -448,7 +448,7 @@ const unlock: ToolSpec<{ password: string }> = {
   Options: ({ options: o, set }) => (
     <>
       <TextInput label="Current password" type="password" autoComplete="current-password" value={o.password} onChange={(password) => set({ password })} />
-      <p className="text-[12px] leading-relaxed text-ink-soft">Only for files you're allowed to open. The password is used in your browser and never sent anywhere.</p>
+      <p className="text-[12px] leading-relaxed text-fg-muted">Only for files you're allowed to open. The password is used in your browser and never sent anywhere.</p>
     </>
   ),
   validate: (_f, o) => (!o.password ? "Enter the file's password." : null),
@@ -463,17 +463,17 @@ const redact: ToolSpec<RedactOpts> = {
     <>
       <label className="block space-y-1.5">
         <span className="block text-[13px] font-medium">Words or phrases to remove</span>
-        <span className="block text-[12px] text-ink-soft">One per line: names, phone numbers, account numbers…</span>
+        <span className="block text-[12px] text-fg-muted">One per line: names, phone numbers, account numbers…</span>
         <textarea
           value={o.terms}
           onChange={(e) => set({ terms: e.target.value })}
           rows={5}
-          className="w-full rounded-lg bg-white p-3 text-[14px] ring-1 ring-rule outline-none focus:ring-2 focus:ring-brand-500"
+          className="w-full rounded-lg bg-sunken text-fg placeholder:text-fg-subtle p-3 text-[14px] ring-1 ring-line-strong outline-none focus:ring-2 focus:ring-brand-500"
         />
       </label>
       <Toggle label="Whole words only" checked={o.wholeWord} onChange={(wholeWord) => set({ wholeWord })} />
       <Toggle label="Match case" checked={o.caseSensitive} onChange={(caseSensitive) => set({ caseSensitive })} />
-      <p className="text-[12px] leading-relaxed text-ink-soft">
+      <p className="text-[12px] leading-relaxed text-fg-muted">
         Matches are deleted from the file, not just covered. For areas like signatures or photos, use the Redact tool in the editor.
       </p>
     </>
@@ -489,7 +489,7 @@ const redact: ToolSpec<RedactOpts> = {
       out.push(pdfOut(derived(f.name, "redacted"), r.bytes));
       lines.push(
         <li key={f.name}>
-          {files.length > 1 && <strong className="text-ink">{f.name}: </strong>}
+          {files.length > 1 && <strong className="text-fg">{f.name}: </strong>}
           {r.totalMatches ? `Removed ${r.totalMatches} match${r.totalMatches === 1 ? "" : "es"} on ${r.pagesWithMatches} page${r.pagesWithMatches === 1 ? "" : "s"}.` : "No matches found."}
           {r.flattenedPages.length > 0 && ` Page${r.flattenedPages.length === 1 ? "" : "s"} ${r.flattenedPages.map((p) => p + 1).join(", ")} were flattened to images to make sure the text is gone.`}
         </li>,
@@ -529,7 +529,7 @@ const translate: ToolSpec<TrOpts> = {
   Options: ({ options: o, set }) => (
     <label className="block space-y-1.5">
       <span className="text-[13px] font-medium">Translate to</span>
-      <select value={o.target} onChange={(e) => set({ target: e.target.value })} className="h-10 w-full rounded-lg bg-white px-3 text-[14px] ring-1 ring-rule">
+      <select value={o.target} onChange={(e) => set({ target: e.target.value })} className="h-10 w-full rounded-lg bg-sunken text-fg placeholder:text-fg-subtle px-3 text-[14px] ring-1 ring-line-strong">
         {LANGUAGES.map((l) => (
           <option key={l}>{l}</option>
         ))}

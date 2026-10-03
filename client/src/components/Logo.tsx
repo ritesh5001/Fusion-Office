@@ -1,9 +1,10 @@
+/** Two stacked sheets: violet behind, lime in front. */
 export function Logo({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" className={className} aria-hidden="true">
-      <rect x="3" y="6" width="17" height="22" rx="3" fill="#bccbff" />
-      <rect x="10" y="3" width="19" height="23" rx="3" fill="#2f54eb" />
-      <path d="M15 10h9M15 14.5h9M15 19h5.5" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+      <rect x="4" y="7" width="16" height="21" rx="4" fill="#8b7cf6" />
+      <rect x="11" y="3" width="17" height="22" rx="4" fill="#cdf564" />
+      <path d="M15.5 10h8M15.5 14h8M15.5 18h5" stroke="#0c0f06" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }

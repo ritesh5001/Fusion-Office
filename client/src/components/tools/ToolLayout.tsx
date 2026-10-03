@@ -1,17 +1,16 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { ChevronRight, Server, ShieldCheck, Sparkles } from "lucide-react";
-import { Nav } from "../landing/Nav";
-import { Footer } from "../landing/Footer";
+import { SiteShell } from "../site/SiteShell";
+import { CATEGORY_META } from "../site/categories";
 import { ToolTile } from "./icons";
-import { isCustomTool } from "@/lib/tools/custom";
 import { TOOLS, type ToolDef } from "@/lib/tools/registry";
 import { cn } from "@/lib/cn";
 
 const RUNS_BADGE = {
-  browser: { icon: ShieldCheck, title: "Works in your browser", text: "No file upload needed", tint: "bg-emerald-50 text-emerald-600" },
-  server: { icon: Server, title: "Converted on our server", text: "Files are deleted right after", tint: "bg-sky-50 text-sky-600" },
-  ai: { icon: Sparkles, title: "Uses AI", text: "Text is processed, not stored", tint: "bg-violet-50 text-violet-600" },
+  browser: { icon: ShieldCheck, title: "Works in your browser", text: "No file upload needed", tint: "bg-emerald-500/10 text-emerald-300" },
+  server: { icon: Server, title: "Converted on our server", text: "Files are deleted right after", tint: "bg-sky-500/10 text-sky-300" },
+  ai: { icon: Sparkles, title: "Uses AI", text: "Text is processed, not stored", tint: "bg-violet-500/10 text-violet-300" },
 } as const;
 
 /** What the tool takes, in plain words ("PDF files", "images"). */
@@ -69,103 +68,96 @@ function related(tool: ToolDef) {
   return [...same, ...popular].slice(0, 4);
 }
 
-/** Page frame for a single tool: breadcrumb, title, the tool, and help on the side. */
+/** Page frame for a single tool: breadcrumb, title, the tool, then help and related tools. */
 export function ToolLayout({ tool, children }: { tool: ToolDef; children: ReactNode }) {
   const badge = RUNS_BADGE[tool.runs];
-  const wide = isCustomTool(tool.slug);
-
-  const panels = (
-    <>
-      <section aria-labelledby="how-title" className="rounded-2xl bg-white p-5 ring-1 ring-ink/10">
-        <h2 id="how-title" className="text-[15px] font-bold">
-          How it works
-        </h2>
-        <ol className="mt-4 space-y-4">
-          {steps(tool).map((s, i) => (
-            <li key={s.title} className="flex gap-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-50 text-[13px] font-bold text-brand-700">{i + 1}</span>
-              <span>
-                <span className="block text-[14px] font-semibold">{s.title}</span>
-                <span className="block text-[13px] text-ink-soft">{s.text}</span>
-              </span>
-            </li>
-          ))}
-        </ol>
-      </section>
-      <section aria-labelledby="related-title" className="rounded-2xl bg-white p-5 ring-1 ring-ink/10">
-        <h2 id="related-title" className="text-[15px] font-bold">
-          Related tools
-        </h2>
-        <ul className="mt-3 -mx-2">
-          {related(tool).map((t) => (
-            <li key={t.slug}>
-              <Link href={t.href ?? `/tools/${t.slug}`} className="group flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-paper">
-                <ToolTile tool={t} size="sm" />
-                <span className="flex-1 text-[14px] font-medium">{t.name}</span>
-                <ChevronRight className="h-4 w-4 text-ink-soft transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
-    </>
-  );
+  const category = CATEGORY_META[tool.category];
 
   return (
-    <div className="landing relative min-h-dvh overflow-x-clip">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[360px] bg-[linear-gradient(180deg,#eef3ff_0%,transparent_100%)]" aria-hidden="true" />
-      <div className="relative z-10">
-        <Nav />
-        <main id="main" className="mx-auto max-w-[1280px] px-5 pb-24 pt-6 md:px-8">
-          <nav aria-label="Breadcrumb">
-            <ol className="flex items-center gap-1.5 text-[13px] text-ink-soft">
-              <li>
-                <Link href="/#all-tools" className="hover:text-ink">
-                  All tools
-                </Link>
-              </li>
-              <li aria-hidden="true">
-                <ChevronRight className="h-3.5 w-3.5" />
-              </li>
-              <li aria-current="page" className="font-medium text-ink">
-                {tool.name}
-              </li>
+    <SiteShell active={tool.category}>
+      <main id="main" className="px-4 pb-20 pt-6 sm:px-6 lg:px-8">
+        <nav aria-label="Breadcrumb">
+          <ol className="flex min-w-0 items-center gap-1.5 text-[13px] text-fg-subtle">
+            <li className="shrink-0">
+              <Link href="/#all-tools" className="hover:text-fg">
+                All tools
+              </Link>
+            </li>
+            <li aria-hidden="true">
+              <ChevronRight className="h-3.5 w-3.5" />
+            </li>
+            <li className="shrink-0">
+              <Link href={`/#cat-${tool.category}`} className="hover:text-fg">
+                {category.short}
+              </Link>
+            </li>
+            <li aria-hidden="true">
+              <ChevronRight className="h-3.5 w-3.5" />
+            </li>
+            <li aria-current="page" className="truncate font-medium text-fg-muted">
+              {tool.name}
+            </li>
+          </ol>
+        </nav>
+
+        <header className="mt-5 flex flex-col gap-4 border-b border-line pb-7 md:flex-row md:items-center md:justify-between">
+          <div className="flex min-w-0 items-center gap-4">
+            <ToolTile tool={tool} size="xl" />
+            <div className="min-w-0">
+              <h1 className="font-display text-[clamp(1.6rem,3.2vw,2.25rem)] font-bold leading-[1.1] tracking-[-0.03em] text-fg">{tool.name}</h1>
+              <p className="mt-1 max-w-[62ch] text-[15px] leading-relaxed text-fg-muted">{tool.description}</p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-3 self-start rounded-xl border border-line bg-surface px-3.5 py-2.5 md:self-auto">
+            <span className={cn("flex h-8 w-8 items-center justify-center rounded-lg", badge.tint)}>
+              <badge.icon className="h-[18px] w-[18px]" aria-hidden="true" />
+            </span>
+            <span>
+              <span className="block text-[13px] font-semibold text-fg">{badge.title}</span>
+              <span className="block text-[12px] text-fg-muted">{badge.text}</span>
+            </span>
+          </div>
+        </header>
+
+        <div className="mt-8">{children}</div>
+
+        <div className="mt-14 grid gap-3 md:grid-cols-2">
+          <section aria-labelledby="how-title" className="card p-5">
+            <h2 id="how-title" className="text-[15px] font-semibold text-fg">
+              How it works
+            </h2>
+            <ol className="mt-4 space-y-4">
+              {steps(tool).map((s, i) => (
+                <li key={s.title} className="flex gap-3">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-raised font-mono text-[12px] font-medium text-fg ring-1 ring-inset ring-line-strong">
+                    {i + 1}
+                  </span>
+                  <span>
+                    <span className="block text-[14px] font-semibold text-fg">{s.title}</span>
+                    <span className="block text-[13px] text-fg-muted">{s.text}</span>
+                  </span>
+                </li>
+              ))}
             </ol>
-          </nav>
-
-          <header className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-4">
-              <ToolTile tool={tool} size="lg" className="h-16 w-16 rounded-[18px] [&_svg]:h-8 [&_svg]:w-8" />
-              <div>
-                <h1 className="font-display text-[clamp(1.75rem,3.5vw,2.5rem)] font-extrabold leading-[1.05] tracking-[-0.035em]">{tool.name}</h1>
-                <p className="mt-1.5 max-w-[60ch] text-[15px] leading-relaxed text-ink-soft">{tool.description}</p>
-              </div>
-            </div>
-            <div className="flex shrink-0 items-center gap-3 rounded-2xl bg-white px-4 py-3 ring-1 ring-ink/10">
-              <span className={cn("flex h-9 w-9 items-center justify-center rounded-xl", badge.tint)}>
-                <badge.icon className="h-5 w-5" aria-hidden="true" />
-              </span>
-              <span>
-                <span className="block text-[13px] font-semibold">{badge.title}</span>
-                <span className="block text-[12px] text-ink-soft">{badge.text}</span>
-              </span>
-            </div>
-          </header>
-
-          {wide ? (
-            <>
-              <div className="mt-8">{children}</div>
-              <div className="mt-10 grid gap-6 md:grid-cols-2">{panels}</div>
-            </>
-          ) : (
-            <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-              <div className="min-w-0">{children}</div>
-              <aside className="space-y-6">{panels}</aside>
-            </div>
-          )}
-        </main>
-        <Footer />
-      </div>
-    </div>
+          </section>
+          <section aria-labelledby="related-title" className="card p-5">
+            <h2 id="related-title" className="text-[15px] font-semibold text-fg">
+              Related tools
+            </h2>
+            <ul className="-mx-2 mt-3">
+              {related(tool).map((t) => (
+                <li key={t.slug}>
+                  <Link href={t.href ?? `/tools/${t.slug}`} className="group flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-raised">
+                    <ToolTile tool={t} size="sm" />
+                    <span className="flex-1 text-[14px] font-medium text-fg">{t.name}</span>
+                    <ChevronRight className="h-4 w-4 text-fg-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-fg" aria-hidden="true" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+      </main>
+    </SiteShell>
   );
 }

@@ -25,7 +25,8 @@ const COLUMNS = [
   {
     title: "Fusion Office",
     links: [
-      { href: "/#all-tools", label: "All tools" },
+      { href: "/tools", label: "All tools" },
+      { href: "/#privacy", label: "Privacy" },
       { href: "/#how-it-works", label: "How it works" },
       { href: "/#faq", label: "FAQ" },
       { href: "/dashboard", label: "My documents" },
@@ -35,24 +36,24 @@ const COLUMNS = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-rule bg-white/60">
-      <div className="mx-auto grid max-w-[1280px] gap-10 px-5 py-12 md:grid-cols-12 md:px-8">
+    <footer className="border-t border-line bg-app">
+      <div className="mx-auto grid max-w-[1440px] gap-10 px-4 py-12 sm:px-6 md:grid-cols-12 lg:px-8">
         <div className="md:col-span-4">
-          <Link href="/" className="flex items-center gap-2.5 font-display text-[17px] font-semibold tracking-tight">
+          <Link href="/" className="flex items-center gap-2.5 font-display text-[17px] font-bold tracking-[-0.02em] text-fg">
             <Logo className="h-7 w-7" /> Fusion Office
           </Link>
-          <p className="mt-3 max-w-[36ch] text-[14px] leading-relaxed text-ink-soft">
+          <p className="mt-3 max-w-[36ch] text-[14px] leading-relaxed text-fg-muted">
             Free tools for PDFs, Office documents and images. Most of them run in your browser, so your files stay with you.
           </p>
         </div>
         <nav aria-label="Footer" className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:col-span-8">
           {COLUMNS.map((c) => (
             <div key={c.title}>
-              <p className="text-[13px] font-semibold text-ink">{c.title}</p>
-              <ul className="mt-3 space-y-2">
+              <p className="eyebrow">{c.title}</p>
+              <ul className="mt-3 space-y-2.5">
                 {c.links.map((l) => (
                   <li key={l.label}>
-                    <Link href={l.href} className="text-[14px] text-ink-soft transition-colors hover:text-brand-700">
+                    <Link href={l.href} className="text-[14px] text-fg-muted transition-colors hover:text-fg">
                       {l.label}
                     </Link>
                   </li>
@@ -62,7 +63,7 @@ export function Footer() {
           ))}
         </nav>
       </div>
-      <div className="mx-auto flex max-w-[1280px] flex-col gap-1 border-t border-rule px-5 py-5 text-[13px] text-ink-soft sm:flex-row sm:justify-between md:px-8">
+      <div className="mx-auto flex max-w-[1440px] flex-col gap-1 border-t border-line px-4 py-5 text-[13px] text-fg-subtle sm:flex-row sm:justify-between sm:px-6 lg:px-8">
         <p>© {new Date().getFullYear()} Fusion Office</p>
         <p>No sign-up. No watermarks.</p>
       </div>

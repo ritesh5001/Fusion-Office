@@ -57,12 +57,12 @@ export const PageView = memo(function PageView({ page, index, zoom }: Props) {
       <div
         ref={ref}
         data-page-id={page.id}
-        className="relative bg-white shadow-[0_1px_3px_rgba(15,23,42,0.12),0_8px_24px_-12px_rgba(15,23,42,0.25)]"
+        className="paper relative shadow-[0_0_0_1px_rgb(255_255_255/0.04),0_12px_32px_-12px_rgb(0_0_0/0.8)]"
         style={{ width: view.width * zoom, height: view.height * zoom }}
       >
         {near && <PageSurface page={page} zoom={zoom} />}
       </div>
-      <div className="text-[11px] tabular-nums text-slate-500">{index + 1}</div>
+      <div className="text-[11px] tabular-nums text-fg-muted">{index + 1}</div>
     </div>
   );
 });
@@ -708,7 +708,7 @@ function TextLinesLayer({ page, zoom }: { page: EditorPage; zoom: number }) {
     // edited) stays reachable underneath.
     <div className="pointer-events-none absolute inset-0 z-10">
       {open.length === 0 && (
-        <div className="absolute left-1/2 top-4 -translate-x-1/2 rounded-md bg-slate-900/85 px-3 py-1.5 text-[12px] text-white">
+        <div className="absolute left-1/2 top-4 -translate-x-1/2 rounded-md bg-black/60 px-3 py-1.5 text-[12px] text-white">
           No editable text on this page. Scanned pages need OCR first.
         </div>
       )}

@@ -26,11 +26,11 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       aria-pressed={active}
       title={shortcut ? `${label} (${shortcut})` : label}
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-md text-slate-600 transition-colors",
-        "hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-500",
+        "inline-flex shrink-0 items-center justify-center rounded-md text-fg-muted transition-colors",
+        "hover:bg-raised hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-500",
         "disabled:pointer-events-none disabled:opacity-35",
         size === "md" ? "h-8 w-8" : "h-7 w-7",
-        active && "bg-brand-50 text-brand-700 hover:bg-brand-100 hover:text-brand-700",
+        active && "bg-brand-500/15 text-brand-300 hover:bg-brand-500/25 hover:text-brand-300",
         className,
       )}
       {...rest}
@@ -50,13 +50,12 @@ export function Button({
     <button
       type="button"
       className={cn(
-        "inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition-colors",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:pointer-events-none disabled:opacity-50",
-        size === "md" ? "h-9 px-3.5 text-sm" : "h-8 px-2.5 text-[13px]",
-        variant === "primary" && "bg-brand-600 text-white shadow-sm hover:bg-brand-700",
-        variant === "secondary" && "border border-slate-200 bg-white text-slate-700 shadow-xs hover:bg-slate-50",
-        variant === "ghost" && "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
-        variant === "danger" && "bg-red-600 text-white shadow-sm hover:bg-red-700",
+        "btn gap-1.5",
+        size === "md" ? "h-9 px-3.5 text-[13.5px]" : "btn-sm",
+        variant === "primary" && "btn-primary",
+        variant === "secondary" && "btn-secondary",
+        variant === "ghost" && "btn-ghost font-medium",
+        variant === "danger" && "btn-danger",
         className,
       )}
       {...rest}
@@ -65,20 +64,20 @@ export function Button({
 }
 
 export function Divider({ vertical = true }: { vertical?: boolean }) {
-  return vertical ? <div className="mx-1 h-5 w-px shrink-0 bg-slate-200" /> : <div className="my-1 h-px bg-slate-200" />;
+  return vertical ? <div className="mx-1 h-5 w-px shrink-0 bg-line-strong" /> : <div className="my-1 h-px bg-line" />;
 }
 
 export function Field({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
   return (
     <label className={cn("flex flex-col gap-1", className)}>
-      <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">{label}</span>
+      <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-fg-subtle">{label}</span>
       {children}
     </label>
   );
 }
 
 const inputCls =
-  "h-8 w-full rounded-md border border-slate-200 bg-white px-2 text-[13px] text-slate-800 tabular-nums outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100";
+  "h-8 w-full rounded-lg border border-line-strong bg-sunken px-2 text-[13px] text-fg tabular-nums outline-none transition-colors hover:border-[#3d4453] focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25";
 
 /**
  * Number input that commits on blur/Enter (not every keystroke), so typing
@@ -145,7 +144,7 @@ export function NumberInput({
           }
         }}
       />
-      {suffix && <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-slate-400">{suffix}</span>}
+      {suffix && <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-fg-subtle">{suffix}</span>}
     </div>
   );
 }
@@ -202,7 +201,7 @@ export function ColorInput({
           onChange={(e) => onChange(e.target.value)}
         />
         {transparent && (
-          <span className="pointer-events-none absolute inset-0 rounded-md border border-slate-300 bg-[linear-gradient(135deg,transparent_45%,#ef4444_45%,#ef4444_55%,transparent_55%)]" />
+          <span className="pointer-events-none absolute inset-0 rounded-md border border-line-strong bg-white bg-[linear-gradient(135deg,transparent_45%,#ef4444_45%,#ef4444_55%,transparent_55%)]" />
         )}
       </div>
       {allowTransparent && (
@@ -210,7 +209,7 @@ export function ColorInput({
           type="button"
           className={cn(
             "h-7 rounded-md border px-1.5 text-[11px]",
-            transparent ? "border-brand-500 bg-brand-50 text-brand-700" : "border-slate-200 text-slate-500 hover:bg-slate-50",
+            transparent ? "border-brand-500 bg-brand-500/15 text-brand-200" : "border-line-strong text-fg-muted hover:bg-raised hover:text-fg",
           )}
           onClick={() => onChange(transparent ? "#ffffff" : "transparent")}
         >
@@ -251,21 +250,21 @@ export function Modal({
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-[2px]" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm" onMouseDown={onClose}>
       <div
         ref={ref}
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="flex max-h-[90vh] w-full flex-col overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-slate-900/5"
+        className="flex max-h-[90vh] w-full flex-col overflow-hidden rounded-2xl border border-line-strong bg-overlay shadow-pop"
         style={{ maxWidth: width }}
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <div className="border-b border-slate-100 px-5 py-3.5">
-          <h2 className="text-[15px] font-semibold text-slate-900">{title}</h2>
+        <div className="border-b border-line px-5 py-4">
+          <h2 className="font-display text-[16px] font-semibold tracking-[-0.01em] text-fg">{title}</h2>
         </div>
         <div className="thin-scroll overflow-y-auto px-5 py-4">{children}</div>
-        {footer && <div className="flex justify-end gap-2 border-t border-slate-100 bg-slate-50/60 px-5 py-3">{footer}</div>}
+        {footer && <div className="flex justify-end gap-2 border-t border-line bg-surface/60 px-5 py-3">{footer}</div>}
       </div>
     </div>
   );
@@ -301,8 +300,8 @@ export function Menu({
       <button
         type="button"
         className={cn(
-          "h-8 rounded-md px-2.5 text-[13px] text-slate-700 hover:bg-slate-100",
-          open && "bg-slate-100 text-slate-900",
+          "h-8 rounded-lg px-2.5 text-[13px] text-fg-muted transition-colors hover:bg-raised hover:text-fg",
+          open && "bg-raised text-fg",
         )}
         aria-haspopup="menu"
         aria-expanded={open}
@@ -314,28 +313,28 @@ export function Menu({
         <div
           role="menu"
           className={cn(
-            "absolute top-full z-40 mt-1 min-w-56 rounded-lg border border-slate-200 bg-white py-1 shadow-lg",
+            "absolute top-full z-40 mt-1.5 min-w-56 rounded-xl border border-line-strong bg-overlay p-1 shadow-pop",
             align === "right" ? "right-0" : "left-0",
           )}
         >
           {items.map((item, i) =>
             item === "divider" ? (
-              <div key={i} className="my-1 h-px bg-slate-100" />
+              <div key={i} className="mx-2 my-1 h-px bg-line" />
             ) : (
               <button
                 key={i}
                 role="menuitem"
                 type="button"
                 disabled={item.disabled}
-                className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-[13px] text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[13px] text-fg hover:bg-raised disabled:opacity-40"
                 onClick={() => {
                   setOpen(false);
                   item.onSelect();
                 }}
               >
-                <span className="flex w-4 justify-center text-slate-500">{item.icon}</span>
+                <span className="flex w-4 justify-center text-fg-subtle">{item.icon}</span>
                 <span className="flex-1">{item.label}</span>
-                {item.shortcut && <span className="text-[11px] text-slate-400">{item.shortcut}</span>}
+                {item.shortcut && <span className="font-mono text-[11px] text-fg-subtle">{item.shortcut}</span>}
               </button>
             ),
           )}

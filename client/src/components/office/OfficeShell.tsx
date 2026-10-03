@@ -6,6 +6,7 @@ import { FilePlus2, FolderOpen, Loader2, Trash2, type LucideIcon } from "lucide-
 import { Mascot } from "@/components/mascot/Mascot";
 import { deleteDraft, listDrafts, saveDraft, type DraftInfo, type DraftKind } from "@/lib/office/drafts";
 import { convertOnServer, extOf, LEGACY } from "@/lib/office/convert";
+import { takeFiles } from "@/lib/tools/handoff";
 import { Logo } from "../Logo";
 import { Menu, cn } from "../ui/primitives";
 import { Toaster } from "../editor/Toaster";
@@ -38,16 +39,16 @@ export function OfficeHeader({
 }) {
   const Icon = app.icon;
   return (
-    <header className="flex h-12 shrink-0 items-center gap-1 border-b border-slate-200 bg-white px-2">
-      <Link href="/" className="flex items-center gap-2 rounded-md px-1.5 py-1 hover:bg-slate-50" title="Fusion Office home">
+    <header className="flex h-12 shrink-0 items-center gap-1 border-b border-line bg-surface px-2">
+      <Link href="/" className="flex shrink-0 items-center gap-2 rounded-lg px-1.5 py-1 hover:bg-raised" title="Fusion Office home">
         <Logo className="h-6 w-6" />
       </Link>
-      <span className={cn("flex h-7 w-7 items-center justify-center rounded-md", app.tint)} title={app.name}>
+      <span className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-lg", app.tint)} title={app.name}>
         <Icon className="h-4 w-4" aria-hidden="true" />
       </span>
       <NameField value={docName} onChange={onRename} />
       {status !== "idle" && (
-        <span className="hidden items-center gap-1.5 text-[12px] text-slate-400 sm:flex" aria-live="polite">
+        <span className="hidden items-center gap-1.5 text-[12px] text-fg-subtle sm:flex" aria-live="polite">
           <Mascot
             mood={status === "saving" ? "working" : "happy"}
             size={22}
@@ -77,7 +78,7 @@ function NameField({ value, onChange }: { value: string; onChange: (v: string) =
       onChange={(e) => setDraft(e.target.value)}
       onBlur={() => (draft.trim() ? onChange(draft.trim()) : setDraft(value))}
       onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-      className="ml-1 h-8 w-[min(34vw,260px)] truncate rounded-md border border-transparent px-2 text-[14px] font-medium text-slate-800 outline-none hover:border-slate-200 focus:border-brand-500"
+      className="ml-1 h-8 w-[min(34vw,260px)] truncate rounded-md border border-transparent px-2 text-[14px] font-medium text-fg outline-none hover:border-line-strong focus:border-brand-500 bg-transparent focus:bg-sunken"
     />
   );
 }
@@ -135,19 +136,28 @@ export function StartScreen({
   const [drafts, setDrafts] = useState<DraftInfo[]>([]);
   const [drag, setDrag] = useState(false);
   const input = useRef<HTMLInputElement>(null);
+  const onFileRef = useRef(onFile);
+  onFileRef.current = onFile;
   useEffect(() => {
     listDrafts(app.kind).then(setDrafts).catch(() => {});
   }, [app.kind]);
+  // A file dropped on the homepage and sent to this editor opens straight away.
+  useEffect(() => {
+    const files = takeFiles();
+    if (files?.[0]) onFileRef.current(files[0]);
+  }, []);
   const Icon = app.icon;
 
   return (
     <div
-      className="min-h-dvh bg-paper"
+      className="min-h-dvh bg-app"
       onDragOver={(e) => {
         e.preventDefault();
         setDrag(true);
       }}
-      onDragLeave={() => setDrag(false)}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) setDrag(false);
+      }}
       onDrop={(e) => {
         e.preventDefault();
         setDrag(false);
@@ -155,71 +165,88 @@ export function StartScreen({
         if (f) onFile(f);
       }}
     >
-      <header className="mx-auto flex h-16 max-w-[1100px] items-center gap-3 px-5">
-        <Link href="/" className="flex items-center gap-2 font-display text-[16px] font-semibold text-ink">
-          <Logo className="h-7 w-7" /> Fusion Office
-        </Link>
-        <Link href="/tools" className="ml-auto text-[14px] text-ink-soft hover:text-ink">
-          All tools
-        </Link>
+      <header className="border-b border-line">
+        <div className="mx-auto flex h-16 max-w-[1100px] items-center gap-3 px-4 sm:px-6">
+          <Link href="/" className="flex items-center gap-2.5 font-display text-[17px] font-bold tracking-[-0.02em] text-fg">
+            <Logo className="h-7 w-7" /> Fusion Office
+          </Link>
+          <Link href="/tools" className="btn btn-ghost btn-sm ml-auto">
+            All tools
+          </Link>
+        </div>
       </header>
-      <main className="mx-auto max-w-[1100px] px-5 pb-20 pt-8">
-        <div className="flex items-center gap-3">
-          <span className={cn("flex h-11 w-11 items-center justify-center rounded-xl", app.tint)}>
+      <main className="mx-auto max-w-[1100px] px-4 pb-20 pt-10 sm:px-6 md:pt-12">
+        <div className="flex items-center gap-4">
+          <span className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-[13px]", app.tint)}>
             <Icon className="h-6 w-6" aria-hidden="true" />
           </span>
-          <div>
-            <h1 className="font-display text-[28px] font-semibold tracking-[-0.02em] text-ink">{title}</h1>
-            <p className="text-[14px] text-ink-soft">{subtitle}</p>
+          <div className="min-w-0">
+            <h1 className="font-display text-[clamp(1.6rem,3.2vw,2rem)] font-bold tracking-[-0.03em] text-fg">{title}</h1>
+            <p className="text-[14px] text-fg-muted">{subtitle}</p>
           </div>
         </div>
 
-        <div className={cn("mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4", drag && "opacity-60")}>
+        <p className="eyebrow mt-10">Start</p>
+        <div className={cn("mt-3 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 lg:grid-cols-4", drag && "opacity-60")}>
           <button
             type="button"
             onClick={() => input.current?.click()}
-            className="group flex flex-col rounded-2xl border-2 border-dashed border-rule-strong/70 bg-white p-4 text-left transition hover:border-brand-500"
+            className={cn(
+              "group flex flex-col rounded-2xl border border-dashed bg-surface p-3 text-left transition-colors",
+              drag ? "border-accent/70" : "border-line-strong hover:border-brand-500/60",
+            )}
           >
-            <span className="flex aspect-[4/3] items-center justify-center rounded-lg bg-paper-deep">
-              {busy ? <Loader2 className="h-7 w-7 animate-spin text-ink-soft" /> : <FolderOpen className="h-8 w-8 text-ink-soft group-hover:text-brand-600" />}
+            <span className="flex aspect-[4/3] items-center justify-center rounded-xl bg-sunken">
+              {busy ? (
+                <Loader2 className="h-7 w-7 animate-spin text-fg-muted" />
+              ) : (
+                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-raised text-fg ring-1 ring-line-strong transition-colors group-hover:bg-accent group-hover:text-on-accent group-hover:ring-accent">
+                  <FolderOpen className="h-6 w-6" />
+                </span>
+              )}
             </span>
-            <span className="mt-3 text-[14px] font-medium text-ink">{busy ?? "Open a file"}</span>
-            <span className="text-[12px] text-ink-soft">Or drop it anywhere on this page</span>
+            <span className="mt-3 truncate px-1 text-[14px] font-semibold text-fg">{busy ?? "Open a file"}</span>
+            <span className="px-1 text-[12px] text-fg-muted">Or drop it anywhere on this page</span>
           </button>
           <input ref={input} type="file" accept={accept} className="sr-only" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
           {templates.map((t) => (
-            <button key={t.label} type="button" onClick={t.onSelect} className="group flex flex-col rounded-2xl bg-white p-4 text-left ring-1 ring-ink/10 transition hover:-translate-y-0.5 hover:ring-ink/25">
-              <span className="flex aspect-[4/3] items-stretch overflow-hidden rounded-lg bg-paper-deep ring-1 ring-ink/5">{t.preview}</span>
-              <span className="mt-3 flex items-center gap-1.5 text-[14px] font-medium text-ink">
-                {t.label === "Blank" && <FilePlus2 className="h-4 w-4 text-ink-soft" aria-hidden="true" />}
+            <button
+              key={t.label}
+              type="button"
+              onClick={t.onSelect}
+              className="group flex flex-col rounded-2xl border border-line bg-surface p-3 text-left transition-colors hover:border-line-strong hover:bg-raised"
+            >
+              <span className="flex aspect-[4/3] items-stretch overflow-hidden rounded-xl bg-[#e9ebef] ring-1 ring-black/20">{t.preview}</span>
+              <span className="mt-3 flex items-center gap-1.5 px-1 text-[14px] font-semibold text-fg">
+                {t.label === "Blank" && <FilePlus2 className="h-4 w-4 text-fg-subtle" aria-hidden="true" />}
                 {t.label}
               </span>
-              <span className="text-[12px] text-ink-soft">{t.hint}</span>
+              <span className="px-1 text-[12px] text-fg-muted">{t.hint}</span>
             </button>
           ))}
         </div>
         {error && (
-          <p role="alert" className="mt-5 rounded-lg bg-red-50 px-4 py-2.5 text-[13px] text-red-700">
+          <p role="alert" className="mt-5 rounded-xl bg-red-500/10 px-4 py-2.5 text-[13px] text-red-300 ring-1 ring-inset ring-red-500/25">
             {error}
           </p>
         )}
 
         {drafts.length > 0 && (
           <section className="mt-12">
-            <h2 className="font-mono text-[12px] uppercase tracking-[0.14em] text-ink-soft">Recent on this device</h2>
-            <ul className="mt-3 divide-y divide-rule overflow-hidden rounded-2xl bg-white ring-1 ring-ink/10">
+            <h2 className="eyebrow">Recent on this device</h2>
+            <ul className="card mt-3 divide-y divide-line overflow-hidden">
               {drafts.map((d) => (
-                <li key={d.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-paper">
-                  <Icon className="h-4 w-4 shrink-0 text-ink-soft" aria-hidden="true" />
-                  <button type="button" onClick={() => onDraft(d)} className="min-w-0 flex-1 truncate text-left text-[14px] text-ink hover:text-brand-700">
+                <li key={d.id} className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-raised">
+                  <Icon className="h-4 w-4 shrink-0 text-fg-subtle" aria-hidden="true" />
+                  <button type="button" onClick={() => onDraft(d)} className="min-w-0 flex-1 truncate text-left text-[14px] font-medium text-fg">
                     {d.name}
                   </button>
-                  <span className="text-[12px] tabular-nums text-ink-soft">{new Date(d.updatedAt).toLocaleString()}</span>
+                  <span className="hidden text-[12px] tabular-nums text-fg-subtle sm:inline">{new Date(d.updatedAt).toLocaleString()}</span>
                   <button
                     type="button"
                     aria-label={`Delete ${d.name}`}
                     onClick={() => deleteDraft(d.id).then(() => setDrafts((all) => all.filter((x) => x.id !== d.id)))}
-                    className="rounded-md p-1.5 text-ink-soft hover:bg-red-50 hover:text-red-600"
+                    className="rounded-lg p-1.5 text-fg-subtle hover:bg-red-500/10 hover:text-red-300"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -228,7 +255,7 @@ export function StartScreen({
             </ul>
           </section>
         )}
-        <p className="mt-10 text-[12px] leading-relaxed text-ink-soft">
+        <p className="mt-10 max-w-[80ch] text-[12.5px] leading-relaxed text-fg-subtle">
           Editing happens in your browser and drafts are kept on this device. Old formats ({app.kind === "doc" ? ".doc, .odt, .rtf" : app.kind === "sheet" ? ".xls, .ods" : ".ppt, .odp"}) and PDF export use our server
           to convert, then the file is deleted.
         </p>

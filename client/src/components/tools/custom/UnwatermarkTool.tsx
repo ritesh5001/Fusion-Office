@@ -118,31 +118,31 @@ export function UnwatermarkTool() {
     return (
       <div>
         {busy ? (
-          <div className="flex flex-col items-center gap-3 py-20 text-[14px] text-ink-soft">
+          <div className="flex flex-col items-center gap-3 py-20 text-[14px] text-fg-muted">
             <Loader2 className="h-6 w-6 animate-spin" aria-hidden="true" /> {busy}
           </div>
         ) : (
           <Dropzone accept="application/pdf,.pdf" multiple={false} onFiles={load} label="Select PDF file" />
         )}
-        {error && <p role="alert" className="mt-4 rounded-md bg-red-50 px-3 py-2 text-center text-[13px] text-red-700">{error}</p>}
-        <p className="mt-4 text-center text-[12px] text-ink-soft">For documents you own or have permission to change.</p>
+        {error && <p role="alert" className="mt-4 rounded-md bg-red-500/10 px-3 py-2 text-center text-[13px] text-red-300">{error}</p>}
+        <p className="mt-4 text-center text-[12px] text-fg-muted">For documents you own or have permission to change.</p>
       </div>
     );
   }
 
   if (result) {
     return (
-      <div className="mx-auto max-w-[820px] rounded-2xl bg-white p-6 ring-1 ring-ink/10 md:p-8">
+      <div className="mx-auto max-w-[820px] rounded-2xl bg-surface p-6 ring-1 ring-line md:p-8">
         <div className="text-center">
-          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-300">
             <Check className="h-6 w-6" aria-hidden="true" />
           </span>
           <h2 className="mt-4 font-display text-[26px] font-semibold tracking-[-0.02em]">Watermark removed</h2>
-          <p className="mt-2 text-[15px] text-ink-soft">
+          <p className="mt-2 text-[15px] text-fg-muted">
             {result.removed} item{result.removed === 1 ? "" : "s"} taken out of the file · {formatBytes(result.bytes.length)}
           </p>
           {result.textMissed.length > 0 && (
-            <p className="mx-auto mt-3 max-w-[60ch] rounded-lg bg-amber-50 px-3 py-2 text-[13px] text-amber-800">
+            <p className="mx-auto mt-3 max-w-[60ch] rounded-lg bg-amber-500/10 px-3 py-2 text-[13px] text-amber-200">
               Some of the text you typed couldn't be removed on page{result.textMissed.length === 1 ? "" : "s"} {result.textMissed.map((p) => p + 1).join(", ")} (it uses a special font or sits inside a drawing). Try ticking a watermark from the list instead.
             </p>
           )}
@@ -152,23 +152,23 @@ export function UnwatermarkTool() {
             ["Before", result.before],
             ["After", result.after],
           ].map(([label, src]) => (
-            <figure key={label} className="rounded-xl bg-paper-deep p-3">
+            <figure key={label} className="rounded-xl bg-sunken p-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={src} alt={`${label}, page ${result.page + 1}`} className="mx-auto max-h-[420px] shadow-sm" />
-              <figcaption className="mt-2 text-center text-[12px] text-ink-soft">
+              <figcaption className="mt-2 text-center text-[12px] text-fg-muted">
                 {label} · page {result.page + 1}
               </figcaption>
             </figure>
           ))}
         </div>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <button type="button" onClick={() => downloadFile({ name: derived(file.name, "no-watermark"), bytes: result.bytes, type: PDF })} className="btn inline-flex h-12 items-center gap-2 rounded-full bg-brand-600 px-7 text-[15px] font-medium text-white hover:bg-brand-700">
+          <button type="button" onClick={() => downloadFile({ name: derived(file.name, "no-watermark"), bytes: result.bytes, type: PDF })} className="btn inline-flex h-12 items-center gap-2 rounded-full bg-accent px-7 text-[15px] font-medium text-on-accent hover:bg-accent-hover">
             <Download className="h-4 w-4" aria-hidden="true" /> Download PDF
           </button>
-          <button type="button" onClick={() => setResult(null)} className="inline-flex h-12 items-center gap-2 rounded-full px-5 text-[14px] ring-1 ring-rule hover:bg-paper">
+          <button type="button" onClick={() => setResult(null)} className="inline-flex h-12 items-center gap-2 rounded-full px-5 text-[14px] ring-1 ring-line hover:bg-raised">
             Change selection
           </button>
-          <button type="button" onClick={reset} className="inline-flex h-12 items-center gap-1.5 px-3 text-[14px] text-ink-soft hover:text-ink">
+          <button type="button" onClick={reset} className="inline-flex h-12 items-center gap-1.5 px-3 text-[14px] text-fg-muted hover:text-fg">
             <RotateCcw className="h-4 w-4" aria-hidden="true" /> Another file
           </button>
         </div>
@@ -187,52 +187,52 @@ export function UnwatermarkTool() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
       <div className="space-y-3">
-        <p className="text-[14px] text-ink-soft">
-          <span className="font-medium text-ink">{file.name}</span> · {analysis.pageCount} page{analysis.pageCount === 1 ? "" : "s"}
+        <p className="text-[14px] text-fg-muted">
+          <span className="font-medium text-fg">{file.name}</span> · {analysis.pageCount} page{analysis.pageCount === 1 ? "" : "s"}
         </p>
         {analysis.candidates.length ? (
           <ul className="space-y-2.5">
             {analysis.candidates.map((c) => (
               <li key={c.id}>
-                <label className={cn("flex cursor-pointer items-center gap-4 rounded-xl bg-white p-3 ring-1 transition", chosen.has(c.id) ? "ring-brand-500" : "ring-ink/10 hover:ring-ink/25")}>
-                  <input type="checkbox" checked={chosen.has(c.id)} onChange={() => toggle(c)} className="h-4 w-4 shrink-0 accent-brand-600" />
-                  <span className="flex h-16 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md bg-paper-deep">
+                <label className={cn("flex cursor-pointer items-center gap-4 rounded-xl bg-surface p-3 ring-1 transition", chosen.has(c.id) ? "ring-brand-500" : "ring-line hover:ring-line-strong")}>
+                  <input type="checkbox" checked={chosen.has(c.id)} onChange={() => toggle(c)} className="h-4 w-4 shrink-0 accent-brand-500" />
+                  <span className="flex h-16 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md bg-sunken">
                     {previews[c.id] ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={previews[c.id]} alt="" className="max-h-full max-w-full" />
                     ) : (
-                      <span className="text-[11px] text-ink-soft">{c.kind === "annotation" || c.kind === "stamp" ? "Annotation" : "—"}</span>
+                      <span className="text-[11px] text-fg-muted">{c.kind === "annotation" || c.kind === "stamp" ? "Annotation" : "—"}</span>
                     )}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[14px] font-medium">{c.label}</span>
-                    <span className="block text-[12px] text-ink-soft">
+                    <span className="block text-[12px] text-fg-muted">
                       {c.reason} · {c.pages.length === analysis.pageCount ? "every page" : `${c.pages.length} of ${analysis.pageCount} pages`}
                       {c.count > c.pages.length ? ` · ${c.count} times` : ""}
                     </span>
                   </span>
-                  {c.likely && <span className="hidden shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 sm:inline">Likely watermark</span>}
+                  {c.likely && <span className="hidden shrink-0 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-300 sm:inline">Likely watermark</span>}
                 </label>
               </li>
             ))}
           </ul>
         ) : (
-          <div className="rounded-xl bg-white p-6 text-center ring-1 ring-ink/10">
-            <Search className="mx-auto h-6 w-6 text-ink-soft" aria-hidden="true" />
+          <div className="rounded-xl bg-surface p-6 text-center ring-1 ring-line">
+            <Search className="mx-auto h-6 w-6 text-fg-muted" aria-hidden="true" />
             <p className="mt-2 text-[14px] font-medium">No watermark found automatically</p>
-            <p className="mx-auto mt-1 max-w-[46ch] text-[13px] text-ink-soft">If the watermark is text, type it on the right. If it&apos;s part of a scanned page, turn the page into an image and use Remove watermark from image.</p>
+            <p className="mx-auto mt-1 max-w-[46ch] text-[13px] text-fg-muted">If the watermark is text, type it on the right. If it&apos;s part of a scanned page, turn the page into an image and use Remove watermark from image.</p>
           </div>
         )}
       </div>
-      <aside className="h-fit space-y-4 rounded-2xl bg-white p-5 ring-1 ring-ink/10 lg:sticky lg:top-24">
+      <aside className="h-fit space-y-4 rounded-2xl bg-surface p-5 ring-1 ring-line lg:sticky lg:top-24">
         <TextInput label="Also remove this text" hint="Words or phrases, separated by commas. Removed from every page." value={terms} onChange={setTerms} placeholder="e.g. CONFIDENTIAL, Draft copy" />
-        {error && <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-[13px] text-red-700">{error}</p>}
-        <button type="button" onClick={run} disabled={!!busy} className="btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-600 text-[15px] font-medium text-white hover:bg-brand-700 disabled:opacity-80">
+        {error && <p role="alert" className="rounded-md bg-red-500/10 px-3 py-2 text-[13px] text-red-300">{error}</p>}
+        <button type="button" onClick={run} disabled={!!busy} className="btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-accent text-[15px] font-medium text-on-accent hover:bg-accent-hover disabled:opacity-80">
           {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
           {busy ?? "Remove watermark"}
         </button>
-        <p className="text-[12px] leading-relaxed text-ink-soft">The chosen items are deleted from the file, not covered up. Everything else on the page stays exactly as it was. Use this on documents you own or have permission to change.</p>
-        <button type="button" onClick={reset} className="text-[13px] text-ink-soft hover:text-ink">
+        <p className="text-[12px] leading-relaxed text-fg-muted">The chosen items are deleted from the file, not covered up. Everything else on the page stays exactly as it was. Use this on documents you own or have permission to change.</p>
+        <button type="button" onClick={reset} className="text-[13px] text-fg-muted hover:text-fg">
           Choose another file
         </button>
       </aside>

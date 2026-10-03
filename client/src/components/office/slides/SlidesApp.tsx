@@ -27,7 +27,7 @@ import { OfficeHeader, StartScreen, readOfficeFile, useAutosave, type AppIdentit
 import { ColorPick, Sep, TB, TSelect } from "../controls";
 import { ElementView, shapeSvg, SlideView, Thumb } from "./SlideView";
 
-const APP: AppIdentity = { kind: "slides", name: "Fusion Slides", icon: Presentation, tint: "bg-orange-50 text-orange-700" };
+const APP: AppIdentity = { kind: "slides", name: "Fusion Slides", icon: Presentation, tint: "bg-[#ffa365] text-[#0d0f14]" };
 const PPTX_MIME = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
 const ACCEPT = ".pptx,.ppt,.odp";
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
@@ -376,10 +376,10 @@ function SlidesEditor({ session, onExit, onOpen }: { session: Session; onExit: (
     },
   ];
 
-  if (!loaded || !slide) return <div className="flex h-dvh items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>;
+  if (!loaded || !slide) return <div className="flex h-dvh items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-fg-subtle" /></div>;
 
   return (
-    <div className="flex h-dvh flex-col bg-[#eef0f3]">
+    <div className="flex h-dvh flex-col bg-canvas">
       <div className="print:hidden">
         <OfficeHeader
           app={APP}
@@ -411,13 +411,13 @@ function SlidesEditor({ session, onExit, onOpen }: { session: Session; onExit: (
           withText={withText}
         />
         {warnings.length > 0 && (
-          <div className="flex items-start gap-3 border-b border-amber-200 bg-amber-50 px-4 py-2 text-[12px] text-amber-900">
+          <div className="flex items-start gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-[12px] text-amber-200">
             <ul className="flex-1 list-disc pl-4">
               {warnings.map((w) => (
                 <li key={w}>{w}</li>
               ))}
             </ul>
-            <button type="button" aria-label="Dismiss" onClick={() => setWarnings([])} className="rounded p-0.5 hover:bg-amber-100">
+            <button type="button" aria-label="Dismiss" onClick={() => setWarnings([])} className="rounded p-0.5 hover:bg-amber-500/20">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -507,7 +507,7 @@ function Toolbar({
   const run = (fn: (c: ReturnType<Editor["chain"]>) => ReturnType<Editor["chain"]>) => withText((e) => fn(e.chain().focus()).run());
 
   return (
-    <div className="thin-scroll flex items-center gap-0.5 overflow-x-auto border-b border-slate-200 bg-white px-2 py-1">
+    <div className="thin-scroll flex items-center gap-0.5 overflow-x-auto border-b border-line bg-surface px-2 py-1">
       <TB label="Undo" shortcut={`${MOD}Z`} disabled={!canUndo} onClick={() => st().undo()}>
         <Undo2 className="h-4 w-4" />
       </TB>
@@ -517,7 +517,7 @@ function Toolbar({
       <Sep />
       <Dropdown open={layoutsOpen} setOpen={setLayoutsOpen} button={<><Plus className="h-4 w-4" /> <span className="text-[13px]">New slide</span><ChevronDown className="h-3 w-3 opacity-60" /></>} label="New slide">
         {LAYOUTS.map((l) => (
-          <button key={l} type="button" onClick={() => (st().addSlide(l as LayoutId), setLayoutsOpen(false))} className="block w-full px-3 py-1.5 text-left text-[13px] hover:bg-slate-50">
+          <button key={l} type="button" onClick={() => (st().addSlide(l as LayoutId), setLayoutsOpen(false))} className="block w-full px-3 py-1.5 text-left text-[13px] hover:bg-raised">
             {LAYOUT_NAMES[l]}
           </button>
         ))}
@@ -528,7 +528,7 @@ function Toolbar({
       <Dropdown open={shapesOpen} setOpen={setShapesOpen} button={<><Shapes className="h-4 w-4" /><ChevronDown className="h-3 w-3 opacity-60" /></>} label="Shapes">
         <div className="grid w-[216px] grid-cols-6 gap-1 p-2">
           {SHAPE_CHOICES.map((k) => (
-            <button key={k} type="button" title={k} aria-label={k} onClick={() => (onShape(k), setShapesOpen(false))} className="flex h-8 w-8 items-center justify-center rounded hover:bg-slate-100">
+            <button key={k} type="button" title={k} aria-label={k} onClick={() => (onShape(k), setShapesOpen(false))} className="flex h-8 w-8 items-center justify-center rounded hover:bg-raised">
               <svg width={22} height={18} className="overflow-visible">{shapeSvg(k, 22, 18, "#dbe3ff", "#2f54eb", 1.2)}</svg>
             </button>
           ))}
@@ -595,7 +595,7 @@ function Dropdown({ open, setOpen, button, label, children }: { open: boolean; s
       <TB label={label} onClick={() => setOpen(!open)}>
         {button}
       </TB>
-      {open && <div className="absolute left-0 top-full z-50 mt-1 min-w-44 rounded-lg border border-slate-200 bg-white py-1 shadow-lg">{children}</div>}
+      {open && <div className="absolute left-0 top-full z-50 mt-1 min-w-44 rounded-xl border border-line-strong bg-overlay py-1 shadow-pop">{children}</div>}
     </div>
   );
 }
@@ -614,7 +614,7 @@ function Sorter() {
     list.current?.querySelector<HTMLElement>(`[data-slide="${current}"]`)?.scrollIntoView({ block: "nearest" });
   }, [current]);
   return (
-    <aside className="flex w-[196px] shrink-0 flex-col border-r border-slate-200 bg-white">
+    <aside className="flex w-[196px] shrink-0 flex-col border-r border-line bg-surface">
       <div ref={list} className="thin-scroll min-h-0 flex-1 space-y-3 overflow-y-auto p-3" aria-label="Slides">
         {deck.slides.map((s, i) => (
           <div
@@ -629,17 +629,17 @@ function Sorter() {
             onContextMenu={(e) => (e.preventDefault(), setMenu({ i, x: e.clientX, y: e.clientY }))}
             className={cn("flex cursor-pointer gap-2", over === i && drag !== null && drag !== i && "border-t-2 border-brand-500 pt-1")}
           >
-            <span className="w-4 shrink-0 pt-0.5 text-right text-[11px] tabular-nums text-slate-500">{i + 1}</span>
-            <div className={cn("relative overflow-hidden rounded ring-2", i === current ? "ring-orange-500" : "ring-transparent hover:ring-slate-300", s.hidden && "opacity-45")}>
-              <div className="pointer-events-none ring-1 ring-slate-200">
+            <span className="w-4 shrink-0 pt-0.5 text-right text-[11px] tabular-nums text-fg-muted">{i + 1}</span>
+            <div className={cn("relative overflow-hidden rounded ring-2", i === current ? "ring-orange-500" : "ring-transparent hover:ring-line-strong", s.hidden && "opacity-45")}>
+              <div className="pointer-events-none ring-1 ring-line">
                 <Thumb slide={s} deck={deck} width={148} />
               </div>
-              {s.hidden && <EyeOff className="absolute right-1 top-1 h-3.5 w-3.5 text-slate-600" />}
+              {s.hidden && <EyeOff className="absolute right-1 top-1 h-3.5 w-3.5 text-fg-muted" />}
             </div>
           </div>
         ))}
       </div>
-      <button type="button" onClick={() => st().addSlide("content")} className="m-3 inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-dashed border-slate-300 text-[13px] text-slate-600 hover:border-orange-400 hover:text-orange-700">
+      <button type="button" onClick={() => st().addSlide("content")} className="m-3 inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-dashed border-line-strong text-[13px] text-fg-muted hover:border-orange-400 hover:text-orange-300">
         <Plus className="h-4 w-4" /> New slide
       </button>
       {menu && (
@@ -669,9 +669,9 @@ function SlideMenu({ x, y, items, onClose }: { x: number; y: number; items: { la
     return () => window.removeEventListener("mousedown", close);
   }, [onClose]);
   return (
-    <div ref={root} role="menu" className="fixed z-50 w-48 rounded-lg border border-slate-200 bg-white py-1 text-[13px] shadow-xl" style={{ left: x, top: Math.min(y, window.innerHeight - items.length * 32 - 12) }}>
+    <div ref={root} role="menu" className="fixed z-50 w-48 rounded-xl border border-line-strong bg-overlay py-1 text-[13px] shadow-pop" style={{ left: x, top: Math.min(y, window.innerHeight - items.length * 32 - 12) }}>
       {items.map((it) => (
-        <button key={it.label} type="button" role="menuitem" disabled={it.disabled} onClick={() => (onClose(), it.onSelect())} className={cn("block w-full px-3 py-1.5 text-left hover:bg-slate-50 disabled:opacity-40", it.danger && "text-red-600")}>
+        <button key={it.label} type="button" role="menuitem" disabled={it.disabled} onClick={() => (onClose(), it.onSelect())} className={cn("block w-full px-3 py-1.5 text-left hover:bg-raised disabled:opacity-40", it.danger && "text-red-300")}>
           {it.label}
         </button>
       ))}
@@ -892,7 +892,7 @@ function Canvas({ onEditor, onDropFiles }: { onEditor: (e: Editor | null) => voi
     >
       <div
         ref={stage}
-        className="absolute shadow-[0_2px_10px_rgb(16_19_26/0.12),0_24px_60px_-24px_rgb(16_19_26/0.35)]"
+        className="paper absolute shadow-[0_0_0_1px_rgb(255_255_255/0.05),0_24px_60px_-24px_rgb(0_0_0/0.85)]"
         style={{ left: (area.w - deck.width * scale) / 2, top: (area.h - deck.height * scale) / 2, width: deck.width * scale, height: deck.height * scale }}
       >
         <div style={{ transform: `scale(${scale})`, transformOrigin: "0 0", width: deck.width, height: deck.height }} className="relative">
@@ -928,7 +928,7 @@ function Canvas({ onEditor, onDropFiles }: { onEditor: (e: Editor | null) => voi
                       <span
                         key={h}
                         onPointerDown={(e) => startResize(e, el, h)}
-                        className="pointer-events-auto absolute rounded-[2px] border border-[#2f54eb] bg-white"
+                        className="pointer-events-auto absolute rounded-[2px] border border-[#6a58e6] bg-white"
                         style={{
                           width: hs,
                           height: hs,
@@ -939,7 +939,7 @@ function Canvas({ onEditor, onDropFiles }: { onEditor: (e: Editor | null) => voi
                         }}
                       />
                     ))}
-                    <span className="absolute left-1/2 bg-[#2f54eb]" style={{ width: 1 / scale, height: 18 / scale, top: -18 / scale }} />
+                    <span className="absolute left-1/2 bg-[#6a58e6]" style={{ width: 1 / scale, height: 18 / scale, top: -18 / scale }} />
                     <span
                       onPointerDown={(e) => startRotate(e, el)}
                       title="Rotate"
@@ -995,14 +995,14 @@ function Notes() {
   const [draft, setDraft] = useState(notes);
   useEffect(() => setDraft(notes), [notes, current]);
   return (
-    <div className="h-[92px] shrink-0 border-t border-slate-200 bg-white px-4 py-2">
+    <div className="h-[92px] shrink-0 border-t border-line bg-surface px-4 py-2">
       <textarea
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={() => draft !== notes && useSlides.getState().updateSlide(current, (s) => ({ ...s, notes: draft }))}
         placeholder="Speaker notes"
         aria-label="Speaker notes"
-        className="h-full w-full resize-none text-[13px] text-slate-700 outline-none placeholder:text-slate-400"
+        className="h-full w-full resize-none text-[13px] text-fg outline-none placeholder:text-fg-subtle"
       />
     </div>
   );
@@ -1013,7 +1013,7 @@ function Notes() {
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-[12px] text-slate-500">{label}</span>
+      <span className="text-[12px] text-fg-muted">{label}</span>
       {children}
     </div>
   );
@@ -1028,10 +1028,10 @@ function Properties({ sel }: { sel: El[] }) {
   const one = sel.length === 1 ? sel[0] : null;
 
   return (
-    <aside className="thin-scroll w-[248px] shrink-0 space-y-5 overflow-y-auto border-l border-slate-200 bg-white p-4 text-[13px]">
+    <aside className="thin-scroll w-[248px] shrink-0 space-y-5 overflow-y-auto border-l border-line bg-surface p-4 text-[13px]">
       {!sel.length ? (
         <>
-          <h3 className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">Slide {current + 1}</h3>
+          <h3 className="text-[12px] font-semibold uppercase tracking-wide text-fg-muted">Slide {current + 1}</h3>
           <Row label="Background">
             <ColorPick label="Background colour" icon={<span className="text-[12px]">Colour</span>} value={slide.background.color ?? deck.theme.bg} onChange={(c) => st().updateSlide(current, (s) => ({ ...s, background: { color: c ?? deck.theme.bg } }))} />
           </Row>
@@ -1056,7 +1056,7 @@ function Properties({ sel }: { sel: El[] }) {
           <Button size="sm" onClick={() => st().change((d) => ({ ...d, slides: d.slides.map((s) => ({ ...s, background: { ...slide.background } })) }))}>
             Apply background to all slides
           </Button>
-          <p className="text-[12px] leading-relaxed text-slate-500">Select something on the slide to change it. Double-click text to edit it; drag to move, corners to resize, the round handle to rotate.</p>
+          <p className="text-[12px] leading-relaxed text-fg-muted">Select something on the slide to change it. Double-click text to edit it; drag to move, corners to resize, the round handle to rotate.</p>
           {slide.elements.some((e) => e.locked) && (
             <Button size="sm" onClick={() => st().change((d) => ({ ...d, slides: d.slides.map((s, i) => (i === current ? { ...s, elements: s.elements.map((e) => ({ ...e, locked: undefined })) } : s)) }))}>
               <Unlock className="h-3.5 w-3.5" /> Unlock background artwork
@@ -1087,13 +1087,13 @@ function Properties({ sel }: { sel: El[] }) {
             <TB label="Flip vertically" onClick={() => up((e) => ({ ...e, flipV: !e.flipV || undefined }))}>
               <FlipVertical2 className="h-4 w-4" />
             </TB>
-            <TB label="Delete" onClick={() => st().removeSelected()} className="text-red-600">
+            <TB label="Delete" onClick={() => st().removeSelected()} className="text-red-300">
               <Trash2 className="h-4 w-4" />
             </TB>
           </div>
 
           <div className="space-y-1.5">
-            <h3 className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">Align on slide</h3>
+            <h3 className="text-[12px] font-semibold uppercase tracking-wide text-fg-muted">Align on slide</h3>
             <div className="grid grid-cols-3 gap-1 text-[12px]">
               {(
                 [
@@ -1105,7 +1105,7 @@ function Properties({ sel }: { sel: El[] }) {
                   ["Bottom", (e: El) => ({ ...e, y: deck.height - e.h })],
                 ] as const
               ).map(([l, fn]) => (
-                <button key={l} type="button" onClick={() => up(fn)} className="h-7 rounded-md border border-slate-200 hover:bg-slate-50">
+                <button key={l} type="button" onClick={() => up(fn)} className="h-7 rounded-md border border-line hover:bg-raised">
                   {l}
                 </button>
               ))}
@@ -1116,12 +1116,12 @@ function Properties({ sel }: { sel: El[] }) {
             <div className="grid grid-cols-2 gap-2">
               {(["x", "y", "w", "h"] as const).map((k) => (
                 <label key={k} className="grid gap-1">
-                  <span className="text-[11px] uppercase text-slate-500">{k === "w" ? "Width" : k === "h" ? "Height" : k.toUpperCase()}</span>
+                  <span className="text-[11px] uppercase text-fg-muted">{k === "w" ? "Width" : k === "h" ? "Height" : k.toUpperCase()}</span>
                   <NumberInput value={Math.round(one[k])} onChange={(v) => up((e) => ({ ...e, [k]: k === "w" || k === "h" ? Math.max(1, v) : v }))} suffix="px" />
                 </label>
               ))}
               <label className="col-span-2 grid gap-1">
-                <span className="text-[11px] uppercase text-slate-500">Rotation</span>
+                <span className="text-[11px] uppercase text-fg-muted">Rotation</span>
                 <NumberInput value={one.rot} onChange={(v) => up((e) => ({ ...e, rot: ((v % 360) + 360) % 360 }))} suffix="°" />
               </label>
             </div>
@@ -1129,7 +1129,7 @@ function Properties({ sel }: { sel: El[] }) {
 
           {sel.every((e) => e.type === "box") && (
             <div className="space-y-2">
-              <h3 className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">Shape</h3>
+              <h3 className="text-[12px] font-semibold uppercase tracking-wide text-fg-muted">Shape</h3>
               {!(one?.type === "box" && one.shape === "line") && (
                 <Row label="Fill">
                   <ColorPick
@@ -1160,7 +1160,7 @@ function Properties({ sel }: { sel: El[] }) {
               {one?.type === "box" && one.shape !== "line" && (
                 <>
                   <Row label="Text position">
-                    <select value={one.valign} onChange={(ev) => up((e) => (e.type === "box" ? { ...e, valign: ev.target.value as BoxEl["valign"] } : e))} className="h-8 rounded-md border border-slate-200 px-1.5 text-[13px]">
+                    <select value={one.valign} onChange={(ev) => up((e) => (e.type === "box" ? { ...e, valign: ev.target.value as BoxEl["valign"] } : e))} className="h-8 rounded-md border border-line px-1.5 text-[13px]">
                       <option value="top">Top</option>
                       <option value="middle">Middle</option>
                       <option value="bottom">Bottom</option>
@@ -1189,7 +1189,7 @@ function Properties({ sel }: { sel: El[] }) {
           )}
 
           {one?.type === "table" && <TableProps el={one} onChange={(t) => up(() => t)} />}
-          {one?.type === "unsupported" && <p className="text-[12px] leading-relaxed text-slate-500">This {one.label.toLowerCase()} came from the original file and can't be edited here. It won't be included when you save.</p>}
+          {one?.type === "unsupported" && <p className="text-[12px] leading-relaxed text-fg-muted">This {one.label.toLowerCase()} came from the original file and can't be edited here. It won't be included when you save.</p>}
           {sel.some((e) => e.locked) && (
             <Button size="sm" onClick={() => up((e) => ({ ...e, locked: undefined }))}>
               <Lock className="h-3.5 w-3.5" /> Unlock
@@ -1209,11 +1209,11 @@ function TableProps({ el, onChange }: { el: TableEl; onChange: (t: TableEl) => v
   const scaleRows = (rows: TableEl["rows"]) => ({ ...el, rows, h: rows.reduce((n, x) => n + x.h, 0) });
   return (
     <div className="space-y-2">
-      <h3 className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">Table</h3>
+      <h3 className="text-[12px] font-semibold uppercase tracking-wide text-fg-muted">Table</h3>
       <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${el.cols.length}, minmax(0,1fr))` }}>
         {el.rows.map((row, ri) =>
           row.cells.map((cl, ci) => (
-            <button key={`${ri}-${ci}`} type="button" onClick={() => setCell({ r: ri, c: ci })} className={cn("h-6 truncate rounded border px-1 text-left text-[11px]", ri === r && ci === c ? "border-brand-500 bg-brand-50" : "border-slate-200")}>
+            <button key={`${ri}-${ci}`} type="button" onClick={() => setCell({ r: ri, c: ci })} className={cn("h-6 truncate rounded border px-1 text-left text-[11px]", ri === r && ci === c ? "border-brand-500 bg-brand-500/15" : "border-line")}>
               {cl.merged ? "·" : cl.text || " "}
             </button>
           )),
@@ -1225,19 +1225,19 @@ function TableProps({ el, onChange }: { el: TableEl; onChange: (t: TableEl) => v
           onChange={(e) => onChange({ ...el, rows: el.rows.map((row, ri) => (ri === r ? { ...row, cells: row.cells.map((x, ci) => (ci === c ? { ...x, text: e.target.value } : x)) } : row)) })}
           rows={2}
           aria-label="Cell text"
-          className="w-full rounded-md border border-slate-200 px-2 py-1 text-[13px] outline-none focus:border-brand-500"
+          className="w-full rounded-md border border-line-strong px-2 py-1 text-[13px] outline-none focus:border-brand-500 bg-sunken text-fg"
         />
       )}
       <Row label="Cell fill">
         <ColorPick label="Cell fill" icon={<span className="text-[12px]">Fill</span>} value={cur?.fill ?? null} resetLabel="No fill" onChange={(f) => onChange({ ...el, rows: el.rows.map((row, ri) => (ri === r ? { ...row, cells: row.cells.map((x, ci) => (ci === c ? { ...x, fill: f ?? undefined } : x)) } : row)) })} />
       </Row>
       <div className="grid grid-cols-2 gap-1 text-[12px]">
-        <button type="button" className="h-7 rounded-md border border-slate-200 hover:bg-slate-50" onClick={() => onChange(scaleRows([...el.rows.slice(0, r + 1), { h: 40, cells: el.cols.map(() => ({ text: "" })) }, ...el.rows.slice(r + 1)]))}>
+        <button type="button" className="h-7 rounded-md border border-line hover:bg-raised" onClick={() => onChange(scaleRows([...el.rows.slice(0, r + 1), { h: 40, cells: el.cols.map(() => ({ text: "" })) }, ...el.rows.slice(r + 1)]))}>
           + Row
         </button>
         <button
           type="button"
-          className="h-7 rounded-md border border-slate-200 hover:bg-slate-50"
+          className="h-7 rounded-md border border-line hover:bg-raised"
           onClick={() => {
             const w = el.w / (el.cols.length + 1);
             onChange({ ...el, cols: el.cols.map(() => w).concat(w), rows: el.rows.map((row) => ({ ...row, cells: [...row.cells.slice(0, c + 1), { text: "" }, ...row.cells.slice(c + 1)] })) });
@@ -1245,13 +1245,13 @@ function TableProps({ el, onChange }: { el: TableEl; onChange: (t: TableEl) => v
         >
           + Column
         </button>
-        <button type="button" disabled={el.rows.length <= 1} className="h-7 rounded-md border border-slate-200 hover:bg-slate-50 disabled:opacity-40" onClick={() => onChange(scaleRows(el.rows.filter((_, i) => i !== r)))}>
+        <button type="button" disabled={el.rows.length <= 1} className="h-7 rounded-md border border-line hover:bg-raised disabled:opacity-40" onClick={() => onChange(scaleRows(el.rows.filter((_, i) => i !== r)))}>
           − Row
         </button>
         <button
           type="button"
           disabled={el.cols.length <= 1}
-          className="h-7 rounded-md border border-slate-200 hover:bg-slate-50 disabled:opacity-40"
+          className="h-7 rounded-md border border-line hover:bg-raised disabled:opacity-40"
           onClick={() => {
             const w = el.w / (el.cols.length - 1);
             onChange({ ...el, cols: el.cols.filter((_, i) => i !== c).map(() => w), rows: el.rows.map((row) => ({ ...row, cells: row.cells.filter((_, i) => i !== c) })) });

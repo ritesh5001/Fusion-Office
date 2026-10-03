@@ -24,7 +24,7 @@ export function BottomBar() {
   };
 
   return (
-    <footer className="flex h-9 shrink-0 items-center gap-1 border-t border-slate-200 bg-white px-2 text-[12px] text-slate-600">
+    <footer className="flex h-9 shrink-0 items-center gap-1 border-t border-line bg-surface px-2 text-[12px] text-fg-muted">
       <IconButton size="sm" label="Previous page" disabled={index === 0} onClick={() => go(index - 1)}>
         <ChevronUp className="h-4 w-4" />
       </IconButton>
@@ -34,7 +34,7 @@ export function BottomBar() {
       <div className="flex items-center gap-1.5 pl-1">
         <input
           aria-label="Current page"
-          className="h-6 w-10 rounded border border-slate-200 text-center tabular-nums outline-none focus:border-brand-500"
+          className="h-6 w-10 rounded-md border border-line-strong bg-sunken text-center tabular-nums text-fg outline-none focus:border-brand-500"
           value={draft}
           onChange={(e) => setDraft(e.target.value.replace(/\D/g, ""))}
           onKeyDown={(e) => {
@@ -45,10 +45,10 @@ export function BottomBar() {
           }}
           onBlur={() => setDraft(String(index + 1))}
         />
-        <span className="tabular-nums text-slate-400">of {pageCount}</span>
+        <span className="tabular-nums text-fg-subtle">of {pageCount}</span>
       </div>
       {selection && (
-        <span className="ml-3 hidden text-slate-400 sm:inline">
+        <span className="ml-3 hidden text-fg-subtle sm:inline">
           {selection.ids.length} selected · arrow keys to nudge · Shift for 10pt
         </span>
       )}
@@ -66,7 +66,7 @@ export function BottomBar() {
         </IconButton>
         <select
           aria-label="Zoom level"
-          className={cn("h-6 cursor-pointer rounded border border-transparent bg-transparent px-1 text-center tabular-nums hover:border-slate-200")}
+          className={cn("h-6 cursor-pointer rounded border border-transparent bg-transparent px-1 text-center tabular-nums hover:border-line")}
           value={String(zoom)}
           onChange={(e) => setZoom(Number(e.target.value))}
         >

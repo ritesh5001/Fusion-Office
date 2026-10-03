@@ -131,35 +131,38 @@ export function ToolRunner<O>({ tool, spec }: { tool: ToolDef; spec: ToolSpec<O>
     <div>
       {needsFiles ? (
         loading ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl bg-brand-50/40 py-14" role="status">
-            <Mascot mood="working" size={92} />
-            <p className="mt-4 text-[15px] font-medium text-ink">Reading your {tool.multiple ? "files" : "file"}…</p>
+          <div className="card flex flex-col items-center justify-center py-16 md:py-20" role="status">
+            <Mascot mood="working" size={72} />
+            <p className="mt-4 text-[15px] font-medium text-fg">Reading your {tool.multiple ? "files" : "file"}…</p>
+            <div className="mt-4 h-1 w-40 overflow-hidden rounded-full bg-raised">
+              <div className="fo-indeterminate h-full w-1/3 rounded-full bg-brand-400" />
+            </div>
           </div>
         ) : (
           <Dropzone accept={tool.accept} multiple={tool.multiple} onFiles={add} label={tool.multiple ? "Choose files" : "Choose a file"} />
         )
       ) : (
-        <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
-          <div className="space-y-4">
+        <div className={cn("grid gap-6", spec.noFiles ? "mx-auto max-w-[640px]" : "lg:grid-cols-[minmax(0,1fr)_340px]")}>
+          <div className={cn("min-w-0 space-y-3", spec.noFiles && "hidden")}>
             {!spec.noFiles && (
               <>
-                <ul className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
+                <ul className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 xl:grid-cols-3">
                   {files.map((f, i) => (
-                    <li key={f.id} className="group relative flex flex-col overflow-hidden rounded-xl bg-white ring-1 ring-ink/10">
-                      <div className="flex h-40 items-center justify-center bg-paper-deep p-3">
+                    <li key={f.id} className="group relative flex min-w-0 flex-col overflow-hidden rounded-2xl border border-line bg-surface">
+                      <div className="flex h-44 items-center justify-center bg-sunken p-4">
                         {f.thumb ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={f.thumb} alt="" className="max-h-full max-w-full rounded-sm object-contain shadow-sm" />
+                          <img src={f.thumb} alt="" className="max-h-full max-w-full rounded-[3px] object-contain shadow-[0_8px_24px_-8px_rgb(0_0_0/0.7)]" />
                         ) : (
-                          <FileText className="h-10 w-10 text-ink-soft" aria-hidden="true" />
+                          <FileText className="h-10 w-10 text-fg-subtle" aria-hidden="true" />
                         )}
                       </div>
-                      <div className="flex items-center gap-2 px-3 py-2.5">
+                      <div className="flex items-center gap-2 border-t border-line px-3 py-2.5">
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-[13px] font-medium" title={f.name}>
+                          <p className="truncate text-[13px] font-medium text-fg" title={f.name}>
                             {f.name}
                           </p>
-                          <p className="text-[12px] text-ink-soft">
+                          <p className="text-[12px] text-fg-muted">
                             {formatBytes(f.bytes.length)}
                             {f.pages ? ` · ${f.pages} page${f.pages === 1 ? "" : "s"}` : ""}
                             {f.width ? ` · ${f.width} × ${f.height}` : ""}
@@ -180,7 +183,7 @@ export function ToolRunner<O>({ tool, spec }: { tool: ToolDef; spec: ToolSpec<O>
                         </IconBtn>
                       </div>
                       {spec.reorderable && files.length > 1 && (
-                        <span className="absolute left-2 top-2 rounded-full bg-ink px-2 py-0.5 font-mono text-[11px] text-paper">{i + 1}</span>
+                        <span className="absolute left-2.5 top-2.5 flex h-6 min-w-6 items-center justify-center rounded-full bg-fg px-1.5 font-mono text-[11px] font-medium text-app">{i + 1}</span>
                       )}
                     </li>
                   ))}
@@ -189,11 +192,12 @@ export function ToolRunner<O>({ tool, spec }: { tool: ToolDef; spec: ToolSpec<O>
               </>
             )}
           </div>
-          <aside className="h-fit rounded-2xl bg-white p-5 ring-1 ring-ink/10 xl:sticky xl:top-24">
+          <aside className="card h-fit p-5 lg:sticky lg:top-24">
+            <p className="eyebrow mb-4">{Options ? "Settings" : "Ready"}</p>
             {(running || error) && (
-              <div className="mb-4 flex items-center gap-3 rounded-xl bg-paper px-3 py-2.5" role="status">
-                <Mascot mood={running ? "working" : "oops"} size={48} />
-                <p className="text-[13px] font-medium text-ink">{running
+              <div className={cn("mb-4 flex items-center gap-3 rounded-xl px-3 py-2.5 ring-1 ring-inset", running ? "bg-brand-500/10 ring-brand-500/25" : "bg-red-500/10 ring-red-500/25")} role="status">
+                <Mascot mood={running ? "working" : "oops"} size={40} />
+                <p className="text-[13px] font-medium text-fg">{running
                     ? tool.runs === "browser"
                       ? "On it! Working right here on your device."
                       : tool.runs === "ai"
@@ -208,7 +212,7 @@ export function ToolRunner<O>({ tool, spec }: { tool: ToolDef; spec: ToolSpec<O>
               </div>
             )}
             {error && (
-              <p role="alert" className="mt-4 rounded-md bg-red-50 px-3 py-2 text-[13px] text-red-700">
+              <p role="alert" className="mt-4 rounded-lg bg-red-500/10 px-3 py-2 text-[13px] text-red-300 ring-1 ring-inset ring-red-500/25">
                 {error}
               </p>
             )}
@@ -216,23 +220,21 @@ export function ToolRunner<O>({ tool, spec }: { tool: ToolDef; spec: ToolSpec<O>
               type="button"
               onClick={run}
               disabled={!!running}
-              className={cn(
-                "btn mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-600 text-[15px] font-medium text-white shadow-sm transition-colors hover:bg-brand-700 disabled:opacity-80",
-              )}
+              className="btn btn-primary btn-lg mt-5 w-full disabled:opacity-80"
             >
               {running ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
               {running ? running.message : spec.action}
             </button>
             {running?.fraction !== undefined && (
-              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-paper-deep" role="progressbar" aria-valuenow={Math.round(running.fraction * 100)} aria-valuemin={0} aria-valuemax={100}>
-                <div className="h-full rounded-full bg-brand-600 transition-[width] duration-300" style={{ width: `${Math.round(running.fraction * 100)}%` }} />
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-raised" role="progressbar" aria-valuenow={Math.round(running.fraction * 100)} aria-valuemin={0} aria-valuemax={100}>
+                <div className="h-full rounded-full bg-accent transition-[width] duration-300" style={{ width: `${Math.round(running.fraction * 100)}%` }} />
               </div>
             )}
           </aside>
         </div>
       )}
       {error && needsFiles && (
-        <div role="alert" className="mt-4 flex items-center justify-center gap-3 rounded-xl bg-red-50 px-4 py-3 text-[14px] text-red-700">
+        <div role="alert" className="mt-4 flex items-center justify-center gap-3 rounded-xl bg-red-500/10 px-4 py-3 text-[14px] text-red-300 ring-1 ring-inset ring-red-500/25">
           <Mascot mood="oops" size={40} />
           {error}
         </div>
@@ -249,7 +251,7 @@ function IconBtn({ label, onClick, disabled, children }: { label: string; onClic
       title={label}
       disabled={disabled}
       onClick={onClick}
-      className="flex h-8 w-8 items-center justify-center rounded-md text-ink-soft hover:bg-paper-deep hover:text-ink disabled:opacity-30"
+      className="flex h-8 w-8 items-center justify-center rounded-lg text-fg-muted hover:bg-raised hover:text-fg disabled:opacity-30"
     >
       {children}
     </button>
@@ -265,7 +267,7 @@ function ImagePreview({ file }: { file: ToolFile }) {
   }, [file]);
   if (!url) return null;
   return (
-    <div className="mx-auto mt-6 flex max-h-[420px] justify-center overflow-hidden rounded-xl bg-[repeating-conic-gradient(#f1efe9_0%_25%,#fff_0%_50%)] bg-[length:16px_16px] p-3 ring-1 ring-rule">
+    <div className="mx-auto mt-6 flex max-h-[420px] justify-center overflow-hidden rounded-xl bg-[repeating-conic-gradient(#1a1e27_0%_25%,#12151c_0%_50%)] bg-[length:16px_16px] p-3 ring-1 ring-line">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={url} alt="Result preview" className="max-h-[396px] max-w-full object-contain" />
     </div>
@@ -283,43 +285,43 @@ function Results({ result, onReset, anchor }: { result: ToolResult; onReset: () 
   };
   return (
     <div ref={anchor} className="mx-auto max-w-[760px] scroll-mt-24">
-      <div className="rounded-2xl bg-white p-6 text-center ring-1 ring-ink/10 md:p-8">
-        <Mascot mood="happy" size={104} interactive winkKey={winkKey} label="All done" />
-        <h2 className="mt-3 font-display text-[26px] font-bold tracking-[-0.02em]">All done!</h2>
-        {result.summary && <div className="mx-auto mt-2 max-w-[56ch] text-[15px] leading-relaxed text-ink-soft">{result.summary}</div>}
+      <div className="card p-6 text-center md:p-10">
+        <Mascot mood="happy" size={88} interactive winkKey={winkKey} label="All done" />
+        <h2 className="mt-3 font-display text-[26px] font-bold tracking-[-0.025em] text-fg">All done</h2>
+        {result.summary && <div className="mx-auto mt-2 max-w-[56ch] text-[15px] leading-relaxed text-fg-muted">{result.summary}</div>}
         {!many && result.files[0]?.type.startsWith("image/") && <ImagePreview file={result.files[0]} />}
         {result.files.length > 0 && (
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <button
               type="button"
               onClick={() => celebrate(() => downloadFile(many ? zipFiles(result.files) : result.files[0]))}
-              className="btn inline-flex h-12 items-center gap-2 rounded-full bg-brand-600 px-7 text-[15px] font-medium text-white shadow-sm hover:bg-brand-700"
+              className="btn btn-primary btn-lg max-w-full px-7"
             >
               <Download className="h-4 w-4" aria-hidden="true" />
-              {many ? `Download all (${result.files.length} files, ZIP)` : `Download ${result.files[0].name}`}
+              <span className="truncate">{many ? `Download all (${result.files.length} files, ZIP)` : `Download ${result.files[0].name}`}</span>
             </button>
           </div>
         )}
         {many && (
-          <ul className="mx-auto mt-5 max-w-[520px] divide-y divide-rule rounded-xl text-left ring-1 ring-rule">
+          <ul className="mx-auto mt-6 max-w-[560px] divide-y divide-line overflow-hidden rounded-xl bg-sunken text-left ring-1 ring-line">
             {result.files.map((f, i) => (
               <li key={i} className="flex items-center gap-3 px-4 py-2.5">
-                <span className="min-w-0 flex-1 truncate text-[13px]">{f.name}</span>
-                <span className="text-[12px] tabular-nums text-ink-soft">{formatBytes(f.bytes.length)}</span>
-                <button type="button" onClick={() => celebrate(() => downloadFile(f))} className="text-[13px] font-medium text-brand-700 hover:underline">
+                <span className="min-w-0 flex-1 truncate text-[13px] text-fg">{f.name}</span>
+                <span className="text-[12px] tabular-nums text-fg-muted">{formatBytes(f.bytes.length)}</span>
+                <button type="button" onClick={() => celebrate(() => downloadFile(f))} className="text-[13px] font-semibold text-brand-300 hover:text-brand-200">
                   Download
                 </button>
               </li>
             ))}
           </ul>
         )}
-        {many && <p className="mt-2 text-[12px] text-ink-soft">{formatBytes(total)} in total</p>}
+        {many && <p className="mt-2 text-[12px] text-fg-muted">{formatBytes(total)} in total</p>}
       </div>
 
       {result.text && (
-        <div className="mt-6 rounded-2xl bg-white ring-1 ring-ink/10">
-          <div className="flex items-center justify-between border-b border-rule px-4 py-2.5">
-            <span className="font-mono text-[12px] uppercase tracking-[0.12em] text-ink-soft">{result.text.filename}</span>
+        <div className="card mt-4 overflow-hidden">
+          <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
+            <span className="min-w-0 truncate font-mono text-[12px] text-fg-muted">{result.text.filename}</span>
             <div className="flex gap-1">
               <button
                 type="button"
@@ -328,25 +330,25 @@ function Results({ result, onReset, anchor }: { result: ToolResult; onReset: () 
                   setCopied(true);
                   setTimeout(() => setCopied(false), 1500);
                 }}
-                className="inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[13px] text-ink-soft hover:bg-paper-deep hover:text-ink"
+                className="btn btn-ghost btn-sm"
               >
                 {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />} {copied ? "Copied" : "Copy"}
               </button>
               <button
                 type="button"
                 onClick={() => downloadFile({ name: result.text!.filename, bytes: new TextEncoder().encode(result.text!.content), type: "text/markdown" })}
-                className="inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[13px] text-ink-soft hover:bg-paper-deep hover:text-ink"
+                className="btn btn-ghost btn-sm"
               >
                 <Download className="h-3.5 w-3.5" /> Download
               </button>
             </div>
           </div>
-          <pre className="thin-scroll max-h-[520px] overflow-auto whitespace-pre-wrap p-4 font-mono text-[13px] leading-relaxed text-ink">{result.text.content}</pre>
+          <pre className="thin-scroll max-h-[520px] overflow-auto whitespace-pre-wrap p-4 font-mono text-[13px] leading-relaxed text-fg">{result.text.content}</pre>
         </div>
       )}
 
       <div className="mt-6 flex justify-center">
-        <button type="button" onClick={onReset} className="inline-flex items-center gap-1.5 text-[14px] font-medium text-ink-soft hover:text-ink">
+        <button type="button" onClick={onReset} className="btn btn-ghost">
           <RotateCcw className="h-4 w-4" aria-hidden="true" /> Start over with another file
         </button>
       </div>

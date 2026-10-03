@@ -138,12 +138,12 @@ export function LayersPanel() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <p className="px-3 pt-2.5 text-[11px] text-slate-500">
+      <p className="px-3 pt-2.5 text-[11px] text-fg-muted">
         Page {pageNumber} · {objects.length} layer{objects.length === 1 ? "" : "s"}
       </p>
       <ul className="thin-scroll flex-1 overflow-y-auto px-2 py-2" aria-label={`Layers on page ${pageNumber}, front to back`}>
         {layers.length === 0 && (
-          <li className="px-2 py-6 text-center text-[12px] leading-relaxed text-slate-500">
+          <li className="px-2 py-6 text-center text-[12px] leading-relaxed text-fg-muted">
             No layers yet. Add text, a signature, an image or a shape and it appears here.
           </li>
         )}
@@ -180,21 +180,21 @@ export function LayersPanel() {
               }}
               className={cn(
                 "group relative mb-0.5 flex items-center gap-1 rounded-md pr-1 text-[12px] transition-colors",
-                isSel ? "bg-brand-50 text-brand-700 ring-1 ring-brand-200" : "text-slate-700 hover:bg-white",
+                isSel ? "bg-brand-500/15 text-brand-300 ring-1 ring-brand-500/35" : "text-fg hover:bg-raised",
                 dragId === o.id && "opacity-40",
-                o.hidden && "text-slate-400",
+                o.hidden && "text-fg-subtle",
               )}
             >
               {drop?.id === o.id && dragId !== o.id && (
                 <span className={cn("absolute inset-x-1 h-0.5 rounded-full bg-brand-500", drop.above ? "-top-px" : "-bottom-px")} aria-hidden="true" />
               )}
-              <GripVertical className="ml-0.5 h-3.5 w-3.5 shrink-0 cursor-grab text-slate-300 group-hover:text-slate-400" aria-hidden="true" />
+              <GripVertical className="ml-0.5 h-3.5 w-3.5 shrink-0 cursor-grab text-fg-subtle group-hover:text-fg-subtle" aria-hidden="true" />
               {renaming === o.id ? (
                 <input
                   autoFocus
                   defaultValue={o.name ?? layerName(o)}
                   aria-label="Layer name"
-                  className="min-w-0 flex-1 rounded border border-brand-300 bg-white px-1 py-0.5 text-[12px] outline-none"
+                  className="min-w-0 flex-1 rounded border border-brand-400 bg-sunken px-1 py-0.5 text-[12px] text-fg outline-none"
                   onBlur={(e) => {
                     const name = e.target.value.trim();
                     setRenaming(null);
@@ -224,7 +224,7 @@ export function LayersPanel() {
                 aria-label={o.hidden ? `Show ${layerName(o)}` : `Hide ${layerName(o)}`}
                 title={noHide ?? (o.hidden ? "Show" : "Hide")}
                 className={cn(
-                  "flex h-6 w-6 shrink-0 items-center justify-center rounded hover:bg-slate-200/70 disabled:cursor-not-allowed disabled:opacity-30",
+                  "flex h-6 w-6 shrink-0 items-center justify-center rounded hover:bg-line/70 disabled:cursor-not-allowed disabled:opacity-30",
                   !o.hidden && "opacity-0 focus-visible:opacity-100 group-hover:opacity-100",
                 )}
               >
@@ -236,7 +236,7 @@ export function LayersPanel() {
                 aria-label={o.locked ? `Unlock ${layerName(o)}` : `Lock ${layerName(o)}`}
                 title={o.locked ? "Unlock (can be moved again)" : "Lock (can't be moved on the page)"}
                 className={cn(
-                  "flex h-6 w-6 shrink-0 items-center justify-center rounded hover:bg-slate-200/70",
+                  "flex h-6 w-6 shrink-0 items-center justify-center rounded hover:bg-line/70",
                   !o.locked && "opacity-0 focus-visible:opacity-100 group-hover:opacity-100",
                 )}
               >
@@ -246,12 +246,12 @@ export function LayersPanel() {
           );
         })}
         {/* The PDF itself is always underneath everything you add. */}
-        <li className="mt-1 flex items-center gap-1.5 rounded-md border border-dashed border-slate-200 px-2 py-1.5 text-[12px] text-slate-400">
+        <li className="mt-1 flex items-center gap-1.5 rounded-md border border-dashed border-line px-2 py-1.5 text-[12px] text-fg-subtle">
           <FileText className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">PDF page content</span>
         </li>
       </ul>
-      <p className="border-t border-slate-200 px-3 py-2 text-[11px] leading-snug text-slate-500">Top of the list is in front. Drag to reorder.</p>
+      <p className="border-t border-line px-3 py-2 text-[11px] leading-snug text-fg-muted">Top of the list is in front. Drag to reorder.</p>
     </div>
   );
 }

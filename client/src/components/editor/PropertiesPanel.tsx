@@ -45,7 +45,7 @@ export function PropertiesPanel() {
   );
 
   return (
-    <aside className="thin-scroll flex h-full w-[264px] shrink-0 flex-col overflow-y-auto border-l border-slate-200 bg-white">
+    <aside className="thin-scroll flex h-full w-[264px] shrink-0 flex-col overflow-y-auto border-l border-line bg-surface">
       {selection && objects && objects.length === 1 ? (
         <ObjectProperties pageId={selection.pageId} obj={objects[0]} />
       ) : selection && objects && objects.length > 1 ? (
@@ -59,8 +59,8 @@ export function PropertiesPanel() {
 
 function Section({ title, children, className }: { title?: string; children: ReactNode; className?: string }) {
   return (
-    <section className={cn("border-b border-slate-100 px-4 py-3.5", className)}>
-      {title && <h3 className="mb-2.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{title}</h3>}
+    <section className={cn("border-b border-line px-4 py-3.5", className)}>
+      {title && <h3 className="mb-2.5 text-[11px] font-semibold uppercase tracking-wider text-fg-subtle">{title}</h3>}
       {children}
     </section>
   );
@@ -68,9 +68,9 @@ function Section({ title, children, className }: { title?: string; children: Rea
 
 function Header({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
-    <div className="border-b border-slate-100 px-4 py-3">
-      <div className="text-[13px] font-semibold text-slate-800">{title}</div>
-      {subtitle && <div className="mt-0.5 text-[11px] text-slate-500">{subtitle}</div>}
+    <div className="border-b border-line px-4 py-3">
+      <div className="text-[13px] font-semibold text-fg">{title}</div>
+      {subtitle && <div className="mt-0.5 text-[11px] text-fg-muted">{subtitle}</div>}
     </div>
   );
 }
@@ -119,7 +119,7 @@ function ArrangeActions({ pageId, ids }: { pageId: string; ids: string[] }) {
           <IconButton size="sm" label="Duplicate" shortcut={`${MOD}D`} onClick={() => st().duplicateSelection()}>
             <Copy className="h-4 w-4" />
           </IconButton>
-          <IconButton size="sm" label="Delete" shortcut="Del" className="hover:bg-red-50 hover:text-red-600" onClick={() => st().deleteObjects(pageId, ids)}>
+          <IconButton size="sm" label="Delete" shortcut="Del" className="hover:bg-red-500/10 hover:text-red-300" onClick={() => st().deleteObjects(pageId, ids)}>
             <Trash2 className="h-4 w-4" />
           </IconButton>
         </div>
@@ -152,10 +152,10 @@ function ObjectProperties({ pageId, obj }: { pageId: string; obj: EditorObject }
 
       {obj.type === "text" && obj.replaces && (
         <Section title="Replaces original text">
-          <p className="rounded-md bg-slate-50 px-2.5 py-2 text-[12px] leading-relaxed text-slate-600 ring-1 ring-slate-200">
+          <p className="rounded-md bg-sunken px-2.5 py-2 text-[12px] leading-relaxed text-fg-muted ring-1 ring-line">
             “{obj.replaces.original}”
           </p>
-          <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+          <p className="mt-2 text-[11px] leading-relaxed text-fg-muted">
             On export the original words are removed from the file and this text takes their place. Clear the text to delete the line.
           </p>
           <Button size="sm" className="mt-2.5 w-full" onClick={() => useEditor.getState().deleteObjects(pageId, [obj.id])}>
@@ -209,7 +209,7 @@ function ObjectProperties({ pageId, obj }: { pageId: string; obj: EditorObject }
             >
               <Underline className="h-4 w-4" />
             </IconButton>
-            <div className="mx-1 h-5 w-px bg-slate-200" />
+            <div className="mx-1 h-5 w-px bg-line" />
             {(["left", "center", "right"] as TextAlign[]).map((a) => (
               <IconButton key={a} size="sm" label={`Align ${a}`} active={obj.align === a} onClick={() => update({ align: a })}>
                 {a === "left" ? <AlignLeft className="h-4 w-4" /> : a === "center" ? <AlignCenter className="h-4 w-4" /> : <AlignRight className="h-4 w-4" />}
@@ -265,13 +265,13 @@ function ObjectProperties({ pageId, obj }: { pageId: string; obj: EditorObject }
 
       {obj.type === "markup" && (
         <Section title="Markup">
-          <div className="mb-3 flex gap-1 rounded-lg bg-slate-100 p-0.5">
+          <div className="mb-3 flex gap-1 rounded-lg bg-sunken p-0.5 ring-1 ring-line">
             {(["highlight", "underline", "strikeout"] as const).map((s) => (
               <button
                 key={s}
                 type="button"
                 onClick={() => update({ style: s, opacity: s === "highlight" ? 0.4 : 1 })}
-                className={cn("flex-1 rounded-md py-1 text-[12px] capitalize", obj.style === s ? "bg-white font-medium text-slate-900 shadow-sm" : "text-slate-500")}
+                className={cn("flex-1 rounded-md py-1 text-[12px] capitalize", obj.style === s ? "bg-raised font-medium text-fg shadow-sm ring-1 ring-line-strong" : "text-fg-muted")}
               >
                 {s === "strikeout" ? "Strike" : s}
               </button>
@@ -285,7 +285,7 @@ function ObjectProperties({ pageId, obj }: { pageId: string; obj: EditorObject }
                 title={c.name}
                 aria-label={c.name}
                 onClick={() => update({ color: c.value })}
-                className={cn("h-6 w-6 rounded-full ring-offset-1", obj.color === c.value ? "ring-2 ring-brand-500" : "ring-1 ring-black/10")}
+                className={cn("h-6 w-6 rounded-full ring-offset-1 ring-offset-surface", obj.color === c.value ? "ring-2 ring-brand-500" : "ring-1 ring-white/15")}
                 style={{ background: c.value }}
               />
             ))}
@@ -298,7 +298,7 @@ function ObjectProperties({ pageId, obj }: { pageId: string; obj: EditorObject }
 
       {obj.type === "redact" && (
         <Section>
-          <p className="rounded-md bg-red-50 px-3 py-2 text-[12px] leading-relaxed text-red-800">
+          <p className="rounded-md bg-red-500/10 px-3 py-2 text-[12px] leading-relaxed text-red-200">
             On export, this page is flattened to an image and everything under the box is <strong>permanently removed</strong>, including hidden text. Text on this page will no longer be selectable.
           </p>
         </Section>
@@ -306,7 +306,7 @@ function ObjectProperties({ pageId, obj }: { pageId: string; obj: EditorObject }
       {obj.type === "whiteout" && (
         <Section title="Cover color">
           <ColorInput label="Cover color" value={obj.color} onChange={(color) => update({ color }, "color")} />
-          <p className="mt-2 text-[11px] leading-relaxed text-slate-500">Whiteout only hides content visually. Use Redact to remove sensitive information.</p>
+          <p className="mt-2 text-[11px] leading-relaxed text-fg-muted">Whiteout only hides content visually. Use Redact to remove sensitive information.</p>
         </Section>
       )}
 
@@ -320,9 +320,9 @@ function ObjectProperties({ pageId, obj }: { pageId: string; obj: EditorObject }
               max={100}
               value={Math.round(obj.opacity * 100)}
               onChange={(e) => update({ opacity: +e.target.value / 100 }, `opacity-${obj.id}`)}
-              className="flex-1 accent-brand-600"
+              className="flex-1 accent-brand-500"
             />
-            <span className="w-9 text-right text-[12px] tabular-nums text-slate-600">{Math.round(obj.opacity * 100)}%</span>
+            <span className="w-9 text-right text-[12px] tabular-nums text-fg-muted">{Math.round(obj.opacity * 100)}%</span>
           </div>
         </Section>
       )}
@@ -462,7 +462,7 @@ function CommentSection({ obj, update }: { obj: Extract<EditorObject, { type: "c
         onBlur={() => draft !== obj.text && update({ text: draft })}
         placeholder="Write a comment…"
         rows={5}
-        className="w-full resize-y rounded-md border border-slate-200 p-2 text-[13px] leading-relaxed outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+        className="w-full resize-y rounded-md border border-line-strong p-2 text-[13px] leading-relaxed outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25 bg-sunken text-fg"
       />
       <div className="mt-2 flex items-center justify-between">
         <div className="flex gap-1.5">
@@ -472,14 +472,14 @@ function CommentSection({ obj, update }: { obj: Extract<EditorObject, { type: "c
               type="button"
               aria-label={`Note color ${c}`}
               onClick={() => update({ color: c })}
-              className={cn("h-5 w-5 rounded ring-offset-1", obj.color === c ? "ring-2 ring-brand-500" : "ring-1 ring-black/10")}
+              className={cn("h-5 w-5 rounded ring-offset-1 ring-offset-surface", obj.color === c ? "ring-2 ring-brand-500" : "ring-1 ring-white/15")}
               style={{ background: c }}
             />
           ))}
         </div>
-        <span className="text-[11px] text-slate-400">{new Date(obj.createdAt).toLocaleDateString()}</span>
+        <span className="text-[11px] text-fg-subtle">{new Date(obj.createdAt).toLocaleDateString()}</span>
       </div>
-      <p className="mt-2 text-[11px] leading-relaxed text-slate-500">Exported as a PDF sticky note that opens in any PDF reader.</p>
+      <p className="mt-2 text-[11px] leading-relaxed text-fg-muted">Exported as a PDF sticky note that opens in any PDF reader.</p>
     </Section>
   );
 }
@@ -500,32 +500,32 @@ function DocumentInfo() {
       <Header title="Document" subtitle={`${doc.pages.length} page${doc.pages.length === 1 ? "" : "s"} · ${objCount} edit${objCount === 1 ? "" : "s"}`} />
       <Section title={`Page ${index + 1}`}>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[12px]">
-          <dt className="text-slate-500">Size</dt>
-          <dd className="tabular-nums text-slate-800">
+          <dt className="text-fg-muted">Size</dt>
+          <dd className="tabular-nums text-fg">
             {mm(size.width)} × {mm(size.height)} mm
           </dd>
-          <dt className="text-slate-500">Points</dt>
-          <dd className="tabular-nums text-slate-800">
+          <dt className="text-fg-muted">Points</dt>
+          <dd className="tabular-nums text-fg">
             {Math.round(size.width)} × {Math.round(size.height)}
           </dd>
-          <dt className="text-slate-500">Rotation</dt>
-          <dd className="tabular-nums text-slate-800">{page.rotation}°</dd>
-          <dt className="text-slate-500">Source</dt>
-          <dd className="truncate text-slate-800">
+          <dt className="text-fg-muted">Rotation</dt>
+          <dd className="tabular-nums text-fg">{page.rotation}°</dd>
+          <dt className="text-fg-muted">Source</dt>
+          <dd className="truncate text-fg">
             {page.source.kind === "blank" ? "Blank page" : (doc.sources.find((s) => page.source.kind === "pdf" && s.id === page.source.sourceId)?.name ?? "PDF")}
           </dd>
         </dl>
       </Section>
       <Section title="History">
         {past.length === 0 && future.length === 0 ? (
-          <p className="text-[12px] text-slate-400">No changes yet.</p>
+          <p className="text-[12px] text-fg-subtle">No changes yet.</p>
         ) : (
           <ol className="max-h-72 space-y-0.5 overflow-y-auto text-[12px]">
             {future
               .slice()
               .reverse()
               .map((h, i) => (
-                <li key={`f${i}`} className="truncate rounded px-2 py-1 text-slate-400 line-through decoration-slate-300">
+                <li key={`f${i}`} className="truncate rounded px-2 py-1 text-fg-subtle line-through decoration-fg-subtle">
                   {h.label}
                 </li>
               ))}
@@ -533,7 +533,7 @@ function DocumentInfo() {
               .slice()
               .reverse()
               .map((h, i) => (
-                <li key={`p${i}`} className={cn("truncate rounded px-2 py-1", i === 0 ? "bg-brand-50 font-medium text-brand-700" : "text-slate-600")}>
+                <li key={`p${i}`} className={cn("truncate rounded px-2 py-1", i === 0 ? "bg-brand-500/15 font-medium text-brand-300" : "text-fg-muted")}>
                   {h.label}
                 </li>
               ))}
@@ -541,7 +541,7 @@ function DocumentInfo() {
         )}
       </Section>
       <Section>
-        <p className="text-[12px] leading-relaxed text-slate-500">
+        <p className="text-[12px] leading-relaxed text-fg-muted">
           Select an object to edit its properties. Your file stays in this browser. Nothing is uploaded unless you save to the cloud.
         </p>
       </Section>

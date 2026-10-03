@@ -67,8 +67,8 @@ export function TopBar({ onToggleSidebar, onTogglePanel }: { onToggleSidebar: ()
   };
 
   return (
-    <header className="flex h-12 shrink-0 items-center gap-1 border-b border-slate-200 bg-white px-2">
-      <Link href="/" className="flex items-center gap-2 rounded-md px-1.5 py-1 hover:bg-slate-50" title="Fusion Office home">
+    <header className="flex h-12 shrink-0 items-center gap-1 border-b border-line bg-surface px-2">
+      <Link href="/" className="flex items-center gap-2 rounded-lg px-1.5 py-1 hover:bg-raised" title="Fusion Office home">
         <Logo className="h-6 w-6" />
       </Link>
       <DocName />
@@ -222,7 +222,7 @@ function DocName() {
       onChange={(e) => setDraft(e.target.value)}
       onBlur={commit}
       onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-      className="h-8 w-[min(28vw,260px)] truncate rounded-md border border-transparent px-2 text-[14px] font-medium text-slate-800 outline-none hover:border-slate-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+      className="h-8 w-[min(28vw,260px)] truncate rounded-md border border-transparent px-2 text-[14px] font-medium text-fg outline-none hover:border-line-strong focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25 bg-transparent focus:bg-sunken"
     />
   );
 }
@@ -245,7 +245,7 @@ function SaveStatus() {
 
   return (
     <span
-      className={`hidden items-center gap-1.5 whitespace-nowrap text-[11px] sm:flex ${status === "error" ? "text-red-600" : "text-slate-400"}`}
+      className={`hidden items-center gap-1.5 whitespace-nowrap text-[11px] sm:flex ${status === "error" ? "text-red-300" : "text-fg-subtle"}`}
       title={title}
       aria-live="polite"
     >
