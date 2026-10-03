@@ -41,7 +41,7 @@ export function DocumentList({ docs, onChange }: { docs: CloudDoc[]; onChange: (
   };
 
   return (
-    <ul className="mt-6 divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
+    <ul className="card mt-8 divide-y divide-line overflow-hidden">
       {docs.map((d) => (
         <li key={d.id}>
           <div className="group flex items-center gap-3 px-4 py-3">

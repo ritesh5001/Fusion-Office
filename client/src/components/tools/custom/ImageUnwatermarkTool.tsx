@@ -325,7 +325,7 @@ export function ImageUnwatermarkTool() {
           <span className="font-medium text-fg">{file.name}</span> · {size.w} × {size.h} px · {formatBytes(file.bytes.length)}
           {note && <span className="ml-2 text-amber-300">{note}</span>}
         </p>
-        <div className="flex justify-center rounded-2xl bg-[repeating-conic-gradient(#ebe8e1_0%_25%,#f6f4ef_0%_50%)] bg-[length:20px_20px] p-3">
+        <div className="flex justify-center rounded-2xl bg-[repeating-conic-gradient(#1a1e27_0%_25%,#12151c_0%_50%)] bg-[length:20px_20px] p-3">
           <div className="relative" style={{ width: Math.round(size.w * scale), height: Math.round(size.h * scale) }}>
             <canvas ref={view} className="absolute inset-0 block" aria-label="Image" />
             <canvas

@@ -270,7 +270,7 @@ export function ImageEditor({ mode = "editor" }: { mode?: "editor" | "crop" }) {
           </label>
         </div>
 
-        <div className="flex min-h-[420px] items-center justify-center rounded-2xl bg-[repeating-conic-gradient(#ebe8e1_0%_25%,#f6f4ef_0%_50%)] bg-[length:20px_20px] p-4 md:p-8">
+        <div className="flex min-h-[420px] items-center justify-center rounded-2xl bg-[repeating-conic-gradient(#1a1e27_0%_25%,#12151c_0%_50%)] bg-[length:20px_20px] p-4 md:p-8">
           <Stage
             canvasRef={display}
             cropping={cropping}
