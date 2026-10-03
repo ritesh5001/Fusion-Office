@@ -178,7 +178,7 @@ export function TopBar({ onToggleSidebar, onTogglePanel }: { onToggleSidebar: ()
         )}
         <Button variant="primary" size="sm" className="ml-1.5" onClick={download} disabled={busy} title={`Download (${MOD}S)`}>
           {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
-          Download
+          <span className="hidden sm:inline">Download</span>
         </Button>
       </div>
       <span className="sr-only">{doc.pages.length} pages</span>

@@ -78,7 +78,7 @@ export function FormsTool() {
 
   const input = "h-10 w-full rounded-lg bg-sunken text-fg placeholder:text-fg-subtle px-3 text-[14px] ring-1 ring-line-strong outline-none focus:ring-2 focus:ring-brand-500";
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
       <form className="space-y-5 rounded-2xl bg-surface p-6 ring-1 ring-line" onSubmit={(e) => e.preventDefault()}>
         <p className="font-mono text-[12px] uppercase tracking-[0.12em] text-fg-muted">{fields.length} fields found</p>
         {fields.map((f) => {

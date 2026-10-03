@@ -249,7 +249,7 @@ export function ImageEditor({ mode = "editor" }: { mode?: "editor" | "crop" }) {
   const ratio = ASPECTS.find((a) => a.id === aspect)?.ratio ?? null;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
       <div className="min-w-0 space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <span className="mr-auto min-w-0 truncate text-[13px] text-fg-muted">

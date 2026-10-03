@@ -185,7 +185,7 @@ export function UnwatermarkTool() {
     });
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
       <div className="space-y-3">
         <p className="text-[14px] text-fg-muted">
           <span className="font-medium text-fg">{file.name}</span> · {analysis.pageCount} page{analysis.pageCount === 1 ? "" : "s"}

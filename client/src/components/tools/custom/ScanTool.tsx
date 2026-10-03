@@ -127,7 +127,7 @@ export function ScanTool() {
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
       <div className="space-y-4">
         <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl bg-fg">
           {stream ? (

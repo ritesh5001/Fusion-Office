@@ -5,7 +5,7 @@ import { EditorContent, useEditor, useEditorState, type Editor } from "@tiptap/r
 import {
   AlignCenter, AlignJustify, AlignLeft, AlignRight, ArrowDown, ArrowUp, Baseline, Bold, BringToFront, ChevronDown, Copy, Download, EyeOff, FlipHorizontal2,
   FlipVertical2, Highlighter, ImagePlus, Italic, List, ListOrdered, Loader2, Lock, Minus, Play, Plus, Presentation, Redo2, SendToBack, Shapes, Strikethrough,
-  Table2, Trash2, Type, Underline, Undo2, Unlock, X,
+  Table2, Trash2, Type, Underline, Undo2, Unlock, X, PanelLeft, PanelRight,
 } from "lucide-react";
 import { wordExtensions } from "@/lib/office/docx/extensions";
 import { browserXml } from "@/lib/office/ooxml";
@@ -150,6 +150,7 @@ function SlidesEditor({ session, onExit, onOpen }: { session: Session; onExit: (
   const [name, setName] = useState(session.name);
   const [warnings, setWarnings] = useState(session.warnings);
   const [presenting, setPresenting] = useState<number | null>(null);
+  const [drawer, setDrawer] = useState<"slides" | "props" | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [activeEditor, setActiveEditor] = useState<Editor | null>(null);
   /** Formatting asked for before the text editor existed; applied once it mounts. */
@@ -394,7 +395,7 @@ function SlidesEditor({ session, onExit, onOpen }: { session: Session; onExit: (
               </Button>
               <Button variant="primary" size="sm" className="ml-1.5" onClick={() => download("pptx")} disabled={!!busy} title={`Download .pptx (${MOD}S)`}>
                 {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
-                {busy ?? "Download"}
+                <span className="hidden max-w-[160px] truncate sm:inline">{busy ?? "Download"}</span>
               </Button>
             </>
           }
@@ -424,8 +425,11 @@ function SlidesEditor({ session, onExit, onOpen }: { session: Session; onExit: (
         )}
       </div>
 
-      <div className="flex min-h-0 flex-1 print:hidden">
-        <Sorter />
+      <div className="relative flex min-h-0 flex-1 print:hidden">
+        {/* Below 900px the side panels become drawers over the canvas. */}
+        <div className={cn("flex max-[899px]:absolute max-[899px]:inset-y-0 max-[899px]:left-0 max-[899px]:z-30 max-[899px]:shadow-pop", drawer !== "slides" && "max-[899px]:hidden")}>
+          <Sorter />
+        </div>
         <div className="flex min-w-0 flex-1 flex-col">
           <Canvas
             onEditor={(e) => {
@@ -439,7 +443,18 @@ function SlidesEditor({ session, onExit, onOpen }: { session: Session; onExit: (
           />
           <Notes />
         </div>
-        <Properties sel={sel} />
+        <div className={cn("flex max-[899px]:absolute max-[899px]:inset-y-0 max-[899px]:right-0 max-[899px]:z-30 max-[899px]:shadow-pop", drawer !== "props" && "max-[899px]:hidden")}>
+          <Properties sel={sel} />
+        </div>
+        {drawer && <button type="button" aria-label="Close panel" className="absolute inset-0 z-20 bg-black/50 min-[900px]:hidden" onClick={() => setDrawer(null)} />}
+        <div className="pointer-events-none absolute inset-x-0 bottom-[104px] z-10 flex justify-center gap-2 min-[900px]:hidden">
+          <button type="button" onClick={() => setDrawer("slides")} className="btn btn-secondary btn-sm pointer-events-auto rounded-full shadow-pop">
+            <PanelLeft className="h-4 w-4" aria-hidden="true" /> Slides
+          </button>
+          <button type="button" onClick={() => setDrawer("props")} className="btn btn-secondary btn-sm pointer-events-auto rounded-full shadow-pop">
+            <PanelRight className="h-4 w-4" aria-hidden="true" /> Format
+          </button>
+        </div>
       </div>
 
       {/* Print: every slide on its own page. */}
@@ -515,7 +530,7 @@ function Toolbar({
         <Redo2 className="h-4 w-4" />
       </TB>
       <Sep />
-      <Dropdown open={layoutsOpen} setOpen={setLayoutsOpen} button={<><Plus className="h-4 w-4" /> <span className="text-[13px]">New slide</span><ChevronDown className="h-3 w-3 opacity-60" /></>} label="New slide">
+      <Dropdown open={layoutsOpen} setOpen={setLayoutsOpen} button={<><Plus className="h-4 w-4" /> <span className="whitespace-nowrap text-[13px]">New slide</span><ChevronDown className="h-3 w-3 opacity-60" /></>} label="New slide">
         {LAYOUTS.map((l) => (
           <button key={l} type="button" onClick={() => (st().addSlide(l as LayoutId), setLayoutsOpen(false))} className="block w-full px-3 py-1.5 text-left text-[13px] hover:bg-raised">
             {LAYOUT_NAMES[l]}

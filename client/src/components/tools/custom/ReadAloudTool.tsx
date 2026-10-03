@@ -220,7 +220,7 @@ export function ReadAloudTool() {
   }
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
       <div
         ref={list}
         className="thin-scroll h-[min(640px,calc(100dvh-240px))] min-h-[420px] overflow-y-auto rounded-2xl bg-surface p-5 text-[16px] leading-[1.9] ring-1 ring-line md:p-7"

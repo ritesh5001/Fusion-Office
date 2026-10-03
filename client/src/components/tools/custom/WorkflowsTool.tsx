@@ -92,7 +92,7 @@ export function WorkflowsTool() {
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
       <div className="space-y-4">
         {saved.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">

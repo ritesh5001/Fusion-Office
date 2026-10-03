@@ -336,7 +336,7 @@ function WriteEditor({ session, onExit, onOpen }: { session: Session; onExit: ()
               </TB>
               <Button variant="primary" size="sm" className="ml-1.5" onClick={() => download("docx")} disabled={!!busy} title={`Download .docx (${MOD}S)`}>
                 {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
-                {busy ?? "Download"}
+                <span className="hidden max-w-[160px] truncate sm:inline">{busy ?? "Download"}</span>
               </Button>
             </>
           }

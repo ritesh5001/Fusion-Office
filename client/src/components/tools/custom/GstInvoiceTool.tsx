@@ -136,9 +136,9 @@ export function GstInvoiceTool() {
   };
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-      <div className="space-y-5">
-        <div className="grid gap-5 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="min-w-0 space-y-5">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           <PartyForm title="Your business" party={seller} set={(p) => setSeller((s) => ({ ...s, ...p }))} />
           <PartyForm title="Bill to" party={buyer} set={(p) => setBuyer((s) => ({ ...s, ...p }))} optionalGstin />
         </div>
@@ -169,7 +169,7 @@ export function GstInvoiceTool() {
           </label>
         </section>
 
-        <section className="rounded-2xl bg-surface p-5 ring-1 ring-line">
+        <section className="min-w-0 rounded-2xl bg-surface p-5 ring-1 ring-line">
           <h2 className="text-[15px] font-bold">Items</h2>
           <div className="mt-3 overflow-x-auto">
             <table className="w-full min-w-[760px] text-[13px]">
@@ -241,7 +241,7 @@ export function GstInvoiceTool() {
           </button>
         </section>
 
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           <section className="space-y-3 rounded-2xl bg-surface p-5 ring-1 ring-line">
             <h2 className="text-[15px] font-bold">Bank details (optional)</h2>
             <div className="grid gap-3 sm:grid-cols-2">

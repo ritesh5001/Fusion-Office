@@ -78,7 +78,7 @@ function NameField({ value, onChange }: { value: string; onChange: (v: string) =
       onChange={(e) => setDraft(e.target.value)}
       onBlur={() => (draft.trim() ? onChange(draft.trim()) : setDraft(value))}
       onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-      className="ml-1 h-8 w-[min(34vw,260px)] truncate rounded-md border border-transparent px-2 text-[14px] font-medium text-fg outline-none hover:border-line-strong focus:border-brand-500 bg-transparent focus:bg-sunken"
+      className="ml-1 h-8 min-w-0 max-w-[260px] flex-1 truncate rounded-lg border border-transparent px-2 text-[14px] font-medium text-fg outline-none hover:border-line-strong focus:border-brand-500 bg-transparent focus:bg-sunken"
     />
   );
 }

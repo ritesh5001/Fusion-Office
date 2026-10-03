@@ -104,7 +104,7 @@ export function CropTool() {
   );
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
       <div className="flex justify-center rounded-2xl bg-sunken p-6">
         <div ref={box} className="relative w-full max-w-[520px] select-none" style={{ aspectRatio: file.ratio }} onPointerMove={onPointerMove} onPointerUp={() => (dragging.current = null)}>
           {/* eslint-disable-next-line @next/next/no-img-element */}

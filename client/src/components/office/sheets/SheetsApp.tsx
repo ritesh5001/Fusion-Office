@@ -119,7 +119,7 @@ function SheetPreview({ id }: { id: string }) {
   return (
     <span className="m-3 grid flex-1 grid-cols-4 gap-px self-stretch bg-line p-px">
       {Array.from({ length: 24 }, (_, i) => (
-        <span key={i} className={cn("bg-white", id !== "blank" && i < 4 && "bg-emerald-100", id === "invoice" && i === 23 && "bg-emerald-200")} />
+        <span key={i} className={id === "invoice" && i === 23 ? "bg-emerald-200" : id !== "blank" && i < 4 ? "bg-emerald-100" : "bg-white"} />
       ))}
     </span>
   );
@@ -304,7 +304,7 @@ function SheetsEditor({ session, onExit, onOpen }: { session: Session; onExit: (
             </TB>
             <Button variant="primary" size="sm" className="ml-1.5" onClick={() => download("xlsx")} disabled={!!busy} title={`Download .xlsx (${MOD}S)`}>
               {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
-              {busy ?? "Download"}
+              <span className="hidden max-w-[160px] truncate sm:inline">{busy ?? "Download"}</span>
             </Button>
           </>
         }
