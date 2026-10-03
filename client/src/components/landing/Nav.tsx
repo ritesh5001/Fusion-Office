@@ -10,12 +10,14 @@ import { ToolsMenu } from "./ToolsMenu";
 import { CATEGORY_META } from "../site/categories";
 import { ToolIcon } from "../tools/icons";
 import { CATEGORIES } from "@/lib/tools/registry";
+import { categoryHref } from "@/lib/seo/clusters";
 import { cn } from "../ui/primitives";
 
 // Absolute paths so the links work from every page, not just the homepage.
 const LINKS = [
+  { href: "/pdf-tools", label: "PDF tools" },
+  { href: "/guides", label: "Guides" },
   { href: "/#privacy", label: "Privacy" },
-  { href: "/#how-it-works", label: "How it works" },
 ];
 
 export function Nav() {
@@ -108,7 +110,7 @@ export function Nav() {
             {CATEGORIES.map((c) => (
               <li key={c.id}>
                 <a
-                  href={`/#cat-${c.id}`}
+                  href={categoryHref(c.id)}
                   onClick={() => setMenu(null)}
                   className="flex h-11 items-center gap-2.5 rounded-xl bg-raised px-3 text-[14px] font-medium text-fg ring-1 ring-line"
                 >

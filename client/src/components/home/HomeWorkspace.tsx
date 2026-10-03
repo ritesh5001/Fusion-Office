@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowRight, ChevronRight, FileText, Image as ImageIcon, PenLine, Plus, ShieldCheck, X } from "lucide-react";
 import { TOOLS, toolBySlug, type ToolDef } from "@/lib/tools/registry";
-import { handFiles, KIND_ACCEPT, kindOf, toolPath, type FileKind } from "@/lib/tools/handoff";
+import { appPath, handFiles, KIND_ACCEPT, kindOf, toolPath, type FileKind } from "@/lib/tools/handoff";
 import { formatBytes } from "@/lib/tools/files";
 import { ToolTile } from "../tools/icons";
 import { ToolsHub, fitsFiles } from "../tools/ToolsHub";
@@ -63,12 +63,13 @@ export function HomeWorkspace() {
           <div className="min-w-0">
             <header className="text-center">
               <h1 className="font-display text-[clamp(2.25rem,5.2vw,3.75rem)] font-extrabold leading-[1.04] tracking-[-0.03em] text-fg">
+                <span className="mb-4 block font-sans text-[13px] font-semibold uppercase leading-none tracking-[0.12em] text-fg-subtle">Free online PDF, Office &amp; image tools</span>
                 All your files.
                 <br />
                 <span className="text-brand-400">One private</span> <span className="text-accent">workspace.</span>
               </h1>
-              <p className="mx-auto mt-4 max-w-[52ch] text-pretty text-[16px] leading-relaxed text-fg-muted">
-                Edit, convert, sign and organize PDFs, Office documents and images, right in your browser. Free, with no sign-up.
+              <p className="mx-auto mt-4 max-w-[56ch] text-pretty text-[16px] leading-relaxed text-fg-muted">
+                Edit, compress, merge, split, convert and sign PDFs, work on Word, Excel and PowerPoint files, and resize or compress images, right in your browser. Free, with no sign-up.
               </p>
             </header>
 
@@ -191,8 +192,8 @@ function DropHub({ staged, onFiles, onClear, matches }: { staged: File[] | null;
                     {top.map((t) => (
                       <li key={t.slug}>
                         <Link
-                          href={toolPath(t)}
-                          onClick={() => handFiles(toolPath(t), staged)}
+                          href={appPath(t)}
+                          onClick={() => handFiles(appPath(t), staged)}
                           className="group flex items-center gap-3 rounded-xl bg-raised/60 p-2 pr-3 ring-1 ring-line transition-colors hover:bg-raised hover:ring-line-strong"
                         >
                           <ToolTile tool={t} size="sm" />
@@ -237,7 +238,7 @@ function QuickActions({ staged }: { staged: File[] | null }) {
           <li key={t.slug}>
             <Link
               href={toolPath(t)}
-              onClick={() => staged?.length && fitsFiles(t, staged) && handFiles(toolPath(t), staged)}
+              onClick={() => staged?.length && fitsFiles(t, staged) && handFiles(appPath(t), staged)}
               className="group flex items-center gap-3 rounded-xl border border-line bg-sunken/60 p-2 pr-3 transition-colors hover:border-line-strong hover:bg-raised"
             >
               <ToolTile tool={t} size="md" />

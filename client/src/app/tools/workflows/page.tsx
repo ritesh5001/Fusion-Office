@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import { TOOL_CONTENT } from "@/lib/seo/toolContent";
+import { pageMetadata } from "@/lib/seo/site";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { ToolClient } from "@/components/tools/ToolClient";
 
-export const metadata: Metadata = { title: "Workflows", description: "Chain PDF tools together and run them on any file." };
+const c = TOOL_CONTENT.workflows;
+export const metadata: Metadata = pageMetadata({ title: `${c.title} | Fusion Office`, description: c.description, path: "/tools/workflows" });
 
 export default function WorkflowsPage() {
   return (

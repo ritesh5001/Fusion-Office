@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import { SiteShell } from "@/components/site/SiteShell";
 import { ToolsHub } from "@/components/tools/ToolsHub";
 import { TOOLS } from "@/lib/tools/registry";
+import { TOOL_COUNT, pageMetadata } from "@/lib/seo/site";
 
-export const metadata: Metadata = {
-  title: "All tools",
-  description: "Merge, split, compress, convert, edit, sign, protect and redact PDFs, open Word, Excel and PowerPoint files, and edit, compress, resize and crop images. Most tools run privately in your browser.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: `All ${TOOL_COUNT} Free Online Tools – PDF, Office & Image | Fusion Office`,
+  description: "The full Fusion Office catalogue: merge, split, compress, convert, edit, sign, protect and redact PDFs, edit Word, Excel and PowerPoint files, and compress, resize and convert images.",
+  path: "/tools",
+});
 
 export default function ToolsPage() {
   const inBrowser = TOOLS.filter((t) => t.runs === "browser" && t.status === "ready").length;

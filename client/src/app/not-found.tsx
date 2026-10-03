@@ -3,6 +3,8 @@ import { ArrowRight } from "lucide-react";
 import { SiteShell } from "@/components/site/SiteShell";
 import { Mascot } from "@/components/mascot/Mascot";
 
+export const metadata = { title: "Page not found", robots: { index: false, follow: true } };
+
 export default function NotFound() {
   return (
     <SiteShell>

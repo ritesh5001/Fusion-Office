@@ -1,19 +1,24 @@
 import type { Metadata } from "next";
+import { TOOLS } from "@/lib/tools/registry";
 
 /**
- * Canonical origin. The apex domain redirects here, so every canonical URL,
- * sitemap entry and structured-data URL uses this host.
+ * Canonical origin: every canonical URL, sitemap entry and structured-data
+ * URL uses this host. The hosting should redirect www (and the onrender.com
+ * address) here so search engines see a single version of each page.
  */
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.fusionoffice.online").replace(/\/+$/, "");
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://fusionoffice.online").replace(/\/+$/, "");
 export const SITE_NAME = "Fusion Office";
 export const SITE_TAGLINE = "Free online PDF, Office and image tools";
+/** Number of tools people can use today (excludes "coming soon"). */
+export const TOOL_COUNT = TOOLS.filter((t) => t.status === "ready").length;
 export const SITE_DESCRIPTION =
-  "Fusion Office is a free workspace of 75 online tools to edit, convert, compress, merge, split, sign and protect PDFs, edit Word, Excel and PowerPoint files, and resize or compress images. No sign-up, and most tools run in your browser so files stay on your device.";
+  `Fusion Office is a free workspace of ${TOOL_COUNT} online tools to edit, convert, compress, merge, split, sign and protect PDFs, edit Word, Excel and PowerPoint files, and resize or compress images. No sign-up, and most tools run in your browser so files stay on your device.`;
 
 /** Date the current editorial content (tool pages, categories, guides) was last reviewed. */
 export const CONTENT_UPDATED = "2026-10-04";
 
-export const absoluteUrl = (path = "/") => (path === "/" ? `${SITE_URL}/` : `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`);
+/** Absolute URL in the same form Next.js prints in canonical tags (the homepage has no trailing slash). */
+export const absoluteUrl = (path = "/") => (path === "/" ? SITE_URL : `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`);
 
 /**
  * Page metadata with a self-referencing canonical URL and matching Open Graph

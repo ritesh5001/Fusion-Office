@@ -10,6 +10,7 @@ import { ToolIcon } from "../tools/icons";
 import { CATEGORY_META } from "./categories";
 import { CATEGORIES, type Category } from "@/lib/tools/registry";
 import { cn } from "@/lib/cn";
+import { categoryHref } from "@/lib/seo/clusters";
 
 /**
  * Frame for every content page: top navigation, a category rail on wide
@@ -38,9 +39,9 @@ function SideRail({ active }: { active?: Category }) {
   const pathname = usePathname();
   const [inView, setInView] = useState<Category | undefined>(active);
 
-  // On the homepage, follow the category section being read.
+  // On pages that list categories (the homepage, category pages), follow the section being read.
   useEffect(() => {
-    if (pathname !== "/") return setInView(active);
+    setInView(active);
     const sections = CATEGORIES.map((c) => document.getElementById(`cat-${c.id}`)).filter((el): el is HTMLElement => !!el);
     if (!sections.length) return;
     const observer = new IntersectionObserver(
@@ -63,7 +64,7 @@ function SideRail({ active }: { active?: Category }) {
             return (
               <li key={c.id}>
                 <a
-                  href={`/#cat-${c.id}`}
+                  href={categoryHref(c.id)}
                   aria-current={on ? "true" : undefined}
                   className={cn(
                     "group flex h-10 items-center gap-3 rounded-[10px] px-3 text-[14px] font-medium transition-colors",

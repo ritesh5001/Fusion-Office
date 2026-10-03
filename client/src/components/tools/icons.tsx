@@ -152,6 +152,7 @@ const LETTER: Record<string, { letter: string; swatch: Swatch }> = {
 };
 
 const SIZES = {
+  xs: { box: "h-6 w-6 rounded-[7px]", icon: "h-3.5 w-3.5", letter: "text-[11px]" },
   sm: { box: "h-8 w-8 rounded-[9px]", icon: "h-4 w-4", letter: "text-[14px]" },
   md: { box: "h-10 w-10 rounded-[11px]", icon: "h-5 w-5", letter: "text-[18px]" },
   lg: { box: "h-12 w-12 rounded-[13px]", icon: "h-6 w-6", letter: "text-[22px]" },

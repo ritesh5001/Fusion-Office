@@ -7,9 +7,10 @@ import { ToolIcon, ToolTile } from "../tools/icons";
 import { CATEGORY_META } from "../site/categories";
 import { CATEGORIES, TOOLS, type Category } from "@/lib/tools/registry";
 import { cn } from "@/lib/cn";
+import { categoryHref } from "@/lib/seo/clusters";
 
 const ready = TOOLS.filter((t) => t.status === "ready");
-const toolHref = (t: (typeof TOOLS)[number]) => t.href ?? `/tools/${t.slug}`;
+const toolHref = (t: (typeof TOOLS)[number]) => `/tools/${t.slug}`;
 
 /**
  * Tools menu: categories on the left, the chosen category's tools on the
@@ -65,7 +66,7 @@ export function ToolsMenu({ onNavigate }: { onNavigate: () => void }) {
             );
           })}
         </div>
-        <Link href="/#all-tools" onClick={onNavigate} className="mt-auto flex items-center justify-between rounded-lg px-3 pt-4 text-[13px] font-semibold text-brand-300 hover:text-brand-200">
+        <Link href="/tools" onClick={onNavigate} className="mt-auto flex items-center justify-between rounded-lg px-3 pt-4 text-[13px] font-semibold text-brand-300 hover:text-brand-200">
           Browse all {TOOLS.length} tools <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </div>
@@ -76,8 +77,8 @@ export function ToolsMenu({ onNavigate }: { onNavigate: () => void }) {
           <p className="text-[15px] font-semibold text-fg">
             {CATEGORY_META[active].title} <span className="ml-1 text-[13px] font-normal text-fg-subtle">{tools.length} tools</span>
           </p>
-          <Link href={`/#cat-${active}`} onClick={onNavigate} className="inline-flex items-center gap-1 text-[13px] font-medium text-brand-300 hover:text-brand-200">
-            View category <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+          <Link href={categoryHref(active)} onClick={onNavigate} className="inline-flex items-center gap-1 text-[13px] font-medium text-brand-300 hover:text-brand-200">
+            All {CATEGORY_META[active].title} tools <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         </div>
         <ul className="grid grid-cols-3 gap-1">

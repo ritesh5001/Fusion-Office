@@ -1,10 +1,37 @@
-import { Plus, Server, ShieldCheck, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, BookOpen, Plus, Server, ShieldCheck, Sparkles } from "lucide-react";
 import { SiteShell } from "@/components/site/SiteShell";
 import { HomeWorkspace } from "@/components/home/HomeWorkspace";
 import { HowItWorks } from "@/components/landing/HowItWorks";
-import { TOOLS } from "@/lib/tools/registry";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { ToolTile } from "@/components/tools/icons";
+import { TOOLS, toolBySlug, type ToolDef } from "@/lib/tools/registry";
+import { CLUSTERS, type ClusterId } from "@/lib/seo/clusters";
+import { GUIDES } from "@/lib/seo/guides";
+import { contentFor } from "@/lib/seo/toolContent";
+import { faqPage, organization, website } from "@/lib/seo/jsonld";
+import { SITE_DESCRIPTION, TOOL_COUNT, pageMetadata } from "@/lib/seo/site";
+
+export const metadata = pageMetadata({
+  title: "Fusion Office – Free Online PDF, Office & Image Tools",
+  description: `Free online tools to edit, compress, merge, split, convert and sign PDFs, edit Word, Excel and PowerPoint files, and compress or resize images. ${TOOL_COUNT} tools, no sign-up, most run privately in your browser.`,
+  path: "/",
+});
+
+/** The tools each category card on the homepage leads with. */
+const CLUSTER_PICKS: Record<ClusterId, string[]> = {
+  "pdf-tools": ["edit-pdf", "compress-pdf", "merge-pdf", "split-pdf", "sign-pdf", "protect-pdf"],
+  "pdf-converter": ["pdf-to-word", "word-to-pdf", "pdf-to-jpg", "jpg-to-pdf", "pdf-to-excel"],
+  "office-tools": ["word-editor", "excel-editor", "powerpoint-editor", "excel-to-pdf"],
+  "image-tools": ["compress-image", "resize-image", "crop-image", "convert-image"],
+  "ai-pdf-tools": ["chat-with-pdf", "summarize-pdf", "translate-pdf", "compare-pdf"],
+};
 
 const FAQ = [
+  {
+    q: "What is Fusion Office?",
+    a: SITE_DESCRIPTION,
+  },
   {
     q: "Are my files uploaded?",
     a: "Not for most tools: they work on your device, inside the browser. Tools marked Server (like Word to PDF) send the file to our server to convert it and delete it straight after. AI tools send the text to our AI provider; nothing is stored.",
@@ -50,8 +77,48 @@ export default function Home() {
 
   return (
     <SiteShell>
+      <JsonLd data={[organization(), website(), faqPage(FAQ.map((f) => [f.q, f.a]))]} />
       <main id="main">
         <HomeWorkspace />
+
+        <section id="categories" aria-labelledby="categories-title" className="scroll-mt-20 border-t border-line">
+          <div className="px-4 py-16 sm:px-6 md:py-20 lg:px-8">
+            <div className="max-w-[640px]">
+              <p className="eyebrow">Tool categories</p>
+              <h2 id="categories-title" className="mt-3 text-balance font-display text-[clamp(1.75rem,3.4vw,2.5rem)] font-bold leading-[1.1] tracking-[-0.035em] text-fg">
+                Every document task, grouped by what you need to do.
+              </h2>
+            </div>
+            <ul className="mt-10 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {CLUSTERS.map((c) => {
+                const picks = CLUSTER_PICKS[c.id].map(toolBySlug).filter((t): t is ToolDef => !!t);
+                return (
+                  <li key={c.id} className="card flex flex-col p-5">
+                    <h3 className="text-[17px] font-semibold tracking-[-0.01em] text-fg">
+                      <Link href={c.path} className="hover:text-brand-200">
+                        {c.h1}
+                      </Link>
+                    </h3>
+                    <p className="mt-1.5 text-[14px] leading-relaxed text-fg-muted">{c.description}</p>
+                    <ul className="mt-4 space-y-1">
+                      {picks.map((t) => (
+                        <li key={t.slug}>
+                          <Link href={`/tools/${t.slug}`} className="-mx-2 flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-[14px] text-fg-muted hover:bg-raised hover:text-fg">
+                            <ToolTile tool={t} size="xs" />
+                            {contentFor(t).anchor}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                    <Link href={c.path} className="mt-auto inline-flex items-center gap-1 pt-4 text-[13px] font-semibold text-brand-300 hover:text-brand-200">
+                      {c.anchor} <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </section>
 
         <section id="privacy" aria-labelledby="privacy-title" className="scroll-mt-20 border-t border-line">
           <div className="px-4 py-16 sm:px-6 md:py-20 lg:px-8">
@@ -84,6 +151,32 @@ export default function Home() {
         </section>
 
         <HowItWorks />
+
+        <section id="guides" aria-labelledby="guides-title" className="scroll-mt-20 border-t border-line">
+          <div className="px-4 py-16 sm:px-6 md:py-20 lg:px-8">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="max-w-[640px]">
+                <p className="eyebrow">Guides</p>
+                <h2 id="guides-title" className="mt-3 text-balance font-display text-[clamp(1.75rem,3.4vw,2.5rem)] font-bold leading-[1.1] tracking-[-0.035em] text-fg">
+                  Step-by-step help for common document tasks
+                </h2>
+              </div>
+              <Link href="/guides" className="inline-flex items-center gap-1 text-[14px] font-semibold text-brand-300 hover:text-brand-200">
+                All guides <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </div>
+            <ul className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {GUIDES.slice(0, 6).map((g) => (
+                <li key={g.slug}>
+                  <Link href={`/guides/${g.slug}`} className="group flex h-full items-start gap-3 rounded-2xl border border-line bg-surface p-4 transition-colors hover:border-line-strong hover:bg-raised">
+                    <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-fg-subtle group-hover:text-fg-muted" aria-hidden="true" />
+                    <span className="text-[15px] font-medium leading-snug text-fg">{g.h1}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
 
         <section id="faq" aria-labelledby="faq-title" className="scroll-mt-20 border-t border-line">
           <div className="mx-auto max-w-[820px] px-4 py-16 sm:px-6 md:py-20 lg:px-8">

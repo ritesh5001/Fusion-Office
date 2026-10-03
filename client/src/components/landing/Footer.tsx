@@ -5,10 +5,10 @@ const COLUMNS = [
   {
     title: "Apps",
     links: [
-      { href: "/editor", label: "PDF editor" },
-      { href: "/write", label: "Word editor" },
-      { href: "/sheets", label: "Excel editor" },
-      { href: "/slides", label: "PowerPoint editor" },
+      { href: "/tools/edit-pdf", label: "PDF editor" },
+      { href: "/tools/word-editor", label: "Word editor" },
+      { href: "/tools/excel-editor", label: "Excel editor" },
+      { href: "/tools/powerpoint-editor", label: "PowerPoint editor" },
       { href: "/tools/image-editor", label: "Image editor" },
     ],
   },
@@ -23,9 +23,20 @@ const COLUMNS = [
     ],
   },
   {
+    title: "Categories",
+    links: [
+      { href: "/pdf-tools", label: "PDF tools" },
+      { href: "/pdf-converter", label: "PDF converter" },
+      { href: "/office-tools", label: "Office tools" },
+      { href: "/image-tools", label: "Image tools" },
+      { href: "/ai-pdf-tools", label: "AI PDF tools" },
+    ],
+  },
+  {
     title: "Fusion Office",
     links: [
       { href: "/tools", label: "All tools" },
+      { href: "/guides", label: "Guides" },
       { href: "/#privacy", label: "Privacy" },
       { href: "/#how-it-works", label: "How it works" },
       { href: "/#faq", label: "FAQ" },
@@ -46,7 +57,7 @@ export function Footer() {
             Free tools for PDFs, Office documents and images. Most of them run in your browser, so your files stay with you.
           </p>
         </div>
-        <nav aria-label="Footer" className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:col-span-8">
+        <nav aria-label="Footer" className="grid grid-cols-2 gap-8 sm:grid-cols-4 md:col-span-8">
           {COLUMNS.map((c) => (
             <div key={c.title}>
               <p className="eyebrow">{c.title}</p>

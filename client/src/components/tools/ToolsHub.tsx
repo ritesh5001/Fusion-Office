@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, ChevronRight, FileText, Search, Server, Sparkles, Workflow, X } from "lucide-react";
 import { CATEGORIES, TOOLS, type Category, type ToolDef } from "@/lib/tools/registry";
-import { accepts, handFiles, toolPath } from "@/lib/tools/handoff";
+import { accepts, appPath, handFiles, toolPath } from "@/lib/tools/handoff";
 import { formatBytes } from "@/lib/tools/files";
 import { ToolTile } from "./icons";
 import { Mascot } from "../mascot/Mascot";
@@ -181,8 +181,8 @@ export function ToolsHub({
   const firstReady = results.find((t) => t.status === "ready");
   const grouped = cat === "all" && !words.length;
   const open = (t: ToolDef) => {
-    if (staged?.length) handFiles(toolPath(t), staged);
-    router.push(toolPath(t));
+    if (staged?.length) handFiles(appPath(t), staged);
+    router.push(staged?.length ? appPath(t) : toolPath(t));
   };
 
   return (
@@ -354,6 +354,7 @@ function ToolGrid({ tools, staged }: { tools: ToolDef[]; staged?: File[] | null 
 
 /** One row card: tile, name with where it runs, description. */
 export function ToolCard({ tool: t, staged }: { tool: ToolDef; staged?: File[] | null }) {
+  const router = useRouter();
   const soon = t.status === "soon";
   const badge = soon ? (
     <span className="rounded-full bg-raised px-2 py-0.5 text-[11px] font-medium text-fg-subtle">Soon</span>
@@ -385,7 +386,17 @@ export function ToolCard({ tool: t, staged }: { tool: ToolDef; staged?: File[] |
       {body}
     </div>
   ) : (
-    <Link href={toolPath(t)} onClick={() => staged?.length && handFiles(toolPath(t), staged)} className={cn(cls, "hover:border-line-strong hover:bg-raised")}>
+    <Link
+      href={toolPath(t)}
+      onClick={(e) => {
+        // With files waiting, go straight to where the tool runs and hand them over.
+        if (!staged?.length) return;
+        e.preventDefault();
+        handFiles(appPath(t), staged);
+        router.push(appPath(t));
+      }}
+      className={cn(cls, "hover:border-line-strong hover:bg-raised")}
+    >
       {body}
     </Link>
   );

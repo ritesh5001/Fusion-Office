@@ -38,7 +38,10 @@ export function takeFiles(): File[] | null {
 /** Tools whose page has no file picker to receive a handed-over file. */
 const NO_PICKER = new Set(["scan-to-pdf", "gst-invoice"]);
 
-export const toolPath = (t: Pick<ToolDef, "slug" | "href">) => t.href ?? `/tools/${t.slug}`;
+/** The tool's own page: its canonical, indexable URL (editors get a landing page here too). */
+export const toolPath = (t: Pick<ToolDef, "slug">) => `/tools/${t.slug}`;
+/** Where the tool actually runs: the full-screen editor for editor tools, otherwise the tool page. */
+export const appPath = (t: Pick<ToolDef, "slug" | "href">) => t.href ?? toolPath(t);
 
 /** Does `tool` take `file` (by extension or MIME type, per its accept list)? */
 export function accepts(tool: Pick<ToolDef, "slug" | "accept">, file: File): boolean {
