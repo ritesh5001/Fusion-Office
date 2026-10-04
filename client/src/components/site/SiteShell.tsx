@@ -26,7 +26,7 @@ export function SiteShell({ children, active, rail = true }: { children: ReactNo
         Skip to content
       </a>
       <Nav />
-      <div className="mx-auto flex w-full max-w-[1440px] flex-1">
+      <div className="mx-auto flex w-full flex-1">
         {rail && <SideRail active={active} />}
         <div className="min-w-0 flex-1">{children}</div>
       </div>

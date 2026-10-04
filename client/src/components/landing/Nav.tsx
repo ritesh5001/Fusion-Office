@@ -45,7 +45,7 @@ export function Nav() {
 
   return (
     <header ref={panel} className="sticky top-0 z-40 border-b border-line bg-app/85 backdrop-blur-xl">
-      <nav aria-label="Main" className="mx-auto flex h-16 max-w-[1440px] items-center gap-4 px-4 sm:px-6 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:px-8">
+      <nav aria-label="Main" className="mx-auto flex h-16 items-center gap-4 px-4 sm:px-6 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:px-8">
         <Link href="/" className="flex shrink-0 items-center gap-2.5 font-display text-[18px] font-bold tracking-[-0.02em] text-fg">
           <Logo className="h-7 w-7" />
           Fusion Office

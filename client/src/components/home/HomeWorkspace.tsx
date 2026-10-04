@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowRight, ChevronRight, FileText, Image as ImageIcon, PenLine, Plus, ShieldCheck, X } from "lucide-react";
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowRight, ChevronRight, FilePlus2, Files, FileText, Image as ImageIcon, ShieldCheck, Shrink, X } from "lucide-react";
 import { TOOLS, toolBySlug, type ToolDef } from "@/lib/tools/registry";
 import { appPath, handFiles, KIND_ACCEPT, kindOf, toolPath, type FileKind } from "@/lib/tools/handoff";
 import { formatBytes } from "@/lib/tools/files";
 import { ToolTile } from "../tools/icons";
 import { ToolsHub, fitsFiles } from "../tools/ToolsHub";
+import { FlowIn, FlowOut } from "./FlowArt";
 import { cn } from "../ui/primitives";
 
 /** Best first choices for each kind of file; anything else that fits follows. */
@@ -58,22 +59,41 @@ export function HomeWorkspace() {
 
   return (
     <>
-      <section className="px-4 pb-10 pt-10 sm:px-6 md:pt-14 lg:px-8">
-        <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_288px] xl:gap-10">
+      <section className="relative isolate overflow-hidden px-4 pb-12 pt-10 sm:px-6 md:pt-14 lg:px-8">
+        {/* Circuit-board backdrop: a violet haze over a faint dot grid. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(55%_60%_at_45%_50%,rgb(92_77_204/0.16),transparent_70%),radial-gradient(rgb(255_255_255/0.05)_1px,transparent_1px)] [background-size:auto,24px_24px] [mask-image:linear-gradient(to_bottom,black_70%,transparent)]"
+        />
+        <div className="grid gap-10 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-center xl:gap-8">
           <div className="min-w-0">
             <header className="text-center">
-              <h1 className="font-display text-[clamp(2.25rem,5.2vw,3.75rem)] font-extrabold leading-[1.04] tracking-[-0.03em] text-fg">
-                <span className="mb-4 block font-sans text-[13px] font-semibold uppercase leading-none tracking-[0.12em] text-fg-subtle">Free online PDF, Office &amp; image tools</span>
+              <h1 className="font-display text-[clamp(2.4rem,6vw,4.5rem)] font-extrabold leading-[1.02] tracking-[-0.035em] text-fg">
+                <span className="mb-5 block font-sans text-[13px] font-semibold uppercase leading-none tracking-[0.12em] text-fg-subtle">Free online PDF, Office &amp; image tools</span>
                 All your files.
                 <br />
-                <span className="text-brand-400">One private</span> <span className="text-accent">workspace.</span>
+                <span className="bg-[linear-gradient(90deg,#8b7cf6,#b6adff)] bg-clip-text text-transparent">One private</span>{" "}
+                <span className="text-accent">workspace.</span>
               </h1>
-              <p className="mx-auto mt-4 max-w-[56ch] text-pretty text-[16px] leading-relaxed text-fg-muted">
-                Edit, compress, merge, split, convert and sign PDFs, work on Word, Excel and PowerPoint files, and resize or compress images, right in your browser. Free, with no sign-up.
-              </p>
             </header>
 
-            <DropHub staged={staged} onFiles={stage} onClear={() => setStaged(null)} matches={matches} />
+            <div className="mt-10 flex items-center justify-center lg:mt-12">
+              <div className="hidden lg:block">
+                <FlowIn />
+              </div>
+              <DropHub staged={staged} onFiles={stage} onClear={() => setStaged(null)} matches={matches} />
+              <div className="hidden self-stretch lg:flex">
+                <FlowOut />
+              </div>
+            </div>
+
+            <p className="mx-auto mt-6 flex items-center justify-center gap-2 text-[14px] font-semibold text-accent lg:hidden">
+              <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+              Stays on this device
+            </p>
+            <p className="mx-auto mt-6 max-w-[62ch] text-pretty text-center text-[15px] leading-relaxed text-fg-muted lg:mt-16">
+              Edit, compress, merge, split, convert and sign PDFs, work on Word, Excel and PowerPoint files, and resize or compress images, right in your browser. Free, with no sign-up.
+            </p>
           </div>
 
           <QuickActions staged={staged} />
@@ -109,154 +129,163 @@ function DropHub({ staged, onFiles, onClear, matches }: { staged: File[] | null;
   const top = matches.slice(0, 6);
 
   return (
-    <div className="mx-auto mt-8 max-w-[560px]">
+    <div
+      className="relative w-full min-w-0 max-w-[560px] flex-1"
+      onDragOver={(e) => {
+        e.preventDefault();
+        setOver(true);
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) setOver(false);
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        setOver(false);
+        onFiles(Array.from(e.dataTransfer.files));
+      }}
+    >
+      {/* The neon glow: the border gradient, blurred behind the card. */}
       <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          setOver(true);
-        }}
-        onDragLeave={(e) => {
-          if (!e.currentTarget.contains(e.relatedTarget as Node)) setOver(false);
-        }}
-        onDrop={(e) => {
-          e.preventDefault();
-          setOver(false);
-          onFiles(Array.from(e.dataTransfer.files));
-        }}
+        aria-hidden="true"
         className={cn(
-          "relative rounded-[22px] border bg-surface p-2 shadow-card transition-colors",
-          over ? "border-accent/70" : "border-line-strong",
+          "pointer-events-none absolute -inset-3 rounded-[40px] bg-[linear-gradient(100deg,#8b7cf6,#a99cff_45%,#cdf564)] blur-2xl transition-opacity duration-300",
+          over ? "opacity-80" : "opacity-45",
         )}
-      >
-        <div
-          className={cn(
-            "flex flex-col items-center rounded-[16px] border border-dashed px-5 text-center transition-colors",
-            staged ? "border-transparent py-5" : "py-10 sm:py-12",
-            !staged && (over ? "border-accent/60 bg-accent/[0.05]" : "border-line-strong bg-[radial-gradient(70%_90%_at_50%_0%,rgb(139_124_246/0.09),transparent)]"),
-          )}
-        >
-          {!staged ? (
-            <>
-              <span className={cn("flex h-14 w-14 items-center justify-center rounded-2xl ring-1 transition-colors", over ? "bg-accent text-on-accent ring-accent" : "bg-raised text-fg ring-line-strong")}>
-                <Plus className="h-6 w-6" aria-hidden="true" />
-              </span>
-              <p className="mt-5 font-display text-[22px] font-bold tracking-[-0.02em] text-fg">{over ? "Release to add" : "Drop anything here"}</p>
-              <p className="mt-1.5 text-[14px] text-fg-muted">
-                or{" "}
-                <button type="button" onClick={browse} className="font-semibold text-fg underline decoration-line-strong underline-offset-4 hover:decoration-fg">
-                  browse your files
+      />
+      <div className="relative rounded-[30px] bg-[linear-gradient(100deg,#9d91fb,#cfc8ff_48%,#cdf564)] p-[2.5px] shadow-[0_0_18px_rgb(139_124_246/0.55),0_0_34px_rgb(205_245_100/0.2)]">
+        <div className="rounded-[28px] bg-[#f5f4f0] p-3 text-[#14152b]">
+          <div
+            onClick={staged ? undefined : browse}
+            className={cn(
+              "flex flex-col items-center rounded-[20px] border-[1.5px] border-dashed px-5 text-center transition-colors",
+              staged ? "border-transparent py-3" : "cursor-pointer py-10 sm:py-12",
+              !staged && (over ? "border-brand-500 bg-brand-500/[0.06]" : "border-[#c4c2d4] hover:border-[#9d97c9]"),
+            )}
+          >
+            {!staged ? (
+              <>
+                <button type="button" onClick={(e) => (e.stopPropagation(), browse())} className="group flex flex-col items-center rounded-2xl px-4 py-1" aria-label="Choose files">
+                  <FilePlus2 className={cn("h-16 w-16 transition-transform duration-200 group-hover:-translate-y-0.5", over && "-translate-y-1 text-brand-600")} strokeWidth={1.6} aria-hidden="true" />
+                  <span className="mt-5 font-display text-[clamp(1.5rem,2.6vw,2rem)] font-bold tracking-[-0.025em]">{over ? "Release to add" : "Drop anything here"}</span>
+                  <span className="mt-1 text-[14px] text-[#5d5f78]">or click to choose a file</span>
                 </button>
-              </p>
-              <div role="radiogroup" aria-label="File type to browse" className="mt-6 inline-flex rounded-full bg-sunken p-1 ring-1 ring-line">
-                {KINDS.map((k) => (
-                  <button
-                    key={k.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={kind === k.id}
-                    onClick={() => setKind(k.id)}
-                    className={cn(
-                      "h-8 rounded-full px-4 text-[13px] font-medium transition-colors sm:px-5",
-                      kind === k.id ? "bg-fg text-app" : "text-fg-muted hover:text-fg",
-                    )}
-                  >
-                    {k.label}
-                  </button>
-                ))}
-              </div>
-            </>
-          ) : (
-            <div className="w-full text-left">
-              <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-raised text-fg ring-1 ring-line-strong">
-                  {kindOf(staged[0]) === "image" ? <ImageIcon className="h-5 w-5" aria-hidden="true" /> : <FileText className="h-5 w-5" aria-hidden="true" />}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[15px] font-semibold text-fg" title={staged.map((f) => f.name).join(", ")}>
-                    {staged.length === 1 ? staged[0].name : `${staged.length} files`}
-                  </p>
-                  <p className="text-[13px] text-fg-muted">
-                    {formatBytes(total)}
-                    {staged.length > 1 && ` · ${staged[0].name} and ${staged.length - 1} more`}
-                  </p>
+                <div role="radiogroup" aria-label="File type to browse" onClick={(e) => e.stopPropagation()} className="mt-7 inline-flex rounded-full bg-white/70 p-1 ring-1 ring-[#d9d7e4]">
+                  {KINDS.map((k) => (
+                    <button
+                      key={k.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={kind === k.id}
+                      onClick={() => setKind(k.id)}
+                      className={cn(
+                        "h-10 rounded-full px-5 text-[15px] font-medium transition-colors sm:px-7",
+                        kind === k.id ? "bg-[#151738] text-white shadow-[0_4px_12px_-4px_rgb(21_23_56/0.6)]" : "text-[#2b2d48] hover:text-[#14152b]",
+                      )}
+                    >
+                      {k.label}
+                    </button>
+                  ))}
                 </div>
-                <button type="button" onClick={onClear} aria-label="Clear files" className="flex h-9 w-9 items-center justify-center rounded-lg text-fg-muted hover:bg-raised hover:text-fg">
-                  <X className="h-4 w-4" aria-hidden="true" />
-                </button>
-              </div>
+              </>
+            ) : (
+              <div className="w-full text-left">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-[#14152b] ring-1 ring-[#e0dee9]">
+                    {kindOf(staged[0]) === "image" ? <ImageIcon className="h-5 w-5" aria-hidden="true" /> : <FileText className="h-5 w-5" aria-hidden="true" />}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[15px] font-semibold" title={staged.map((f) => f.name).join(", ")}>
+                      {staged.length === 1 ? staged[0].name : `${staged.length} files`}
+                    </p>
+                    <p className="text-[13px] text-[#5d5f78]">
+                      {formatBytes(total)}
+                      {staged.length > 1 && ` · ${staged[0].name} and ${staged.length - 1} more`}
+                    </p>
+                  </div>
+                  <button type="button" onClick={onClear} aria-label="Clear files" className="flex h-9 w-9 items-center justify-center rounded-lg text-[#5d5f78] hover:bg-black/5 hover:text-[#14152b]">
+                    <X className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                </div>
 
-              {top.length ? (
-                <>
-                  <p className="eyebrow mt-5">Open it in</p>
-                  <ul className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                    {top.map((t) => (
-                      <li key={t.slug}>
-                        <Link
-                          href={appPath(t)}
-                          onClick={() => handFiles(appPath(t), staged)}
-                          className="group flex items-center gap-3 rounded-xl bg-raised/60 p-2 pr-3 ring-1 ring-line transition-colors hover:bg-raised hover:ring-line-strong"
-                        >
-                          <ToolTile tool={t} size="sm" />
-                          <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-fg">{t.name}</span>
-                          <ChevronRight className="h-4 w-4 shrink-0 text-fg-subtle group-hover:text-fg" aria-hidden="true" />
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                  {matches.length > top.length && (
-                    <a href="#all-tools" className="mt-3 inline-flex items-center gap-1 text-[13px] font-medium text-brand-300 hover:text-brand-200">
-                      See all {matches.length} tools for this file <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-                    </a>
-                  )}
-                </>
-              ) : (
-                <p className="mt-4 rounded-xl bg-raised px-3.5 py-3 text-[13.5px] text-fg-muted">
-                  No tool opens this kind of file yet. PDFs, Word, Excel, PowerPoint, Markdown, CSV, eBooks and images are supported.
-                </p>
-              )}
-            </div>
-          )}
+                {top.length ? (
+                  <>
+                    <p className="mt-5 text-[12px] font-semibold uppercase tracking-[0.1em] text-[#6b6d86]">Open it in</p>
+                    <ul className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                      {top.map((t) => (
+                        <li key={t.slug}>
+                          <Link
+                            href={appPath(t)}
+                            onClick={() => handFiles(appPath(t), staged)}
+                            className="group flex items-center gap-3 rounded-xl bg-white p-2 pr-3 ring-1 ring-[#e3e1ec] transition-shadow hover:ring-brand-400 hover:shadow-[0_6px_16px_-8px_rgb(92_77_204/0.45)]"
+                          >
+                            <ToolTile tool={t} size="sm" />
+                            <span className="min-w-0 flex-1 truncate text-[14px] font-medium">{t.name}</span>
+                            <ChevronRight className="h-4 w-4 shrink-0 text-[#8a8ca3] group-hover:text-[#14152b]" aria-hidden="true" />
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                    {matches.length > top.length && (
+                      <a href="#all-tools" className="mt-3 inline-flex items-center gap-1 text-[13px] font-semibold text-brand-700 hover:text-brand-800">
+                        See all {matches.length} tools for this file <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                      </a>
+                    )}
+                  </>
+                ) : (
+                  <p className="mt-4 rounded-xl bg-[#ebe9f2] px-3.5 py-3 text-[13.5px] text-[#4a4c66]">
+                    No tool opens this kind of file yet. PDFs, Word, Excel, PowerPoint, Markdown, CSV, eBooks and images are supported.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-      <p className="mt-4 flex items-center justify-center gap-2 text-[13px] text-fg-muted">
-        <ShieldCheck className="h-4 w-4 text-accent" aria-hidden="true" />
-        Files stay on this device for in-browser tools.
-      </p>
     </div>
   );
 }
 
+/** Each quick action's tile, as in the design: a solid colour square with a bold glyph. */
+const QUICK_TILE: Record<string, { bg: string; fg: string; icon: ReactNode }> = {
+  "merge-pdf": { bg: "bg-[#e5676a]", fg: "text-white", icon: <Files className="h-7 w-7" strokeWidth={1.8} aria-hidden="true" /> },
+  "compress-pdf": { bg: "bg-[#7a72f0]", fg: "text-white", icon: <Shrink className="h-7 w-7" strokeWidth={1.8} aria-hidden="true" /> },
+  "pdf-to-word": {
+    bg: "bg-accent",
+    fg: "text-[#14152b]",
+    icon: <span className="flex h-8 w-8 items-center justify-center rounded-[7px] border-[2.5px] border-current font-display text-[17px] font-extrabold leading-none">W</span>,
+  },
+  "resize-image": { bg: "bg-[#b7a6f7]", fg: "text-[#14152b]", icon: <ImageIcon className="h-7 w-7" strokeWidth={1.8} aria-hidden="true" /> },
+};
+
 function QuickActions({ staged }: { staged: File[] | null }) {
   const tools = QUICK.map((s) => toolBySlug(s)).filter((t): t is ToolDef => !!t);
   return (
-    <aside aria-labelledby="quick-title" className="card h-fit p-4 xl:mt-2">
-      <h2 id="quick-title" className="px-1 font-display text-[16px] font-bold tracking-[-0.01em] text-fg">
+    <aside aria-labelledby="quick-title" className="h-fit rounded-[24px] border border-line bg-surface/80 p-5 shadow-card backdrop-blur">
+      <h2 id="quick-title" className="px-1 font-display text-[20px] font-bold tracking-[-0.015em] text-fg">
         Quick actions
       </h2>
-      <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-1">
-        {tools.map((t) => (
-          <li key={t.slug}>
-            <Link
-              href={toolPath(t)}
-              onClick={() => staged?.length && fitsFiles(t, staged) && handFiles(appPath(t), staged)}
-              className="group flex items-center gap-3 rounded-xl border border-line bg-sunken/60 p-2 pr-3 transition-colors hover:border-line-strong hover:bg-raised"
-            >
-              <ToolTile tool={t} size="md" />
-              <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-fg">{t.name}</span>
-              <ChevronRight className="h-4 w-4 shrink-0 text-fg-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-fg" aria-hidden="true" />
-            </Link>
-          </li>
-        ))}
+      <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
+        {tools.map((t) => {
+          const tile = QUICK_TILE[t.slug];
+          return (
+            <li key={t.slug}>
+              <Link
+                href={toolPath(t)}
+                onClick={() => staged?.length && fitsFiles(t, staged) && handFiles(appPath(t), staged)}
+                className="group flex h-[72px] items-center overflow-hidden rounded-[18px] border border-line bg-raised/50 pr-4 transition-colors hover:border-line-strong hover:bg-raised"
+              >
+                {tile ? (
+                  <span className={cn("flex h-full w-[72px] shrink-0 items-center justify-center rounded-[18px] transition-transform duration-200 group-hover:scale-[1.04]", tile.bg, tile.fg)}>{tile.icon}</span>
+                ) : (
+                  <ToolTile tool={t} size="lg" className="ml-3" />
+                )}
+                <span className="min-w-0 flex-1 truncate pl-4 text-[15px] font-semibold text-fg">{t.name}</span>
+                <ChevronRight className="h-5 w-5 shrink-0 text-fg-muted transition-transform group-hover:translate-x-0.5 group-hover:text-fg" aria-hidden="true" />
+              </Link>
+            </li>
+          );
+        })}
       </ul>
-      <Link href="/editor" className="mt-3 flex items-center gap-3 rounded-xl p-2 pr-3 text-fg-muted transition-colors hover:bg-raised hover:text-fg">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] bg-raised text-fg ring-1 ring-inset ring-line-strong">
-          <PenLine className="h-5 w-5" aria-hidden="true" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-[14px] font-semibold text-fg">Open the PDF editor</span>
-          <span className="block text-[12px]">Recent files and blank documents</span>
-        </span>
-      </Link>
     </aside>
   );
 }

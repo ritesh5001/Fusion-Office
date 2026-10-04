@@ -218,6 +218,17 @@ input[type="color"]::-moz-color-swatch {
   .fo-indeterminate { animation: none; width: 100%; opacity: 0.5; }
 }
 
+/* Homepage flow diagram (components/home/FlowArt.tsx): file tiles bob
+   gently and light runs along the circuit lines into the drop card. */
+@keyframes fo-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -6px; } }
+.fo-float { animation: fo-float 6s ease-in-out infinite; }
+@keyframes fo-flow-dash { to { stroke-dashoffset: -60; } }
+.fo-flow-dash { stroke-dasharray: 3 27; animation: fo-flow-dash 1.8s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .fo-float { animation: none; }
+  .fo-flow-dash { animation: none; stroke-opacity: 0; }
+}
+
 /* ── Folio, the mascot (components/mascot/Mascot.tsx) ───────────── */
 @property --m-a { syntax: "<color>"; inherits: true; initial-value: #b3a8ff; }
 @property --m-b { syntax: "<color>"; inherits: true; initial-value: #6a58e6; }

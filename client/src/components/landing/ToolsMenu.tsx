@@ -31,7 +31,7 @@ export function ToolsMenu({ onNavigate }: { onNavigate: () => void }) {
   };
 
   return (
-    <div className="mx-auto grid max-w-[1440px] grid-cols-[260px_minmax(0,1fr)] px-8">
+    <div className="mx-auto grid grid-cols-[260px_minmax(0,1fr)] px-8">
       {/* Categories */}
       <div className="flex flex-col border-r border-line py-5 pr-4">
         <p className="eyebrow px-3 pb-2">Categories</p>

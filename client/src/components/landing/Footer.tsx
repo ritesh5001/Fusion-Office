@@ -48,7 +48,7 @@ const COLUMNS = [
 export function Footer() {
   return (
     <footer className="border-t border-line bg-app">
-      <div className="mx-auto grid max-w-[1440px] gap-10 px-4 py-12 sm:px-6 md:grid-cols-12 lg:px-8">
+      <div className="mx-auto grid gap-10 px-4 py-12 sm:px-6 md:grid-cols-12 lg:px-8">
         <div className="md:col-span-4">
           <Link href="/" className="flex items-center gap-2.5 font-display text-[17px] font-bold tracking-[-0.02em] text-fg">
             <Logo className="h-7 w-7" /> Fusion Office
@@ -74,7 +74,7 @@ export function Footer() {
           ))}
         </nav>
       </div>
-      <div className="mx-auto flex max-w-[1440px] flex-col gap-1 border-t border-line px-4 py-5 text-[13px] text-fg-subtle sm:flex-row sm:justify-between sm:px-6 lg:px-8">
+      <div className="mx-auto flex flex-col gap-1 border-t border-line px-4 py-5 text-[13px] text-fg-subtle sm:flex-row sm:justify-between sm:px-6 lg:px-8">
         <p>© {new Date().getFullYear()} Fusion Office</p>
         <p>No sign-up. No watermarks.</p>
       </div>
