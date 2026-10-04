@@ -178,7 +178,7 @@ function Idle({ kind, setKind, hot, setHot, onChoose }: { kind: FileKind; setKin
       >
         {box.w > 0 && (
           <Svg pointerEvents="none" width={box.w} height={box.h} style={{ position: "absolute", left: 0, top: 0 }}>
-            <AnimatedRect x={0.75} y={0.75} width={box.w - 1.5} height={box.h - 1.5} rx={20} fill="none" stroke={hot ? C.brand500 : "#c4c2d4"} strokeWidth={1.5} strokeDasharray={[7, 7]} animatedProps={dashProps} />
+            <AnimatedRect x={0.75} y={0.75} width={box.w - 1.5} height={box.h - 1.5} rx={20} fill="none" stroke={hot ? C.brand500 : C.paperDash} strokeWidth={1.5} strokeDasharray={[7, 7]} animatedProps={dashProps} />
           </Svg>
         )}
         <Float distance={4}>
@@ -187,7 +187,7 @@ function Idle({ kind, setKind, hot, setHot, onChoose }: { kind: FileKind; setKin
               <KindOutline key={k.value} kind={k.value} active={k.value === kind} />
             ))}
             <View style={{ position: "absolute", right: -8, bottom: -4, width: 24, height: 24, borderRadius: 12, backgroundColor: hot ? C.brand600 : C.ink, borderWidth: 2.5, borderColor: C.paper, alignItems: "center", justifyContent: "center" }}>
-              <T weight="bold" style={{ color: "#fff", fontSize: 16, lineHeight: 18 }}>+</T>
+              <T weight="bold" allowFontScaling={false} style={{ color: "#fff", fontSize: 16, lineHeight: 18 }}>+</T>
             </View>
           </Animated.View>
         </Float>
@@ -195,7 +195,7 @@ function Idle({ kind, setKind, hot, setHot, onChoose }: { kind: FileKind; setKin
           <T weight="display" style={{ marginTop: 18, fontSize: 24, letterSpacing: -0.6, color: C.ink }}>{hot ? "Choose a file to begin" : "Choose a file"}</T>
         </Animated.View>
         <View style={{ marginTop: 6, flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <Svg width={14} height={14} viewBox="0 0 24 24"><Path d="M12 2 4 5v6c0 5.1 3.4 9.4 8 11 4.6-1.6 8-5.9 8-11V5z" fill="#4c8a12" /><Path d="m8.4 12.2 2.5 2.5 4.7-5" stroke="#fff" strokeWidth={2.4} fill="none" strokeLinecap="round" /></Svg>
+          <Svg width={14} height={14} viewBox="0 0 24 24"><Path d="M12 2 4 5v6c0 5.1 3.4 9.4 8 11 4.6-1.6 8-5.9 8-11V5z" fill={C.successIcon} /><Path d="m8.4 12.2 2.5 2.5 4.7-5" stroke="#fff" strokeWidth={2.4} fill="none" strokeLinecap="round" /></Svg>
           <T weight="medium" style={{ fontSize: 13.5, color: C.paperMuted }}>Stays on this device</T>
         </View>
       </Pressable>
@@ -207,7 +207,7 @@ function Idle({ kind, setKind, hot, setHot, onChoose }: { kind: FileKind; setKin
           <Animated.View key={t.slug} entering={reduced ? undefined : FadeInDown.delay(i * 40).duration(260)}>
             <PressScale onPress={() => openTool(t.slug)} style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 34, paddingLeft: 4, paddingRight: 12, borderRadius: 17, backgroundColor: "rgba(255,255,255,0.75)", borderWidth: 1, borderColor: C.paperLine }}>
               <ToolTile tool={t} size={24} />
-              <T weight="medium" style={{ fontSize: 12.5, color: "#2b2d48" }}>{t.name}</T>
+              <T weight="medium" style={{ fontSize: 12.5, color: C.paperText }}>{t.name}</T>
             </PressScale>
           </Animated.View>
         ))}
@@ -254,13 +254,13 @@ function Ready({ inline, rest, total, onRun }: { inline: ToolDef[]; rest: ToolDe
     <View>
       {inline.length > 0 && (
         <>
-          <T weight="semibold" style={{ fontSize: 11.5, letterSpacing: 1.2, color: "#6b6d86" }}>DO IT RIGHT HERE</T>
+          <T weight="semibold" style={{ fontSize: 11.5, letterSpacing: 1.2, color: C.paperSubtle }}>DO IT RIGHT HERE</T>
           <View style={{ marginTop: 8, gap: 8 }}>
             {inline.map((t, n) => (
               <Animated.View key={t.slug} entering={reduced ? undefined : FadeInDown.delay(n * 50).duration(320)}>
                 <PressScale
                   onPress={() => onRun(t)}
-                  style={[{ flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 16, padding: 10 }, n === 0 ? { backgroundColor: "#151738" } : { backgroundColor: "#fff", borderWidth: 1, borderColor: C.paperLine }]}
+                  style={[{ flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 16, padding: 10 }, n === 0 ? { backgroundColor: C.inkDeep } : { backgroundColor: "#fff", borderWidth: 1, borderColor: C.paperLine }]}
                 >
                   <ToolTile tool={t} size={40} />
                   <View style={{ flex: 1 }}>
@@ -278,14 +278,14 @@ function Ready({ inline, rest, total, onRun }: { inline: ToolDef[]; rest: ToolDe
       )}
       {rest.length > 0 && (
         <>
-          <T weight="semibold" style={{ marginTop: inline.length ? 16 : 0, fontSize: 11.5, letterSpacing: 1.2, color: "#6b6d86" }}>{inline.length ? "OR OPEN IT IN" : "OPEN IT IN"}</T>
+          <T weight="semibold" style={{ marginTop: inline.length ? 16 : 0, fontSize: 11.5, letterSpacing: 1.2, color: C.paperSubtle }}>{inline.length ? "OR OPEN IT IN" : "OPEN IT IN"}</T>
           <View style={{ marginTop: 8, flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             {rest.map((t, n) => (
               <Animated.View key={t.slug} entering={reduced ? undefined : FadeInDown.delay((inline.length + n) * 40).duration(320)} style={{ width: "48.5%" }}>
                 <PressScale onPress={() => openTool(t.slug, true)} style={{ flexDirection: "row", alignItems: "center", gap: 8, borderRadius: 13, backgroundColor: "#fff", borderWidth: 1, borderColor: C.paperLine, padding: 8 }}>
                   <ToolTile tool={t} size={30} />
                   <T weight="medium" numberOfLines={2} style={{ flex: 1, fontSize: 13, lineHeight: 16, color: C.ink }}>{t.name}</T>
-                  <ChevronRight size={14} color="#8a8ca3" />
+                  <ChevronRight size={14} color={C.paperIcon} />
                 </PressScale>
               </Animated.View>
             ))}
@@ -294,11 +294,11 @@ function Ready({ inline, rest, total, onRun }: { inline: ToolDef[]; rest: ToolDe
       )}
       {total > inline.length + rest.length && (
         <PressScale onPress={() => router.push({ pathname: "/tools", params: { fit: "1" } })} style={{ marginTop: 12, alignSelf: "flex-start" }}>
-          <T weight="semibold" style={{ fontSize: 13, color: C.brand600 }}>See all {total} tools for this file →</T>
+          <T weight="semibold" style={{ fontSize: 13, color: C.linkOnPaper }}>See all {total} tools for this file →</T>
         </PressScale>
       )}
       {total === 0 && (
-        <T style={{ borderRadius: 12, backgroundColor: "#ebe9f2", padding: 12, fontSize: 13.5, color: "#4a4c66" }}>
+        <T style={{ borderRadius: 12, backgroundColor: C.paperSunken, padding: 12, fontSize: 13.5, color: C.paperText2 }}>
           No tool opens this kind of file yet. PDFs, Word, Excel, PowerPoint, Markdown, CSV, eBooks and images are supported.
         </T>
       )}

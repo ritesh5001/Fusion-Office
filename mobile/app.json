@@ -39,6 +39,15 @@
           "cameraPermission": "Fusion Office uses the camera to scan documents into PDFs. Photos stay on your device.",
           "photosPermission": "Fusion Office opens photos you choose so you can turn them into PDFs or compress them. They stay on your device."
         }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 140,
+          "resizeMode": "contain",
+          "backgroundColor": "#0a0c11"
+        }
       ]
     ],
     "experiments": {

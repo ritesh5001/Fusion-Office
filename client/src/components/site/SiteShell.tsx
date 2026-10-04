@@ -83,7 +83,7 @@ function SideRail({ active }: { active?: Category }) {
   };
 
   return (
-    <aside aria-label="Tool categories" className="hidden w-[208px] shrink-0 border-r border-line xl:block">
+    <aside aria-label="Tool categories" className="site-chrome hidden w-[208px] shrink-0 border-r border-line xl:block">
       <div className="sticky top-16 flex h-[calc(100dvh-4rem)] flex-col px-3 py-6">
         <p className="eyebrow px-3">Tools</p>
         <div className="relative mt-2 pl-2.5">

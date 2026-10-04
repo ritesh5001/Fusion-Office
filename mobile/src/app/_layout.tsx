@@ -10,6 +10,10 @@ import { C } from "@/theme";
 import { MotionProvider } from "@/lib/motion";
 import { SessionProvider } from "@/lib/session";
 import { AddSheet } from "@/components/AddSheet";
+import { OfflineBanner } from "@/components/OfflineBanner";
+
+// A crash anywhere below shows a recovery screen instead of a blank app.
+export { CrashScreen as ErrorBoundary } from "@/components/CrashScreen";
 
 export default function RootLayout() {
   const [loaded] = useFonts({ PlusJakartaSans_700Bold, PlusJakartaSans_800ExtraBold, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold });
@@ -26,6 +30,7 @@ export default function RootLayout() {
               <Stack.Screen name="tool/[slug]" />
             </Stack>
             <AddSheet />
+            <OfflineBanner />
           </SessionProvider>
         </MotionProvider>
       </SafeAreaProvider>

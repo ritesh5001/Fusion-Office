@@ -8,7 +8,7 @@ import { Clock, House, LayoutGrid, Plus, Settings, type LucideIcon } from "lucid
 import { C } from "@/theme";
 import { useSession } from "@/lib/session";
 import { useReduced } from "@/lib/motion";
-import { T, shadow } from "./ui";
+import { T, TEXT_SCALE, shadow } from "./ui";
 
 /** The parts of React Navigation's tab bar props this bar uses. */
 interface TabBarProps {
@@ -52,7 +52,7 @@ export function TabBar({ state, navigation }: TabBarProps) {
 
   return (
     <View style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 10) }]} pointerEvents="box-none">
-      <View style={styles.bar}>
+      <View style={styles.bar} accessibilityRole="tablist">
         {Platform.OS === "ios" ? <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} /> : null}
         <View style={[StyleSheet.absoluteFill, { backgroundColor: Platform.OS === "ios" ? "rgba(18,21,28,0.72)" : "rgba(18,21,28,0.97)" }]} />
         {left.map(tab)}
@@ -101,13 +101,13 @@ function TabButton({ focused, label, icon: Icon, onPress }: { focused: boolean; 
           <Icon size={21} color={focused ? C.accent : C.fgSubtle} strokeWidth={focused ? 2.3 : 1.9} />
         </Animated.View>
       </View>
-      <T weight={focused ? "semibold" : "medium"} style={{ marginTop: 2, fontSize: 11, color: focused ? C.accent : C.fgSubtle }}>{label}</T>
+      <T weight={focused ? "semibold" : "medium"} numberOfLines={1} maxFontSizeMultiplier={TEXT_SCALE.label} style={{ marginTop: 2, fontSize: 11, color: focused ? C.accent : C.fgSubtle }}>{label}</T>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: { position: "absolute", left: 0, right: 0, bottom: 0, paddingHorizontal: 12, alignItems: "center" },
-  bar: { flexDirection: "row", alignSelf: "stretch", height: 64, borderRadius: 24, overflow: "hidden", borderWidth: 1, borderColor: C.line, alignItems: "center" },
+  bar: { flexDirection: "row", alignSelf: "stretch", width: "100%", maxWidth: 520, marginHorizontal: "auto", minHeight: 64, borderRadius: 24, overflow: "hidden", borderWidth: 1, borderColor: C.line, alignItems: "center" },
   fab: { position: "absolute", top: -18, width: 60, height: 60, borderRadius: 30, backgroundColor: C.accent, alignItems: "center", justifyContent: "center", borderWidth: 4, borderColor: C.app },
 });

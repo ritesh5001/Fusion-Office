@@ -31,7 +31,7 @@ export default function Recent() {
 
   return (
     <Screen>
-      <T weight="display" style={{ marginTop: 8, fontSize: 28, letterSpacing: -0.9 }}>Recent</T>
+      <T weight="display" header style={{ marginTop: 8, fontSize: 28, letterSpacing: -0.9 }}>Recent</T>
       <T style={{ marginTop: 4, fontSize: 13.5, color: C.fgMuted }}>Results you made, kept only on this device.</T>
 
       {items && items.length === 0 && (
@@ -50,7 +50,7 @@ export default function Recent() {
       <View style={{ marginTop: 18, gap: 8 }}>
         {(items ?? []).map((r, i) => (
           <Animated.View key={r.id} layout={reduced ? undefined : LinearTransition.springify().damping(16)} entering={reduced ? undefined : FadeInDown.delay(Math.min(i, 5) * 50).duration(380)}>
-            <PressScale onPress={() => shareFile(r).catch((e) => Alert.alert("Couldn't share", e.message))} style={{ flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.line, padding: 12 }}>
+            <PressScale onPress={() => shareFile(r).catch((e) => Alert.alert("Couldn't share", e.message))} accessibilityLabel={`Share ${r.name}, ${formatBytes(r.size)}, made with ${r.toolName}`} style={{ flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.line, padding: 12 }}>
               <View style={{ width: 44, height: 44, borderRadius: 13, backgroundColor: C.ink, alignItems: "center", justifyContent: "center" }}>
                 <T weight="bold" style={{ fontSize: 10.5, color: C.accent }}>{(r.name.split(".").pop() ?? "").toUpperCase()}</T>
               </View>
@@ -59,7 +59,7 @@ export default function Recent() {
                 <T numberOfLines={1} style={{ fontSize: 12, color: C.fgMuted }}>{formatBytes(r.size)} · {r.toolName} · {ago(r.at)}</T>
               </View>
               <Share2 size={18} color={C.fgMuted} />
-              <PressScale onPress={() => removeRecent(r.id)} accessibilityLabel={`Delete ${r.name}`} style={{ padding: 6 }}>
+              <PressScale onPress={() => removeRecent(r.id)} accessibilityLabel={`Delete ${r.name}`} hitSlop={12} style={{ padding: 6 }}>
                 <Trash2 size={18} color={C.fgSubtle} />
               </PressScale>
             </PressScale>

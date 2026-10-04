@@ -10,6 +10,7 @@ import { formatBytes, pickDocuments, pickPhotos, takePhoto, type PickedFile } fr
 import type { NativeTool } from "@/lib/native";
 import { useRunner } from "@/lib/runner";
 import { accepts, type ToolDef } from "@/lib/tools";
+import { useOffline } from "@/lib/network";
 import { BackHeader } from "./Screen";
 import { Segmented } from "./Segmented";
 import { DoneCard, ErrorCard, PrivacyStrip, ProgressCard } from "./Stage";
@@ -32,6 +33,7 @@ export function ToolRunnerScreen({ tool, native, useStaged }: { tool: ToolDef; n
   });
   const [options, setOptions] = useState(native.defaults);
   const { state, run, reset } = useRunner();
+  const offline = useOffline() && native.runs === "server";
 
   const add = async (source: "files" | "photos" | "camera") => {
     try {
@@ -66,7 +68,7 @@ export function ToolRunnerScreen({ tool, native, useStaged }: { tool: ToolDef; n
         <Animated.View entering={reduced ? undefined : FadeInDown.duration(380)} style={{ flexDirection: "row", gap: 14, alignItems: "center", marginTop: 6 }}>
           <ToolTile tool={tool} size={56} />
           <View style={{ flex: 1 }}>
-            <T weight="display" style={{ fontSize: 24, letterSpacing: -0.6 }}>{tool.name}</T>
+            <T weight="display" header style={{ fontSize: 24, letterSpacing: -0.6 }}>{tool.name}</T>
             <T style={{ marginTop: 2, fontSize: 13.5, lineHeight: 19, color: C.fgMuted }}>{tool.description}</T>
           </View>
         </Animated.View>
@@ -101,15 +103,15 @@ export function ToolRunnerScreen({ tool, native, useStaged }: { tool: ToolDef; n
                     </View>
                     {tool.multiple && files.length > 1 && (
                       <>
-                        <PressScale onPress={() => move(i, -1)} disabled={i === 0} accessibilityLabel="Move earlier" style={{ padding: 6, opacity: i === 0 ? 0.3 : 1 }}>
+                        <PressScale onPress={() => move(i, -1)} disabled={i === 0} accessibilityLabel="Move earlier" hitSlop={10} style={{ padding: 6, opacity: i === 0 ? 0.3 : 1 }}>
                           <ArrowUp size={16} color={C.fgMuted} />
                         </PressScale>
-                        <PressScale onPress={() => move(i, 1)} disabled={i === files.length - 1} accessibilityLabel="Move later" style={{ padding: 6, opacity: i === files.length - 1 ? 0.3 : 1 }}>
+                        <PressScale onPress={() => move(i, 1)} disabled={i === files.length - 1} accessibilityLabel="Move later" hitSlop={10} style={{ padding: 6, opacity: i === files.length - 1 ? 0.3 : 1 }}>
                           <ArrowDown size={16} color={C.fgMuted} />
                         </PressScale>
                       </>
                     )}
-                    <PressScale onPress={() => setFiles((cur) => cur.filter((_, k) => k !== i))} accessibilityLabel={`Remove ${f.name}`} style={{ padding: 6 }}>
+                    <PressScale onPress={() => setFiles((cur) => cur.filter((_, k) => k !== i))} accessibilityLabel={`Remove ${f.name}`} hitSlop={10} style={{ padding: 6 }}>
                       <X size={16} color={C.fgMuted} />
                     </PressScale>
                   </View>
@@ -152,18 +154,20 @@ export function ToolRunnerScreen({ tool, native, useStaged }: { tool: ToolDef; n
                   onChangeText={(v) => setOptions((cur) => ({ ...cur, [o.key]: v }))}
                   placeholder={o.placeholder}
                   placeholderTextColor={C.fgSubtle}
+                  accessibilityLabel={o.label}
+                  maxFontSizeMultiplier={1.4}
                   style={{ height: 46, borderRadius: 12, borderWidth: 1, borderColor: C.lineStrong, backgroundColor: C.sunken, color: C.fg, paddingHorizontal: 14, fontSize: 15 }}
                 />
               </View>
             ),
           )}
           <PressScale
-            disabled={files.length < need}
+            disabled={files.length < need || offline}
             onPress={() => run(native, tool, files, options)}
-            style={{ height: 54, borderRadius: 27, backgroundColor: files.length < need ? C.raised : C.accent, alignItems: "center", justifyContent: "center" }}
+            style={{ minHeight: 54, borderRadius: 27, backgroundColor: files.length < need || offline ? C.raised : C.accent, alignItems: "center", justifyContent: "center", paddingHorizontal: 16 }}
           >
-            <T weight="bold" style={{ fontSize: 16, color: files.length < need ? C.fgSubtle : C.onAccent }}>
-              {files.length < need ? (need > 1 ? `Add at least ${need} files` : "Add a file to start") : `${tool.name}${native.runs === "device" ? " on this device" : ""}`}
+            <T weight="bold" style={{ fontSize: 16, color: files.length < need || offline ? C.fgSubtle : C.onAccent }}>
+              {offline ? "Connect to the internet to convert" : files.length < need ? (need > 1 ? `Add at least ${need} files` : "Add a file to start") : `${tool.name}${native.runs === "device" ? " on this device" : ""}`}
             </T>
           </PressScale>
         </Animated.View>

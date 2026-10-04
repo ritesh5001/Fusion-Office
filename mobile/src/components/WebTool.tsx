@@ -8,6 +8,8 @@ import { C } from "@/theme";
 import { saveOutput, shareFile } from "@/lib/files";
 import { addRecent } from "@/lib/recents";
 import { WEB_URL, type ToolDef } from "@/lib/tools";
+import { useOffline } from "@/lib/network";
+import { useReduced } from "@/lib/motion";
 import { BackHeader } from "./Screen";
 import { PressScale, T } from "./ui";
 
@@ -37,7 +39,9 @@ const BRIDGE = `(function () {
     var a = e.target && e.target.closest && e.target.closest("a[download]");
     if (a && /^(blob|data):/.test(a.href)) { e.preventDefault(); grab(a.href, a.getAttribute("download")); }
   }, true);
-  var css = "body > div > header, header[class*='sticky'], footer, aside[aria-label='Tool categories'], nav[aria-label='Breadcrumb'] { display: none !important; } main#main { padding-top: 8px !important; }";
+  // The site hides its own chrome in app mode (?app=1). This is a fallback for older
+  // deploys; it targets the site footer only (not the editors' status bars).
+  var css = "header[class*='sticky'], footer.bg-app, aside[aria-label='Tool categories'], nav[aria-label='Breadcrumb'] { display: none !important; } main#main { padding-top: 8px !important; }";
   function style() { if (!document.head) return setTimeout(style, 20); var s = document.createElement("style"); s.textContent = css; document.head.appendChild(s); }
   style();
 })(); true;`;
@@ -45,9 +49,14 @@ const BRIDGE = `(function () {
 export function WebTool({ tool }: { tool: ToolDef }) {
   const insets = useSafeAreaInsets();
   const [progress, setProgress] = useState(0);
-  const [failed, setFailed] = useState(false);
+  const [loadFailed, setFailed] = useState(false);
+  const offline = useOffline();
+  const failed = loadFailed || offline;
   const web = useRef<WebView>(null);
-  const url = `${WEB_URL}${tool.href ?? `/tools/${tool.slug}`}`;
+  const reduced = useReduced();
+  const page = `${WEB_URL}${tool.href ?? `/tools/${tool.slug}`}`;
+  // App mode hides the site's chrome; the motion setting follows the app's switch.
+  const url = `${page}?app=1&motion=${reduced ? "reduced" : "full"}`;
 
   const onMessage = async (e: WebViewMessageEvent) => {
     try {
@@ -69,7 +78,7 @@ export function WebTool({ tool }: { tool: ToolDef }) {
         <BackHeader
           title={tool.name}
           right={
-            <PressScale onPress={() => Linking.openURL(url)} accessibilityLabel="Open in browser" style={{ width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: C.raised, borderWidth: 1, borderColor: C.line }}>
+            <PressScale onPress={() => Linking.openURL(page)} accessibilityLabel="Open in browser" style={{ width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: C.raised, borderWidth: 1, borderColor: C.line }}>
               <ExternalLink size={18} color={C.fg} />
             </PressScale>
           }

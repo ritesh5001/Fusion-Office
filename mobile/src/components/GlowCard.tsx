@@ -36,11 +36,11 @@ export function GlowCard({ children, hot = false, radius = 28, style, inner }: {
     <View style={style} onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
       {/* Outer glow: violet on the left, lime on the right. */}
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, halo]}>
-        <View style={[styles.halo, { borderRadius: radius + 6, shadowColor: "#8b7cf6", left: -2, right: "40%" }]} />
-        <View style={[styles.halo, { borderRadius: radius + 6, shadowColor: "#cdf564", left: "40%", right: -2 }]} />
+        <View style={[styles.halo, { borderRadius: radius + 6, shadowColor: C.brand500, left: -2, right: "40%" }]} />
+        <View style={[styles.halo, { borderRadius: radius + 6, shadowColor: C.accent, left: "40%", right: -2 }]} />
       </Animated.View>
       <View style={{ borderRadius: radius, overflow: "hidden", padding: 3 }}>
-        <LinearGradient colors={["#9d91fb", "#cfc8ff", "#cdf564"]} start={{ x: 0, y: 0.3 }} end={{ x: 1, y: 0.7 }} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={[C.brand400, "#cfc8ff", C.accent]} start={{ x: 0, y: 0.3 }} end={{ x: 1, y: 0.7 }} style={StyleSheet.absoluteFill} />
         {/* The sweeping light: a rotating streak, clipped to the border by the card on top. */}
         {!reduced && size.w > 0 && (
           <Animated.View pointerEvents="none" style={[{ position: "absolute", width: diag, height: diag, left: (size.w - diag) / 2, top: (size.h - diag) / 2 }, sweep]}>

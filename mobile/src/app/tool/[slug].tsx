@@ -8,6 +8,8 @@ import { WebTool } from "@/components/WebTool";
 import { BackHeader, Screen } from "@/components/Screen";
 import { T } from "@/components/ui";
 
+export { CrashScreen as ErrorBoundary } from "@/components/CrashScreen";
+
 /** A tool: native when the app has it, otherwise the website's version inside the app. */
 export default function ToolScreen() {
   const { slug, staged } = useLocalSearchParams<{ slug: string; staged?: string }>();

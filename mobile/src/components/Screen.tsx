@@ -6,11 +6,13 @@ import { ArrowLeft } from "lucide-react-native";
 import { C } from "@/theme";
 import { Backdrop, Logo, PressScale, T } from "./ui";
 import { TAB_BAR_SPACE } from "./TabBar";
+import { MAX_CONTENT } from "@/lib/layout";
 
 /** A tab screen: backdrop, safe-area padding, room for the floating tab bar. */
 export function Screen({ children, tabs = true, scroll = true, ...p }: { children: ReactNode; tabs?: boolean; scroll?: boolean } & ScrollViewProps) {
   const insets = useSafeAreaInsets();
-  const pad = { paddingTop: insets.top + 6, paddingBottom: (tabs ? TAB_BAR_SPACE : 24) + insets.bottom + 12, paddingHorizontal: 16 };
+  // On tablets the content stays a readable width, centred.
+  const pad = { paddingTop: insets.top + 6, paddingBottom: (tabs ? TAB_BAR_SPACE : 24) + insets.bottom + 12, paddingHorizontal: 16, width: "100%" as const, maxWidth: MAX_CONTENT, alignSelf: "center" as const };
   return (
     <View style={{ flex: 1, backgroundColor: C.app }}>
       <Backdrop />

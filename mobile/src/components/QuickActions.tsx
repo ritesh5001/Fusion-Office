@@ -3,6 +3,7 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { ChevronRight, Files, Image as ImageIcon, Shrink, type LucideIcon } from "lucide-react-native";
 import { C } from "@/theme";
 import { useReduced } from "@/lib/motion";
+import { useColumns } from "@/lib/layout";
 import { toolBySlug } from "@/lib/tools";
 import { PressScale, T } from "./ui";
 import { openTool } from "./DropStage";
@@ -11,27 +12,30 @@ import { openTool } from "./DropStage";
 const QUICK: { slug: string; bg: string; fg: string; icon?: LucideIcon; letter?: string }[] = [
   { slug: "merge-pdf", bg: "#e5676a", fg: "#fff", icon: Files },
   { slug: "compress-pdf", bg: "#7a72f0", fg: "#fff", icon: Shrink },
-  { slug: "pdf-to-word", bg: "#cdf564", fg: "#14152b", letter: "W" },
-  { slug: "resize-image", bg: "#b7a6f7", fg: "#14152b", icon: ImageIcon },
+  { slug: "pdf-to-word", bg: C.accent, fg: C.ink, letter: "W" },
+  { slug: "resize-image", bg: "#b7a6f7", fg: C.ink, icon: ImageIcon },
 ];
 
 export function QuickActions() {
   const reduced = useReduced();
+  const { columns, cardWidth, gap } = useColumns();
+  // 2×2 on phones, one row of four on tablets.
+  const width = columns >= 3 ? (cardWidth * columns + gap * (columns - 1) - gap * 3) / 4 : cardWidth;
   return (
     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
       {QUICK.map((q, i) => {
         const t = toolBySlug(q.slug);
         if (!t) return null;
         return (
-          <Animated.View key={q.slug} entering={reduced ? undefined : FadeInDown.delay(80 + i * 50).duration(400)} style={{ width: "48.5%" }}>
-            <PressScale onPress={() => openTool(q.slug)} style={{ borderRadius: 20, borderWidth: 1, borderColor: C.line, backgroundColor: "rgba(25,29,38,0.6)", padding: 12, minHeight: 112 }}>
+          <Animated.View key={q.slug} entering={reduced ? undefined : FadeInDown.delay(80 + i * 50).duration(400)} style={{ width }}>
+            <PressScale onPress={() => openTool(q.slug)} accessibilityLabel={t.name} style={{ borderRadius: 20, borderWidth: 1, borderColor: C.line, backgroundColor: "rgba(25,29,38,0.6)", padding: 12, minHeight: 112 }}>
               <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                 <View style={{ width: 56, height: 56, borderRadius: 16, backgroundColor: q.bg, alignItems: "center", justifyContent: "center" }}>
                   {q.icon ? (
                     <q.icon size={26} color={q.fg} strokeWidth={1.9} />
                   ) : (
                     <View style={{ width: 30, height: 30, borderRadius: 7, borderWidth: 2.5, borderColor: q.fg, alignItems: "center", justifyContent: "center" }}>
-                      <T weight="display" style={{ fontSize: 15, color: q.fg }}>{q.letter}</T>
+                      <T weight="display" allowFontScaling={false} style={{ fontSize: 15, color: q.fg }}>{q.letter}</T>
                     </View>
                   )}
                 </View>

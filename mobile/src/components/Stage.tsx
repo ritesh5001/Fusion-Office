@@ -69,14 +69,14 @@ export function FileRow({ files, detail, onClear }: { files: PickedFile[]; detai
   const total = files.reduce((n, f) => n + f.size, 0);
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-      <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: "#fff", borderWidth: 1, borderColor: "#e0dee9", alignItems: "center", justifyContent: "center" }}>
+      <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: "#fff", borderWidth: 1, borderColor: C.paperBorder, alignItems: "center", justifyContent: "center" }}>
         <KindGlyph kind={files[0].kind} size={30} />
       </View>
       <View style={{ flex: 1, minWidth: 0 }}>
         <T weight="semibold" numberOfLines={1} style={{ fontSize: 15, color: C.ink }}>{files.length === 1 ? files[0].name : `${files.length} files`}</T>
         <T style={{ fontSize: 12.5, color: C.paperMuted }}>{[formatBytes(total), detail].filter(Boolean).join(" · ")}</T>
       </View>
-      <PressScale onPress={onClear} accessibilityLabel="Clear files" style={{ width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center" }}>
+      <PressScale onPress={onClear} accessibilityLabel="Clear files" hitSlop={8} style={{ width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center" }}>
         <X size={18} color={C.paperMuted} />
       </PressScale>
     </View>
@@ -104,7 +104,7 @@ export function PrivacyStrip({ state, step = 0, device = true }: { state: "ready
 
   const node = (lit: boolean, accent = false) => ({
     width: 32, height: 32, borderRadius: 9, alignItems: "center" as const, justifyContent: "center" as const, borderWidth: 1,
-    backgroundColor: lit ? (accent ? C.accent : "#2a2c4d") : "#1a1c36", borderColor: lit ? (accent ? C.accent : "rgba(255,255,255,0.2)") : "rgba(255,255,255,0.1)",
+    backgroundColor: lit ? (accent ? C.accent : C.stripLit) : C.stripOff, borderColor: lit ? (accent ? C.accent : "rgba(255,255,255,0.2)") : "rgba(255,255,255,0.1)",
   });
   const wire = (lit: boolean) => ({ flex: 1, height: 2, borderRadius: 1, backgroundColor: lit ? C.accent : "rgba(255,255,255,0.15)" });
 
@@ -115,12 +115,12 @@ export function PrivacyStrip({ state, step = 0, device = true }: { state: "ready
           <Svg width={14} height={16} viewBox="0 0 16 18"><Path d="M3 1h7l4 4v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2z" stroke="#fff" strokeWidth={1.6} fill="none" /></Svg>
         </View>
         <View style={wire(state !== "ready")} />
-        <Animated.View style={[{ flexDirection: "row", alignItems: "center", gap: 5, height: 32, borderRadius: 9, paddingHorizontal: 9, borderWidth: 1, backgroundColor: state === "running" ? "#2d2868" : "#1f2142", borderColor: state === "running" ? C.brand400 : "rgba(255,255,255,0.15)", shadowColor: C.brand400, shadowRadius: 10, shadowOffset: { width: 0, height: 0 } }, chip]}>
-          <Cpu size={13} color={state === "running" ? "#e7e3ff" : "rgba(255,255,255,0.8)"} />
-          <T weight="semibold" style={{ fontSize: 11, color: state === "running" ? "#e7e3ff" : "rgba(255,255,255,0.8)" }}>{device ? "On-device engine" : "Temporary server"}</T>
+        <Animated.View style={[{ flexDirection: "row", alignItems: "center", gap: 5, height: 32, borderRadius: 9, paddingHorizontal: 9, borderWidth: 1, backgroundColor: state === "running" ? C.stripActive : C.stripIdle, borderColor: state === "running" ? C.brand400 : "rgba(255,255,255,0.15)", shadowColor: C.brand400, shadowRadius: 10, shadowOffset: { width: 0, height: 0 } }, chip]}>
+          <Cpu size={13} color={state === "running" ? C.brand100 : "rgba(255,255,255,0.8)"} />
+          <T weight="semibold" style={{ fontSize: 11, color: state === "running" ? C.brand100 : "rgba(255,255,255,0.8)" }}>{device ? "On-device engine" : "Temporary server"}</T>
         </Animated.View>
         <View style={wire(state !== "ready" && step >= 1)} />
-        <View style={{ width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: locked ? "#29331d" : "#1f2142", shadowColor: C.accent, shadowOpacity: locked ? 0.7 : 0, shadowRadius: 10 }}>
+        <View style={{ width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: locked ? C.stripLocked : C.stripIdle, shadowColor: C.accent, shadowOpacity: locked ? 0.7 : 0, shadowRadius: 10 }}>
           <Svg width={18} height={18} viewBox="0 0 24 24">
             <Path d={SHIELD} fill={locked ? C.accent : "none"} stroke={C.accent} strokeWidth={1.8} strokeLinejoin="round" />
             {locked && <DrawPath d={TICK} length={12} color={C.ink} width={2.4} />}
@@ -164,7 +164,7 @@ export function ProgressCard({ state }: { state: Extract<RunState, { phase: "run
         <T weight="semibold" style={{ fontSize: 15, color: C.ink }}>{state.verb}</T>
         <T weight="bold" style={{ fontSize: 15, color: C.ink, fontVariant: ["tabular-nums"] }}>{pct}%</T>
       </View>
-      <View style={{ marginTop: 12, height: 10, borderRadius: 5, backgroundColor: "#ebe9f2", overflow: "hidden" }}>
+      <View style={{ marginTop: 12, height: 10, borderRadius: 5, backgroundColor: C.paperSunken, overflow: "hidden" }}>
         <View onLayout={(e) => setBarW(e.nativeEvent.layout.width)} style={{ height: "100%", width: `${pct}%`, borderRadius: 5, overflow: "hidden", backgroundColor: C.brand500 }}>
           <View style={{ position: "absolute", inset: 0, backgroundColor: C.accent, opacity: pct / 140 }} />
           {!reduced && <Animated.View style={[{ position: "absolute", top: 0, bottom: 0, width: 64, backgroundColor: "rgba(255,255,255,0.7)" }, s]} />}
@@ -172,7 +172,7 @@ export function ProgressCard({ state }: { state: Extract<RunState, { phase: "run
       </View>
       <View style={{ marginTop: 10, flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
         <Animated.View key={state.step} entering={FadeIn.duration(250)}>
-          <T weight="semibold" style={{ fontSize: 12.5, color: "#2b2d48" }}>{STEPS[state.step]}…</T>
+          <T weight="semibold" style={{ fontSize: 12.5, color: C.paperText }}>{STEPS[state.step]}…</T>
         </Animated.View>
         <T style={{ fontSize: 12, color: C.paperMuted, flexShrink: 1, textAlign: "right" }}>{state.device ? "Running locally · Stays private" : "Secure server · Deleted after"}</T>
       </View>
@@ -218,7 +218,7 @@ export function DoneCard({ state, onAgain }: { state: Extract<RunState, { phase:
       </View>
       <Animated.View entering={reduced ? undefined : FadeInDown.delay(150).duration(300)}>
         <T weight="displayBold" style={{ marginTop: 10, fontSize: 21, color: C.ink, letterSpacing: -0.4, textAlign: "center" }}>{many ? `${state.outputs.length} files are ready` : "Your file is ready"}</T>
-        {many && saved > 0 && <T weight="semibold" style={{ marginTop: 2, fontSize: 13, color: "#3f7d12", textAlign: "center" }}>{saved}% smaller in total</T>}
+        {many && saved > 0 && <T weight="semibold" style={{ marginTop: 2, fontSize: 13, color: C.successInk, textAlign: "center" }}>{saved}% smaller in total</T>}
       </Animated.View>
 
       <Animated.View entering={reduced ? undefined : FadeInDown.delay(250).duration(400)} style={{ alignSelf: "stretch", marginTop: 12, gap: 8 }}>
@@ -231,12 +231,12 @@ export function DoneCard({ state, onAgain }: { state: Extract<RunState, { phase:
               <T weight="semibold" numberOfLines={1} style={{ fontSize: 14, color: C.ink }}>{o.name}</T>
               <T style={{ fontSize: 12.5, color: C.paperMuted }}>
                 {formatBytes(o.size)}
-                {saved > 0 && !many && <T weight="semibold" style={{ color: "#3f7d12" }}>{` · ${saved}% smaller`}</T>}
+                {saved > 0 && !many && <T weight="semibold" style={{ color: C.successInk }}>{` · ${saved}% smaller`}</T>}
                 {!saved && state.compress && !many ? " · Already well optimized, so it kept its size" : ""}
               </T>
             </View>
             {many && (
-              <PressScale onPress={() => share(o)} accessibilityLabel={`Share ${o.name}`} style={{ padding: 8 }}>
+              <PressScale onPress={() => share(o)} accessibilityLabel={`Share ${o.name}`} hitSlop={8} style={{ padding: 8 }}>
                 <Share2 size={18} color={C.ink} />
               </PressScale>
             )}
@@ -246,13 +246,13 @@ export function DoneCard({ state, onAgain }: { state: Extract<RunState, { phase:
       </Animated.View>
 
       <Animated.View entering={reduced ? undefined : ZoomIn.delay(450).springify().damping(12)} style={{ marginTop: 16, alignSelf: "stretch" }}>
-        <PressScale onPress={() => share(first)} style={{ height: 52, borderRadius: 26, backgroundColor: "#151738", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}>
+        <PressScale onPress={() => share(first)} style={{ height: 52, borderRadius: 26, backgroundColor: C.inkDeep, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}>
           <Share2 size={18} color="#fff" />
           <T weight="semibold" style={{ fontSize: 15.5, color: "#fff" }}>{many ? "Share the first file" : `Save or share ${(first.name.split(".").pop() ?? "").toUpperCase()}`}</T>
         </PressScale>
       </Animated.View>
       <PressScale onPress={onAgain} style={{ marginTop: 6, height: 44, paddingHorizontal: 16, alignItems: "center", justifyContent: "center" }}>
-        <T weight="semibold" style={{ fontSize: 14, color: "#2b2d48" }}>Use another tool →</T>
+        <T weight="semibold" style={{ fontSize: 14, color: C.paperText }}>Use another tool →</T>
       </PressScale>
       <T style={{ fontSize: 11.5, color: C.paperMuted, textAlign: "center" }}>Saved in Recent on this device · {formatBytes(total)}</T>
     </View>
@@ -261,10 +261,10 @@ export function DoneCard({ state, onAgain }: { state: Extract<RunState, { phase:
 
 export function ErrorCard({ message, onBack }: { message: string; onBack: () => void }) {
   return (
-    <Animated.View entering={FadeInDown.duration(300)} accessibilityRole="alert" style={{ borderRadius: 16, backgroundColor: "#fdecec", padding: 16 }}>
-      <T weight="semibold" style={{ fontSize: 14.5, color: "#8a1f1f" }}>That didn&apos;t work</T>
-      <T style={{ marginTop: 4, fontSize: 13.5, color: "#8a1f1f" }}>{message}</T>
-      <PressScale onPress={onBack} style={{ marginTop: 12, alignSelf: "flex-start", height: 38, paddingHorizontal: 16, borderRadius: 19, backgroundColor: "#151738", justifyContent: "center" }}>
+    <Animated.View entering={FadeInDown.duration(300)} accessibilityRole="alert" style={{ borderRadius: 16, backgroundColor: C.dangerSoft, padding: 16 }}>
+      <T weight="semibold" style={{ fontSize: 14.5, color: C.dangerInk }}>That didn&apos;t work</T>
+      <T style={{ marginTop: 4, fontSize: 13.5, color: C.dangerInk }}>{message}</T>
+      <PressScale onPress={onBack} style={{ marginTop: 12, alignSelf: "flex-start", height: 38, paddingHorizontal: 16, borderRadius: 19, backgroundColor: C.inkDeep, justifyContent: "center" }}>
         <T weight="semibold" style={{ fontSize: 13, color: "#fff" }}>Back</T>
       </PressScale>
     </Animated.View>

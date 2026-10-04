@@ -11,7 +11,13 @@ import { useEffect, useLayoutEffect, useState, type RefObject } from "react";
 const KEY = "fo-motion";
 const EVENT = "fo-motion-change";
 
-export const motionInitScript = `try{var p=localStorage.getItem("${KEY}");var r=p?p==="reduced":matchMedia("(prefers-reduced-motion: reduce)").matches;if(r)document.documentElement.dataset.motion="reduced"}catch(e){}`;
+/*
+ * Also handles the mobile app, which opens tools with ?app=1 (hide the site's
+ * header, footer and rails: the app has its own) and &motion=reduced (follow
+ * the app's Reduce motion switch). App mode lasts for the session, so links
+ * inside the embedded page keep it.
+ */
+export const motionInitScript = `try{var d=document.documentElement,q=new URLSearchParams(location.search);if(q.get("app")==="1")sessionStorage.setItem("fo-embed","app");if(sessionStorage.getItem("fo-embed")==="app")d.dataset.embed="app";var m=q.get("motion");var p=m==="reduced"||m==="full"?m:localStorage.getItem("${KEY}");var r=p?p==="reduced":matchMedia("(prefers-reduced-motion: reduce)").matches;if(r)d.dataset.motion="reduced"}catch(e){}`;
 
 export function isReducedMotion() {
   return typeof document !== "undefined" && document.documentElement.dataset.motion === "reduced";

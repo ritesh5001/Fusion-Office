@@ -4,7 +4,7 @@ import { ChevronRight } from "lucide-react";
 /** Visible breadcrumb trail; the last item is the current page. Pair with breadcrumbs() JSON-LD. */
 export function Breadcrumbs({ items }: { items: { name: string; path: string }[] }) {
   return (
-    <nav aria-label="Breadcrumb">
+    <nav aria-label="Breadcrumb" className="site-chrome">
       <ol className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-[13px] text-fg-subtle">
         {items.map((it, i) => {
           const last = i === items.length - 1;

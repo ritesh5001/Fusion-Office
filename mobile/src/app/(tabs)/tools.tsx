@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ScrollView, TextInput, View } from "react-native";
+import { FlatList, ScrollView, TextInput, View } from "react-native";
 import Animated, { Easing, FadeInDown, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useLocalSearchParams } from "expo-router";
 import { Search, X } from "lucide-react-native";
@@ -8,11 +8,13 @@ import { useReduced } from "@/lib/motion";
 import { useSession } from "@/lib/session";
 import { useRecents } from "@/lib/recents";
 import { CATEGORIES, CATEGORY_META, TOOLS, accepts, searchTools, toolBySlug, type Category, type ToolDef } from "@/lib/tools";
-import { Screen } from "@/components/Screen";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { TAB_BAR_SPACE } from "@/components/TabBar";
+import { MAX_CONTENT, useColumns } from "@/lib/layout";
 import { ToolCard } from "@/components/ToolCard";
 import { ToolPreview } from "@/components/ToolPreview";
 import { openTool } from "@/components/DropStage";
-import { PressScale, T } from "@/components/ui";
+import { Backdrop, PressScale, T, TEXT_SCALE } from "@/components/ui";
 
 type Cat = Category | "all";
 
@@ -20,6 +22,7 @@ type Cat = Category | "all";
 export default function Tools() {
   const params = useLocalSearchParams<{ focus?: string; fit?: string }>();
   const reduced = useReduced();
+  const insets = useSafeAreaInsets();
   const { staged } = useSession();
   const recents = useRecents();
   const [query, setQuery] = useState("");
@@ -39,24 +42,41 @@ export default function Tools() {
   const results = useMemo(() => searchTools(pool.filter((t) => cat === "all" || t.category === cat), query), [pool, cat, query]);
   const recentTools = useMemo(() => [...new Set((recents ?? []).map((r) => r.tool))].map(toolBySlug).filter((t): t is ToolDef => !!t).slice(0, 4), [recents]);
 
-  const grid = (tools: ToolDef[]) => (
-    <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", rowGap: 10, marginTop: 10 }}>
-      {tools.map((t, i) => (
-        <ToolCard key={t.slug} tool={t} index={i} onPress={() => openTool(t.slug, fitMode)} onLongPress={() => setPreview(t)} />
-      ))}
-    </View>
-  );
-
+  const { columns, gap, cardWidth } = useColumns();
   const grouped = cat === "all" && !query.trim();
 
-  return (
-    <Screen>
-      <T weight="display" style={{ marginTop: 8, fontSize: 28, letterSpacing: -0.9 }}>{fitMode ? "Tools for your file" : "What do you want to do?"}</T>
+  // A flat list of section titles and card rows, rendered lazily as you scroll.
+  const rows = useMemo(() => {
+    const out: Row[] = [];
+    const add = (key: string, tools: ToolDef[]) => {
+      for (let i = 0; i < tools.length; i += columns) out.push({ kind: "cards", key: `${key}-${i}`, tools: tools.slice(i, i + columns), start: i });
+    };
+    if (!results.length) return out;
+    if (!grouped) {
+      add("results", results);
+      return out;
+    }
+    if (!fitMode && recentTools.length) {
+      out.push({ kind: "title", key: "t-recent", title: "Recently used" });
+      add("recent", recentTools);
+    }
+    for (const c of CATEGORIES) {
+      const inCat = results.filter((t) => t.category === c.id);
+      if (!inCat.length) continue;
+      out.push({ kind: "title", key: `t-${c.id}`, title: CATEGORY_META[c.id].title, color: CATEGORY_META[c.id].color, count: inCat.length });
+      add(c.id, inCat);
+    }
+    return out;
+  }, [results, grouped, fitMode, recentTools, columns]);
+
+  const header = (
+    <View>
+      <T weight="display" header style={{ marginTop: 8, fontSize: 28, letterSpacing: -0.9 }}>{fitMode ? "Tools for your file" : "What do you want to do?"}</T>
       <T style={{ marginTop: 4, fontSize: 13.5, color: C.fgMuted }}>
         {fitMode ? `${pool.length} tools can open ${staged!.length === 1 ? staged![0].name : `${staged!.length} files`}.` : `${TOOLS.length} tools for PDFs, Office files and images.`}
       </T>
 
-      <View style={{ marginTop: 16, flexDirection: "row", alignItems: "center", height: 52, borderRadius: 16, borderWidth: 1, borderColor: C.lineStrong, backgroundColor: C.surface, paddingHorizontal: 14, gap: 10 }}>
+      <View style={{ marginTop: 16, flexDirection: "row", alignItems: "center", minHeight: 52, borderRadius: 16, borderWidth: 1, borderColor: C.lineStrong, backgroundColor: C.surface, paddingHorizontal: 14, gap: 10 }}>
         <Search size={19} color={C.fgSubtle} />
         <TextInput
           ref={input}
@@ -67,54 +87,64 @@ export default function Tools() {
           returnKeyType="search"
           autoCorrect={false}
           onSubmitEditing={() => results[0] && openTool(results[0].slug, fitMode)}
-          style={{ flex: 1, height: "100%", color: C.fg, fontSize: 16 }}
+          maxFontSizeMultiplier={TEXT_SCALE.label}
+          style={{ flex: 1, minHeight: 50, color: C.fg, fontSize: 16 }}
           accessibilityLabel="Search tools"
         />
         {query ? (
-          <PressScale onPress={() => setQuery("")} accessibilityLabel="Clear search" style={{ padding: 4 }}>
+          <PressScale onPress={() => setQuery("")} accessibilityLabel="Clear search" hitSlop={14} style={{ padding: 4 }}>
             <X size={18} color={C.fgMuted} />
           </PressScale>
         ) : null}
       </View>
 
       <Chips value={cat} onChange={setCat} counts={(c) => (c === "all" ? pool.length : pool.filter((t) => t.category === c).length)} />
+      <View style={{ height: grouped ? 4 : 16 }} />
+    </View>
+  );
 
-      {results.length === 0 ? (
-        <View style={{ marginTop: 30, alignItems: "center" }}>
-          <T weight="semibold" style={{ fontSize: 16 }}>No tool matches “{query}”</T>
-          <T style={{ marginTop: 6, color: C.fgMuted }}>Try a simpler word, like “pdf”, “image” or “convert”.</T>
-        </View>
-      ) : grouped ? (
-        <>
-          {!fitMode && recentTools.length > 0 && (
-            <View style={{ marginTop: 20 }}>
-              <T weight="semibold" style={{ fontSize: 16 }}>Recently used</T>
-              {grid(recentTools)}
+  return (
+    <View style={{ flex: 1, backgroundColor: C.app }}>
+      <Backdrop />
+      <FlatList
+        data={rows}
+        keyExtractor={(r) => r.key}
+        ListHeaderComponent={header}
+        ListEmptyComponent={
+          <View style={{ marginTop: 30, alignItems: "center" }}>
+            <T weight="semibold" style={{ fontSize: 16 }}>No tool matches “{query}”</T>
+            <T style={{ marginTop: 6, color: C.fgMuted, textAlign: "center" }}>Try a simpler word, like “pdf”, “image” or “convert”.</T>
+          </View>
+        }
+        renderItem={({ item }) =>
+          item.kind === "title" ? (
+            <Animated.View entering={reduced ? undefined : FadeInDown.duration(380)} style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 22, marginBottom: 10 }}>
+              {item.color && <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: item.color }} />}
+              <T weight="semibold" header style={{ fontSize: 16, flex: 1 }}>{item.title}</T>
+              {item.count != null && <T style={{ fontSize: 13, color: C.fgSubtle }}>{item.count}</T>}
+            </Animated.View>
+          ) : (
+            <View style={{ flexDirection: "row", gap, marginBottom: gap }}>
+              {item.tools.map((t, i) => (
+                <ToolCard key={t.slug} tool={t} index={item.start + i} width={cardWidth} onPress={() => openTool(t.slug, fitMode)} onLongPress={() => setPreview(t)} />
+              ))}
             </View>
-          )}
-          {CATEGORIES.map((c) => {
-            const inCat = results.filter((t) => t.category === c.id);
-            if (!inCat.length) return null;
-            return (
-              <Animated.View key={c.id} entering={reduced ? undefined : FadeInDown.duration(420)} style={{ marginTop: 26 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: CATEGORY_META[c.id].color }} />
-                  <T weight="semibold" style={{ fontSize: 16, flex: 1 }}>{CATEGORY_META[c.id].title}</T>
-                  <T style={{ fontSize: 13, color: C.fgSubtle }}>{inCat.length}</T>
-                </View>
-                {grid(inCat)}
-              </Animated.View>
-            );
-          })}
-        </>
-      ) : (
-        <View style={{ marginTop: 16 }}>{grid(results)}</View>
-      )}
-
+          )
+        }
+        contentContainerStyle={{ paddingTop: insets.top + 6, paddingBottom: TAB_BAR_SPACE + insets.bottom + 12, paddingHorizontal: 16, width: "100%", maxWidth: MAX_CONTENT, alignSelf: "center" }}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        showsVerticalScrollIndicator={false}
+        initialNumToRender={8}
+        windowSize={7}
+        removeClippedSubviews
+      />
       <ToolPreview tool={preview} onClose={() => setPreview(null)} />
-    </Screen>
+    </View>
   );
 }
+
+type Row = { kind: "title"; key: string; title: string; color?: string; count?: number } | { kind: "cards"; key: string; tools: ToolDef[]; start: number };
 
 /** Horizontal category chips; the active pill slides between them (250ms). */
 function Chips({ value, onChange, counts }: { value: Cat; onChange: (c: Cat) => void; counts: (c: Cat) => number }) {
@@ -149,11 +179,12 @@ function Chips({ value, onChange, counts }: { value: Cat; onChange: (c: Cat) => 
           <PressScale
             onPress={() => onChange(c.id)}
             accessibilityRole="tab"
+            accessibilityLabel={`${c.label}, ${n} tools`}
             accessibilityState={{ selected: on }}
             style={{ height: 38, paddingHorizontal: 14, borderRadius: 19, flexDirection: "row", alignItems: "center", gap: 6, borderWidth: on ? 0 : 1, borderColor: C.line }}
           >
-            <T weight="medium" style={{ fontSize: 13.5, color: on ? C.app : C.fgMuted }}>{c.label}</T>
-            <T style={{ fontSize: 12, color: on ? "rgba(10,12,17,0.55)" : C.fgSubtle }}>{n}</T>
+            <T weight="medium" maxFontSizeMultiplier={TEXT_SCALE.label} style={{ fontSize: 13.5, color: on ? C.app : C.fgMuted }}>{c.label}</T>
+            <T maxFontSizeMultiplier={TEXT_SCALE.label} style={{ fontSize: 12, color: on ? "rgba(10,12,17,0.65)" : C.fgSubtle }}>{n}</T>
           </PressScale>
           </View>
         );

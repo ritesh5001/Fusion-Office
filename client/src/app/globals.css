@@ -385,6 +385,9 @@ input[type="color"]::-moz-color-swatch {
 @keyframes fo-heartbeat { 0%, 60%, 100% { scale: 1; } 15% { scale: 1.22; } 30% { scale: 1; } 45% { scale: 1.14; } }
 .fo-heartbeat { animation: fo-heartbeat 1.6s ease-in-out infinite; }
 
+/* Inside the mobile app (?app=1): the app supplies navigation, so the site's own chrome is hidden. */
+:root[data-embed="app"] .site-chrome { display: none !important; }
+
 /* Reduced motion: no floating, no loops, no scroll effects; states still change clearly. */
 :root[data-motion="reduced"] :is(
   .fo-sweep, .fo-twinkle, .fo-float-sm, .fo-dash-march, .fo-fade, .fo-rise, .fo-pop, .fo-drop-in, .fo-scan, .fo-ripple,

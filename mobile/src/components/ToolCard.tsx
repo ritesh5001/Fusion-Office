@@ -14,7 +14,7 @@ import { PressScale, T, ToolTile } from "./ui";
  * Cards cascade in 50ms apart, at most six moving at once. The entrance
  * starts once on mount, so re-renders (typing in search) can't interrupt it.
  */
-export function ToolCard({ tool: t, index = 0, onPress, onLongPress }: { tool: ToolDef; index?: number; onPress: () => void; onLongPress?: () => void }) {
+export function ToolCard({ tool: t, index = 0, width, onPress, onLongPress }: { tool: ToolDef; index?: number; width?: number; onPress: () => void; onLongPress?: () => void }) {
   const reduced = useReduced();
   const soon = t.status === "soon";
   const shown = useSharedValue(reduced ? 1 : 0);
@@ -23,7 +23,7 @@ export function ToolCard({ tool: t, index = 0, onPress, onLongPress }: { tool: T
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const enter = useAnimatedStyle(() => ({ opacity: shown.value, transform: [{ translateY: (1 - shown.value) * 16 }] }));
   return (
-    <Animated.View style={[{ width: "48.5%" }, enter]}>
+    <Animated.View style={[{ width: width ?? "48.5%" }, enter]}>
       <PressScale
         disabled={soon}
         onPress={onPress}
@@ -36,10 +36,10 @@ export function ToolCard({ tool: t, index = 0, onPress, onLongPress }: { tool: T
           <ToolTile tool={t} size={42} />
           {!soon && <ChevronRight size={16} color={C.fgSubtle} />}
         </View>
-        <T weight="semibold" numberOfLines={1} style={{ marginTop: 12, fontSize: 14.5, letterSpacing: -0.2 }}>{t.name}</T>
+        <T weight="semibold" numberOfLines={2} style={{ marginTop: 12, fontSize: 14.5, letterSpacing: -0.2 }}>{t.name}</T>
         <View style={{ marginTop: 4, flexDirection: "row", alignItems: "center", gap: 4 }}>
           {t.runs === "ai" ? <Sparkles size={11} color={C.brand300} /> : t.runs === "server" ? <Server size={11} color={C.fgMuted} /> : <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: C.accent }} />}
-          <T weight="medium" style={{ fontSize: 11, color: t.runs === "browser" ? C.accent : C.fgMuted }}>
+          <T weight="medium" maxFontSizeMultiplier={1.3} style={{ fontSize: 11, color: t.runs === "browser" ? C.accent : C.fgMuted }}>
             {soon ? "Coming soon" : t.runs === "ai" ? "Uses AI" : t.runs === "server" ? "Server" : NATIVE[t.slug] ? "On your device" : "Private"}
           </T>
         </View>

@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect } from "react";
-import { Pressable, StyleSheet, Text, View, type PressableProps, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, View, type PressableProps, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from "react-native";
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withSpring, withTiming } from "react-native-reanimated";
 import MaskedView from "@react-native-masked-view/masked-view";
 import { LinearGradient } from "expo-linear-gradient";
@@ -12,26 +12,49 @@ import { useReduced } from "@/lib/motion";
 export function Logo({ size = 28 }: { size?: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 32 32">
-      <Rect x="4" y="7" width="16" height="21" rx="4" fill="#8b7cf6" />
-      <Rect x="11" y="3" width="17" height="22" rx="4" fill="#cdf564" />
-      <Path d="M15.5 10h8M15.5 14h8M15.5 18h5" stroke="#0c0f06" strokeWidth={2} strokeLinecap="round" />
+      <Rect x="4" y="7" width="16" height="21" rx="4" fill={C.brand500} />
+      <Rect x="11" y="3" width="17" height="22" rx="4" fill={C.accent} />
+      <Path d="M15.5 10h8M15.5 14h8M15.5 18h5" stroke={C.onAccent} strokeWidth={2} strokeLinecap="round" />
     </Svg>
   );
 }
 
-/** Text in the app's type scale. */
-export function T({ style, weight = "body", ...p }: TextProps & { weight?: keyof typeof F }) {
-  return <Text {...p} style={[{ fontFamily: F[weight], color: C.fg }, style]} />;
+/**
+ * How far text may grow with the system text size. Body text scales the
+ * most; big display headings and compact UI labels less, so layouts hold
+ * at the largest accessibility sizes.
+ */
+export const TEXT_SCALE = { body: 1.6, display: 1.25, label: 1.2 } as const;
+
+/** Text in the app's type scale. `header` marks section titles for screen readers. */
+export function T({ style, weight = "body", header, ...p }: TextProps & { weight?: keyof typeof F; header?: boolean }) {
+  const display = weight === "display" || weight === "displayBold";
+  return (
+    <Text
+      maxFontSizeMultiplier={display ? TEXT_SCALE.display : TEXT_SCALE.body}
+      accessibilityRole={header ? "header" : undefined}
+      {...p}
+      style={[{ fontFamily: F[weight], color: C.fg }, style]}
+    />
+  );
 }
 
 /** Text filled with the purple → lime (or any) gradient. */
-export function GradientText({ children, style, colors = ["#8b7cf6", "#b6adff"] }: { children: string; style?: StyleProp<TextStyle>; colors?: readonly [string, string, ...string[]] }) {
+export function GradientText({ children, style, colors = [C.brand500, C.brand300], header }: { children: string; style?: StyleProp<TextStyle>; colors?: readonly [string, string, ...string[]]; header?: boolean }) {
+  // Masked views don't render in browsers; there, CSS gradient text does the same job.
+  if (Platform.OS === "web") {
+    const web = { backgroundImage: `linear-gradient(90deg, ${colors.join(", ")})`, backgroundClip: "text", WebkitBackgroundClip: "text", color: "transparent" } as unknown as TextStyle;
+    return <Text maxFontSizeMultiplier={TEXT_SCALE.display} accessibilityRole={header ? "header" : undefined} style={[style, web]}>{children}</Text>;
+  }
+  // The mask hides its text from screen readers, so the wrapper carries the words.
   return (
-    <MaskedView maskElement={<Text style={style}>{children}</Text>}>
-      <LinearGradient colors={colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-        <Text style={[style, { opacity: 0 }]}>{children}</Text>
-      </LinearGradient>
-    </MaskedView>
+    <View accessible accessibilityLabel={children} accessibilityRole={header ? "header" : "text"}>
+      <MaskedView maskElement={<Text maxFontSizeMultiplier={TEXT_SCALE.display} style={style}>{children}</Text>}>
+        <LinearGradient colors={colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+          <Text maxFontSizeMultiplier={TEXT_SCALE.display} style={[style, { opacity: 0 }]}>{children}</Text>
+        </LinearGradient>
+      </MaskedView>
+    </View>
   );
 }
 
@@ -40,19 +63,22 @@ export function ToolTile({ tool, size = 40, radius }: { tool: Pick<ToolDef, "slu
   const { color, letter, Icon } = tileFor(tool);
   return (
     <View style={{ width: size, height: size, borderRadius: radius ?? size * 0.28, backgroundColor: color, alignItems: "center", justifyContent: "center" }}>
-      {letter ? <Text style={{ fontFamily: F.display, fontSize: size * 0.45, color: "#0d0f14" }}>{letter}</Text> : <Icon size={size * 0.5} color="#0d0f14" strokeWidth={2} />}
+      {letter ? <Text allowFontScaling={false} style={{ fontFamily: F.display, fontSize: size * 0.45, color: C.tileGlyph }}>{letter}</Text> : <Icon size={size * 0.5} color={C.tileGlyph} strokeWidth={2} />}
     </View>
   );
 }
 
 /** Pressable that scales down a touch (150–200ms) and taps a light haptic. */
-export function PressScale({ children, style, haptic = true, onPress, ...p }: PressableProps & { style?: StyleProp<ViewStyle>; haptic?: boolean; children: ReactNode }) {
+export function PressScale({ children, style, haptic = true, onPress, accessibilityRole = "button", hitSlop = 6, ...p }: PressableProps & { style?: StyleProp<ViewStyle>; haptic?: boolean; children: ReactNode }) {
   const s = useSharedValue(1);
   const reduced = useReduced();
   const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
   return (
     <Pressable
       {...p}
+      accessibilityRole={accessibilityRole}
+      accessibilityState={{ disabled: !!p.disabled, ...p.accessibilityState }}
+      hitSlop={hitSlop}
       onPressIn={() => !reduced && s.set(withTiming(0.96, { duration: 120 }))}
       onPressOut={() => s.set(withSpring(1, { damping: 14, stiffness: 260 }))}
       onPress={(e) => {
@@ -70,7 +96,7 @@ export function KindGlyph({ kind, size = 40 }: { kind: FileKind; size?: number }
   if (kind === "image")
     return (
       <Svg width={size * 1.1} height={size} viewBox="0 0 44 40">
-        <Rect width="44" height="40" rx="7" fill="#8b7cf6" />
+        <Rect width="44" height="40" rx="7" fill={C.brand500} />
         <Circle cx="31" cy="12" r="4.5" fill="#fff" />
         <Path d="M5 33 17 17l9 11 5-6 8 11z" fill="#fff" />
       </Svg>
@@ -124,7 +150,7 @@ const TWINKLES = Array.from({ length: 14 }, (_, i) => ({
 export function Backdrop() {
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <LinearGradient colors={["#111331", C.app, C.app]} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={[C.navyGlow, C.app, C.app]} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} />
       <LinearGradient colors={["rgba(92,77,204,0.28)", "rgba(92,77,204,0)"]} start={{ x: 0.5, y: 0.1 }} end={{ x: 0.5, y: 0.6 }} style={[StyleSheet.absoluteFill, { height: 520 }]} />
       <Svg style={StyleSheet.absoluteFill}>
         <Defs>
@@ -142,14 +168,14 @@ export function Backdrop() {
 }
 
 export function Eyebrow({ children, color = C.fgSubtle, style }: { children: string; color?: string; style?: StyleProp<TextStyle> }) {
-  return <T weight="semibold" style={[{ fontSize: 11.5, letterSpacing: 1.4, textTransform: "uppercase", color }, style]}>{children}</T>;
+  return <T weight="semibold" header maxFontSizeMultiplier={TEXT_SCALE.label} style={[{ fontSize: 11.5, letterSpacing: 1.4, textTransform: "uppercase", color }, style]}>{children}</T>;
 }
 
 /** Small rounded label: Server, AI, Soon… */
 export function Badge({ children, tone = "muted" }: { children: ReactNode; tone?: "muted" | "accent" }) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 4, borderRadius: 99, paddingHorizontal: 7, paddingVertical: 2, backgroundColor: tone === "accent" ? C.accent : C.raised }}>
-      {typeof children === "string" ? <T weight="medium" style={{ fontSize: 10.5, color: tone === "accent" ? C.onAccent : C.fgMuted }}>{children}</T> : children}
+      {typeof children === "string" ? <T weight="medium" maxFontSizeMultiplier={TEXT_SCALE.label} style={{ fontSize: 10.5, color: tone === "accent" ? C.onAccent : C.fgMuted }}>{children}</T> : children}
     </View>
   );
 }

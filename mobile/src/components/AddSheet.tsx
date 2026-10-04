@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Alert, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 import * as Clipboard from "expo-clipboard";
 import { Camera, ClipboardPaste, FolderOpen, History, Images, type LucideIcon } from "lucide-react-native";
 import { C } from "@/theme";
@@ -28,12 +28,15 @@ export function AddSheet() {
   const { sheetOpen, closeSheet, stage } = useSession();
   const reduced = useReduced();
   const [pages, setPages] = useState<PickedFile[]>([]);
+  const pathname = usePathname();
 
   const done = (files: PickedFile[]) => {
     if (!files.length) return;
     closeSheet();
     stage(files);
-    router.navigate("/");
+    // From the Tools tab, stay there and show the tools that fit; elsewhere the home stage takes over.
+    if (pathname === "/tools") router.setParams({ fit: "1" });
+    else router.navigate("/");
   };
 
   const guard = (fn: () => Promise<void>) => async () => {
@@ -70,7 +73,7 @@ export function AddSheet() {
     { icon: Camera, title: pages.length ? "Scan another page" : "Scan with camera", text: pages.length ? `${pages.length} page${pages.length === 1 ? "" : "s"} so far` : "Turn paper into a PDF", tint: "#63d5cf", onPress: scan },
     { icon: ClipboardPaste, title: "Paste from clipboard", text: "A copied photo or screenshot", tint: "#ffcb66", onPress: paste },
     {
-      icon: History, title: "Recent files", text: "Results you made on this device", tint: "#cdf564",
+      icon: History, title: "Recent files", text: "Results you made on this device", tint: C.accent,
       onPress: () => {
         closeSheet();
         router.navigate("/recent");
@@ -87,7 +90,7 @@ export function AddSheet() {
           <Animated.View key={r.title} entering={reduced ? undefined : FadeInDown.delay(i * 40).duration(260)}>
             <PressScale onPress={r.onPress} style={{ flexDirection: "row", alignItems: "center", gap: 14, minHeight: 60, borderRadius: 18, backgroundColor: C.raised, borderWidth: 1, borderColor: C.line, paddingHorizontal: 12 }}>
               <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: r.tint, alignItems: "center", justifyContent: "center" }}>
-                <r.icon size={20} color="#0d0f14" />
+                <r.icon size={20} color={C.tileGlyph} />
               </View>
               <View style={{ flex: 1 }}>
                 <T weight="semibold" style={{ fontSize: 15 }}>{r.title}</T>

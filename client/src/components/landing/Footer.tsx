@@ -49,7 +49,7 @@ const COLUMNS = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-line bg-app">
+    <footer className="site-chrome border-t border-line bg-app">
       <AppBanner />
       <div className="mx-auto grid gap-10 px-4 py-12 sm:px-6 lg:grid-cols-12 lg:px-8">
         <div className="lg:col-span-4">

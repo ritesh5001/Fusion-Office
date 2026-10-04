@@ -31,7 +31,7 @@ export function StepTracker({ step }: { step: number }) {
           return (
             <View key={l} style={{ flexDirection: "row", alignItems: "center", flex: i < 3 ? 1 : 0 }}>
               <View style={{ width: 26, height: 26, borderRadius: 13, alignItems: "center", justifyContent: "center", borderWidth: 1, backgroundColor: done ? C.accent : now ? "rgba(139,124,246,0.2)" : C.surface, borderColor: done ? C.accent : now ? C.brand400 : C.lineStrong }}>
-                {done ? <Check size={13} strokeWidth={3} color={C.onAccent} /> : <T weight="semibold" style={{ fontSize: 11.5, color: now ? "#d2ccff" : C.fgSubtle }}>{i + 1}</T>}
+                {done ? <Check size={13} strokeWidth={3} color={C.onAccent} /> : <T weight="semibold" style={{ fontSize: 11.5, color: now ? C.brand200 : C.fgSubtle }}>{i + 1}</T>}
               </View>
               {i < 3 && <Line filled={i < step} />}
             </View>
