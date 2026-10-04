@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BookOpen, ChevronRight, Server, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen } from "lucide-react";
 import { SiteShell } from "../site/SiteShell";
 import { ToolTile } from "../tools/icons";
 import { Breadcrumbs } from "./Breadcrumbs";
@@ -59,25 +59,13 @@ export function ClusterPage({ id }: { id: ClusterId }) {
                   {s.heading}
                 </h2>
                 <p className="mt-1.5 max-w-[70ch] text-[15px] leading-relaxed text-fg-muted">{s.blurb}</p>
-                <ul className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                   {tools.map((t) => {
                     return (
                       <li key={t.slug} className="min-w-0">
-                        <Link href={toolUrl(t)} className="group flex h-full items-start gap-3.5 rounded-2xl border border-line bg-surface p-4 transition-colors hover:border-line-strong hover:bg-raised">
-                          <ToolTile tool={t} size="md" />
-                          <span className="min-w-0 flex-1">
-                            <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                              <span className="text-[14.5px] font-semibold leading-tight text-fg">{t.name}</span>
-                              {t.runs !== "browser" && (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-raised px-2 py-0.5 text-[11px] font-medium text-fg-muted">
-                                  {t.runs === "ai" ? <Sparkles className="h-3 w-3" aria-hidden="true" /> : <Server className="h-3 w-3" aria-hidden="true" />}
-                                  {t.runs === "ai" ? "AI" : "Server"}
-                                </span>
-                              )}
-                            </span>
-                            <span className="mt-1 block text-[13px] leading-snug text-fg-muted">{t.description}</span>
-                          </span>
-                          <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-fg-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-fg" aria-hidden="true" />
+                        <Link href={toolUrl(t)} className="group flex h-full min-h-[120px] flex-col items-center justify-center gap-3 rounded-2xl border border-line bg-surface px-3 py-5 text-center transition-colors hover:border-line-strong hover:bg-raised">
+                          <ToolTile tool={t} size="lg" className="transition-transform duration-200 group-hover:scale-110" />
+                          <span className="text-balance text-[14px] font-semibold leading-tight text-fg">{t.name}</span>
                         </Link>
                       </li>
                     );

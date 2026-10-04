@@ -81,17 +81,12 @@ export function ToolsMenu({ onNavigate }: { onNavigate: () => void }) {
             All {CATEGORY_META[active].title} tools <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         </div>
-        <ul className="grid grid-cols-3 gap-1">
+        <ul className="grid grid-cols-4 gap-1 xl:grid-cols-5">
           {tools.map((t) => (
             <li key={t.slug}>
-              <Link href={toolHref(t)} onClick={onNavigate} className="group flex items-start gap-3 rounded-xl p-2.5 transition-colors hover:bg-raised">
-                <ToolTile tool={t} size="sm" />
-                <span className="min-w-0">
-                  <span className="block text-[14px] font-semibold leading-tight text-fg">{t.name}</span>
-                  <span className="mt-0.5 line-clamp-1 text-[12px] leading-snug text-fg-subtle" title={t.description}>
-                    {t.description}
-                  </span>
-                </span>
+              <Link href={toolHref(t)} onClick={onNavigate} className="group flex h-full flex-col items-center gap-2 rounded-xl px-2 py-3 text-center transition-colors hover:bg-raised">
+                <ToolTile tool={t} size="md" className="transition-transform duration-200 group-hover:scale-110" />
+                <span className="text-balance text-[13px] font-semibold leading-tight text-fg">{t.name}</span>
               </Link>
             </li>
           ))}

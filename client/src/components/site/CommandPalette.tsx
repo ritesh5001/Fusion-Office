@@ -177,7 +177,6 @@ export function CommandPalette() {
                       </span>
                     )}
                   </span>
-                  <span className="block truncate text-[12.5px] text-fg-muted">{t.description}</span>
                 </span>
                 <span className={cn("hidden shrink-0 text-[11.5px] text-fg-subtle sm:block", on && "text-fg-muted")}>{CATEGORY_META[t.category].short}</span>
                 <CornerDownLeft className={cn("h-4 w-4 shrink-0 text-fg-subtle transition-opacity", on ? "opacity-100" : "opacity-0")} aria-hidden="true" />

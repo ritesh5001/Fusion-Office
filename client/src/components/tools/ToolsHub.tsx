@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, ChevronRight, FileText, Search, Server, Sparkles, Workflow, X } from "lucide-react";
+import { ArrowRight, FileText, Search, Workflow, X } from "lucide-react";
 import { CATEGORIES, TOOLS, type Category, type ToolDef } from "@/lib/tools/registry";
 import { accepts, appPath, handFiles, toolPath } from "@/lib/tools/handoff";
 import { formatBytes } from "@/lib/tools/files";
@@ -267,7 +267,7 @@ function RevealGroup({ id, labelledBy, children }: { id: string; labelledBy: str
 
 function ToolGrid({ tools, staged, reveal = false }: { tools: ToolDef[]; staged?: File[] | null; reveal?: boolean }) {
   return (
-    <ul className="mt-3 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-3 2xl:grid-cols-4">
+    <ul className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
       {tools.map((t, i) => (
         // Cards cascade 50ms apart; past the sixth they arrive together, so no more than six move at once.
         <li key={t.slug} className={cn("min-w-0", reveal && "fo-r-item")} data-late={reveal && i > 5 ? "" : undefined} style={reveal ? ({ "--i": Math.min(i, 5) } as React.CSSProperties) : undefined}>
@@ -278,36 +278,18 @@ function ToolGrid({ tools, staged, reveal = false }: { tools: ToolDef[]; staged?
   );
 }
 
-/** One row card: tile, name with where it runs, description. */
+/** One tool: its icon and name, centred. */
 export function ToolCard({ tool: t, staged }: { tool: ToolDef; staged?: File[] | null }) {
   const router = useRouter();
   const soon = t.status === "soon";
-  const badge = soon ? (
-    <span className="rounded-full bg-raised px-2 py-0.5 text-[11px] font-medium text-fg-subtle">Soon</span>
-  ) : t.runs !== "browser" ? (
-    <span
-      className="inline-flex items-center gap-1 rounded-full bg-raised px-2 py-0.5 text-[11px] font-medium text-fg-muted"
-      title={t.runs === "ai" ? "Uses AI on our server" : "Converted on our server, then deleted"}
-    >
-      {t.runs === "ai" ? <Sparkles className="h-3 w-3" aria-hidden="true" /> : <Server className="h-3 w-3" aria-hidden="true" />}
-      {t.runs === "ai" ? "AI" : "Server"}
-    </span>
-  ) : null;
   const body = (
     <>
-      <ToolTile tool={t} size="md" className="transition-[rotate,scale] duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] group-hover:-rotate-6 group-hover:scale-110" />
-      <span className="min-w-0 flex-1">
-        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="text-[14px] font-semibold leading-tight tracking-[-0.01em] text-fg sm:text-[14.5px]">{t.name}</span>
-          {badge}
-        </span>
-        <span className="mt-1 line-clamp-3 text-[12.5px] leading-snug text-fg-muted sm:line-clamp-2 sm:text-[13px]">{t.description}</span>
-      </span>
-      {!soon && <ChevronRight className="absolute right-3 top-4 h-4 w-4 shrink-0 text-fg-subtle sm:static sm:mt-0.5 transition-[translate,color] duration-200 group-hover:translate-x-1 group-hover:text-fg" aria-hidden="true" />}
+      <ToolTile tool={t} size="lg" className="transition-[rotate,scale] duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] group-hover:-rotate-6 group-hover:scale-110" />
+      <span className="text-balance text-[14px] font-semibold leading-tight tracking-[-0.01em] text-fg">{t.name}</span>
+      {soon && <span className="sr-only">(coming soon)</span>}
     </>
   );
-  // Phones show two cards per row, so the icon sits above the text; from sm up it's a row.
-  const cls = "group relative flex h-full min-h-[44px] flex-col items-start gap-3 rounded-2xl border border-line bg-surface p-3.5 transition-[border-color,background-color,box-shadow] duration-200 sm:flex-row sm:gap-3.5 sm:p-4";
+  const cls = "group relative flex h-full min-h-[120px] flex-col items-center justify-center gap-3 rounded-2xl border border-line bg-surface px-3 py-5 text-center transition-[border-color,background-color,box-shadow] duration-200";
   return soon ? (
     <div className={cn(cls, "opacity-55")} aria-disabled="true">
       {body}
