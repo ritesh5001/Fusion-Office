@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "Fusion Office",
+    "slug": "fusion-office",
+    "scheme": "fusionoffice",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0a0c11",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "in.nextgenfusion.fusionoffice",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Fusion Office uses the camera to scan documents into PDFs. Photos stay on your device.",
+        "NSPhotoLibraryUsageDescription": "Fusion Office opens photos you choose so you can turn them into PDFs or compress them. They stay on your device."
+      }
+    },
+    "android": {
+      "package": "in.nextgenfusion.fusionoffice",
+      "adaptiveIcon": {
+        "backgroundColor": "#0a0c11",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Fusion Office uses the camera to scan documents into PDFs. Photos stay on your device.",
+          "photosPermission": "Fusion Office opens photos you choose so you can turn them into PDFs or compress them. They stay on your device."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
