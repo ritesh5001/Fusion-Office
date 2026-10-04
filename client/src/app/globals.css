@@ -229,6 +229,81 @@ input[type="color"]::-moz-color-swatch {
   .fo-flow-dash { animation: none; stroke-opacity: 0; }
 }
 
+/* Homepage drop stage (components/home/DropStage.tsx): "private file flow".
+   Springs for things you touch (files, buttons); linear for machine work
+   (data lines, progress). Entrances use `backwards` so they never pin a
+   transform after they finish. */
+.fo-press { transition-property: scale, color, background-color, box-shadow, border-color, opacity; transition-duration: 180ms; transition-timing-function: cubic-bezier(.2,.8,.2,1); }
+.fo-press:active { scale: 0.96; }
+
+@keyframes fo-sweep { to { rotate: 360deg; } }
+.fo-sweep { animation: fo-sweep 6s linear infinite; }
+
+@keyframes fo-twinkle { 0%, 100% { opacity: 0.04; } 50% { opacity: 0.55; } }
+.fo-twinkle { opacity: 0.04; animation: fo-twinkle 5s ease-in-out infinite; }
+
+@keyframes fo-float-sm { 0%, 100% { translate: 0 0; } 50% { translate: 0 -4px; } }
+.fo-float-sm { animation: fo-float-sm 3.6s ease-in-out infinite; }
+
+.fo-flow-dash--fast { animation-duration: 0.7s; }
+
+@keyframes fo-dash-march { to { stroke-dashoffset: -28; } }
+.fo-dash-march { animation: fo-dash-march 1.4s linear infinite paused; }
+.is-hot .fo-dash-march { animation-play-state: running; }
+.is-over .fo-dash-march { animation-play-state: running; animation-duration: 0.45s; }
+
+@keyframes fo-fade { from { opacity: 0; translate: 0 4px; } }
+.fo-fade { animation: fo-fade 250ms ease-out backwards; }
+
+@keyframes fo-rise { from { opacity: 0; translate: 0 10px; } }
+.fo-rise { animation: fo-rise 320ms cubic-bezier(.2,.8,.2,1) backwards; }
+
+@keyframes fo-pop { from { opacity: 0; scale: 0.6; } 60% { opacity: 1; scale: 1.08; } to { scale: 1; } }
+.fo-pop { animation: fo-pop 550ms cubic-bezier(.34,1.56,.64,1) backwards; }
+
+@keyframes fo-drop-in {
+  0% { opacity: 0; translate: 0 -44px; scale: 0.7; }
+  55% { opacity: 1; translate: 0 6px; scale: 1.04; }
+  80% { translate: 0 -2px; scale: 0.99; }
+  100% { translate: 0 0; scale: 1; }
+}
+.fo-drop-in { animation: fo-drop-in 650ms cubic-bezier(.34,1.3,.64,1) backwards; }
+
+@keyframes fo-scan { from { translate: -120% 0; opacity: 1; } to { translate: 260% 0; opacity: 1; } }
+.fo-scan { opacity: 0; animation: fo-scan 750ms ease-in-out 420ms both; }
+
+@keyframes fo-ripple { from { scale: 0.4; opacity: 0.9; } to { scale: 2.8; opacity: 0; } }
+.fo-ripple { opacity: 0; animation: fo-ripple 900ms ease-out 250ms both; }
+
+@keyframes fo-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.fo-draw { stroke-dasharray: 1; animation: fo-draw 500ms ease-out both; }
+
+@keyframes fo-chip-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgb(157 145 251 / 0.0); } 50% { box-shadow: 0 0 16px 2px rgb(157 145 251 / 0.55); } }
+.fo-chip-pulse { animation: fo-chip-pulse 1.2s ease-in-out infinite; }
+
+.fo-flow-strip { container-type: inline-size; }
+@keyframes fo-packet {
+  0% { transform: translateX(0); opacity: 0; }
+  8%, 92% { opacity: 1; }
+  100% { transform: translateX(calc(100cqw - 10px)); opacity: 0; }
+}
+.fo-packet { animation: fo-packet 1.6s linear infinite; }
+
+@keyframes fo-streak { from { left: -64px; } to { left: 100%; } }
+.fo-streak { animation: fo-streak 1.2s linear infinite; }
+
+@keyframes fo-burst { from { scale: 0.5; opacity: 0.8; } to { scale: 2.4; opacity: 0; } }
+.fo-burst { opacity: 0; animation: fo-burst 700ms ease-out both; }
+
+@keyframes fo-particle { from { translate: 0 0; opacity: 1; scale: 1; } to { translate: var(--dx) var(--dy); opacity: 0; scale: 0.4; } }
+.fo-particle { opacity: 0; animation: fo-particle 800ms cubic-bezier(.2,.7,.3,1) 120ms both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fo-sweep, .fo-twinkle, .fo-float-sm, .fo-dash-march, .fo-fade, .fo-rise, .fo-pop, .fo-drop-in, .fo-scan, .fo-ripple,
+  .fo-draw, .fo-chip-pulse, .fo-packet, .fo-streak, .fo-burst, .fo-particle { animation: none; }
+  .fo-press:active { scale: 1; }
+}
+
 /* ── Folio, the mascot (components/mascot/Mascot.tsx) ───────────── */
 @property --m-a { syntax: "<color>"; inherits: true; initial-value: #b3a8ff; }
 @property --m-b { syntax: "<color>"; inherits: true; initial-value: #6a58e6; }
