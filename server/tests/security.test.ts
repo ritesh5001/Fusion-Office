@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { createApp } from "../src/app.js";
-import { allowedOrigins } from "../src/lib/security.js";
+import { allowedOrigins, originGuard } from "../src/lib/security.js";
 
 let server: Server;
 let base = "";
@@ -74,4 +74,21 @@ test("allowedOrigins merges CLIENT_ORIGIN, AUTH_URL and dev defaults", () => {
   const prod = allowedOrigins({ NODE_ENV: "production", CLIENT_ORIGIN: "https://a.app/, https://b.app", AUTH_URL: "https://a.app/api/auth" });
   assert.deepEqual(prod.sort(), ["https://a.app", "https://b.app"]);
   assert.ok(allowedOrigins({ NODE_ENV: "development" }).includes("http://localhost:3000"));
+});
+
+test("originGuard accepts the proxying site, www variants, and still blocks strangers", () => {
+  const guard = originGuard(["https://fusionoffice.online"]);
+  const run = (origin: string, forwardedHost?: string, method = "POST") => {
+    let status = 200;
+    const req = { method, get: (h: string) => ({ origin, "x-forwarded-host": forwardedHost })[h.toLowerCase() as "origin"] };
+    const res = { status: (n: number) => ((status = n), { json: () => undefined }) };
+    guard(req as never, res as never, () => {});
+    return status;
+  };
+  assert.equal(run("https://fusionoffice.online"), 200, "listed origin");
+  assert.equal(run("https://www.fusionoffice.online"), 200, "www variant of a listed origin");
+  assert.equal(run("https://www.other-site.app", "www.other-site.app"), 200, "origin matches the forwarded host");
+  assert.equal(run("https://evil.example", "www.fusionoffice.online"), 403, "foreign origin, even with a real forwarded host");
+  assert.equal(run("https://evil.example"), 403, "foreign origin");
+  assert.equal(run("https://evil.example", undefined, "GET"), 200, "reads are not guarded");
 });

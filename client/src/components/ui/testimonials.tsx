@@ -19,7 +19,7 @@ export interface Testimonial {
 
 export const TESTIMONIALS: Testimonial[] = [
   {
-    name: "Sahill Barnwal",
+    name: "Sahil Barnwal",
     role: "Software Engineer",
     text: "I needed to fix one line in a signed vendor PDF. Fusion Office let me click the text and change it, and it kept the original font. No re-typing the whole document.",
   },

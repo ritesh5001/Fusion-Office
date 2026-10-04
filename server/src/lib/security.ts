@@ -54,15 +54,44 @@ const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
  * Auth.js routes are excluded; they have their own CSRF token check.
  */
 export function originGuard(origins = allowedOrigins()): RequestHandler {
+  const allowed = new Set(origins.flatMap(withWwwVariant));
   return (req, res, next) => {
     if (SAFE_METHODS.has(req.method)) return next();
     const origin = req.get("origin");
-    if (origin && !origins.includes(origin)) {
+    if (origin && !allowed.has(origin) && !isOwnSite(origin, req.get("x-forwarded-host"))) {
       res.status(403).json({ error: "This origin is not allowed to make changes." });
       return;
     }
     next();
   };
+}
+
+/** "https://x.com" ⇄ "https://www.x.com": both spellings of one site. */
+function withWwwVariant(origin: string): string[] {
+  try {
+    const u = new URL(origin);
+    if (/^(localhost|127\.|\[)/.test(u.hostname)) return [origin];
+    const other = u.hostname.startsWith("www.") ? u.hostname.slice(4) : `www.${u.hostname}`;
+    return [origin, `${u.protocol}//${other}${u.port ? `:${u.port}` : ""}`];
+  } catch {
+    return [origin];
+  }
+}
+
+/**
+ * True when the request came from the site that proxied it here: the client's
+ * /api proxy forwards the address the browser used (X-Forwarded-Host), and a
+ * browser on another site can't make that match its own Origin. This keeps the
+ * live site working even if CLIENT_ORIGIN is missing or incomplete.
+ */
+function isOwnSite(origin: string, forwardedHost: string | undefined) {
+  const host = forwardedHost?.split(",")[0].trim().toLowerCase();
+  if (!host) return false;
+  try {
+    return new URL(origin).host.toLowerCase() === host;
+  } catch {
+    return false;
+  }
 }
 
 /**
