@@ -2,112 +2,17 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, ChevronRight, FileText, Search, Server, Sparkles, Workflow, X } from "lucide-react";
 import { CATEGORIES, TOOLS, type Category, type ToolDef } from "@/lib/tools/registry";
 import { accepts, appPath, handFiles, toolPath } from "@/lib/tools/handoff";
 import { formatBytes } from "@/lib/tools/files";
+import { matches, rank } from "@/lib/tools/search";
 import { ToolTile } from "./icons";
 import { Mascot } from "../mascot/Mascot";
-import { CATEGORY_META } from "../site/categories";
+import { CATEGORY_COLOR, CATEGORY_META } from "../site/categories";
+import { useReveal } from "@/lib/motion";
 import { cn } from "../ui/primitives";
-
-/** Words people type that don't appear in the tool names. */
-const SYNONYMS: Record<string, string> = {
-  combine: "merge",
-  join: "merge",
-  shrink: "compress",
-  reduce: "compress",
-  smaller: "compress",
-  size: "compress resize",
-  docx: "word",
-  doc: "word",
-  xlsx: "excel",
-  xls: "excel",
-  csv: "excel",
-  spreadsheet: "excel",
-  pptx: "powerpoint",
-  ppt: "powerpoint",
-  slides: "powerpoint",
-  presentation: "powerpoint",
-  jpeg: "jpg",
-  png: "jpg image",
-  photo: "image jpg",
-  picture: "image jpg",
-  password: "protect unlock",
-  encrypt: "protect",
-  decrypt: "unlock",
-  signature: "sign",
-  esign: "sign",
-  delete: "organize remove",
-  reorder: "organize",
-  scan: "scan ocr",
-  text: "ocr edit",
-  number: "page numbers",
-  ai: "summarizer translate",
-  summary: "summarizer",
-  hide: "redact",
-  kb: "compress resize",
-  interleave: "alternate",
-  mix: "alternate",
-  nup: "pages per sheet",
-  booklet: "pages per sheet",
-  mirror: "flip",
-  half: "split in half",
-  chapter: "bookmarks",
-  hash: "fingerprint",
-  checksum: "fingerprint",
-  md5: "fingerprint",
-  sha: "fingerprint",
-  kindle: "epub",
-  ebook: "epub ebook",
-  dark: "invert",
-  night: "invert",
-  aadhar: "aadhaar",
-  pii: "aadhaar redact",
-  privacy: "privacy redact",
-  properties: "metadata",
-  author: "metadata",
-  title: "metadata",
-  footer: "headers",
-  header: "headers",
-  bates: "bates",
-  legal: "bates",
-  thumb: "thumbmark",
-  fingerprint: "fingerprint thumbmark",
-  handwritten: "handwriting",
-  notes: "handwriting",
-  gst: "gst",
-  portal: "gst",
-  md: "markdown",
-  invoice: "invoice",
-  bill: "invoice",
-  billing: "invoice",
-  tax: "gst",
-  chat: "chat",
-  ask: "chat",
-  question: "chat",
-  listen: "audio",
-  speak: "audio",
-  tts: "audio",
-  voice: "audio",
-  txt: "text",
-};
-
-/** Does `text` contain the word, or one of its synonyms? */
-const hit = (text: string, w: string) => text.includes(w) || (SYNONYMS[w] ?? "").split(" ").some((s) => s && text.includes(s));
-
-/** Every word must match the tool's name, description or category (directly or through a synonym). */
-function matches(t: ToolDef, words: string[]) {
-  const hay = `${t.name} ${t.description} ${CATEGORIES.find((c) => c.id === t.category)?.label ?? ""}`.toLowerCase();
-  return words.every((w) => hit(hay, w));
-}
-
-/** Name matches first (synonyms count: "shrink pdf" finds Compress PDF), then ready tools before "soon". */
-function rank(t: ToolDef, words: string[]) {
-  const name = t.name.toLowerCase();
-  return (words.every((w) => hit(name, w)) ? 0 : 1) * 2 + (t.status === "soon" ? 1 : 0);
-}
 
 /** Can every staged file go to this tool? */
 export function fitsFiles(t: ToolDef, files: File[]) {
@@ -146,18 +51,6 @@ export function ToolsHub({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cat, query, pool]);
 
-  // "/" jumps to search from anywhere on the page, like most tool sites.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const el = e.target as HTMLElement;
-      if (e.key !== "/" || e.metaKey || e.ctrlKey || el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
-      e.preventDefault();
-      input.current?.focus();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
   // Links into the page (#search from the header, #cat-… from the menus) show the full list first.
   useEffect(() => {
     const onHash = () => {
@@ -175,6 +68,19 @@ export function ToolsHub({
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
+
+  // Measure the active tab so the pill can slide to it.
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = tabsRef.current?.querySelector<HTMLElement>(`[data-tab="${cat}"]`);
+      setPill(el ? { left: el.offsetLeft, width: el.offsetWidth } : null);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [cat, pool]);
 
   const show = (c: Category | "all") => {
     setCat(c);
@@ -235,9 +141,7 @@ export function ToolsHub({
               >
                 <X className="h-4 w-4" aria-hidden="true" />
               </button>
-            ) : (
-              <kbd className="mr-1 hidden h-6 min-w-6 items-center justify-center rounded-md border border-line-strong px-1.5 font-mono text-[11px] text-fg-subtle sm:flex">/</kbd>
-            )}
+            ) : null}
             <button type="submit" aria-label="Open the best match" className="mr-1.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-fg-muted hover:bg-raised hover:text-fg">
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </button>
@@ -268,7 +172,13 @@ export function ToolsHub({
 
       {/* Category filters: stay under the header while scrolling. */}
       <div className="sticky top-16 z-30 -mx-4 mt-5 border-b border-line bg-app/90 px-4 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-        <div role="tablist" aria-label="Tool categories" className="-my-1 flex gap-1.5 overflow-x-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div ref={tabsRef} role="tablist" aria-label="Tool categories" className="relative -my-1 flex gap-1.5 overflow-x-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {/* The active pill slides between tabs instead of fading. */}
+          <span
+            aria-hidden="true"
+            className={cn("absolute top-1 h-9 rounded-full bg-fg transition-[transform,width] duration-[250ms] ease-[cubic-bezier(.3,.7,.2,1)]", !pill && "opacity-0")}
+            style={pill ? { width: pill.width, transform: `translateX(${pill.left}px)` } : undefined}
+          />
           {[{ id: "all" as const, label: "All tools" }, ...CATEGORIES.map((c) => ({ id: c.id, label: CATEGORY_META[c.id].short }))].map((c) => {
             const count = c.id === "all" ? pool.length : pool.filter((t) => t.category === c.id).length;
             const on = cat === c.id;
@@ -278,11 +188,12 @@ export function ToolsHub({
                 key={c.id}
                 type="button"
                 role="tab"
+                data-tab={c.id}
                 aria-selected={on}
                 onClick={() => setCat(c.id)}
                 className={cn(
-                  "inline-flex h-9 shrink-0 items-center gap-2 rounded-full px-3.5 text-[13px] font-medium transition-colors",
-                  on ? "bg-fg text-app" : "text-fg-muted ring-1 ring-inset ring-line hover:bg-raised hover:text-fg",
+                  "fo-press relative inline-flex h-9 shrink-0 items-center gap-2 rounded-full px-3.5 text-[13px] font-medium transition-colors duration-[250ms]",
+                  on ? "text-app" : "text-fg-muted ring-1 ring-inset ring-line hover:bg-raised hover:text-fg",
                 )}
               >
                 <span className="whitespace-nowrap">{c.label}</span>
@@ -319,8 +230,8 @@ export function ToolsHub({
             {CATEGORIES.map((c) => {
               const inCat = results.filter((t) => t.category === c.id);
               return inCat.length ? (
-                <section key={c.id} id={`cat-${c.id}`} aria-labelledby={`cat-${c.id}-title`} className="scroll-mt-36">
-                  <div className="flex items-center justify-between gap-4">
+                <RevealGroup key={c.id} id={`cat-${c.id}`} labelledBy={`cat-${c.id}-title`}>
+                  <div className="fo-r-head flex items-center justify-between gap-4">
                     <h3 id={`cat-${c.id}-title`} className="text-[16px] font-semibold tracking-[-0.01em] text-fg">
                       {CATEGORY_META[c.id].title}
                       <span className="ml-2 text-[13px] font-normal text-fg-subtle">{inCat.length}</span>
@@ -329,8 +240,8 @@ export function ToolsHub({
                       View all <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                     </button>
                   </div>
-                  <ToolGrid tools={inCat} staged={staged} />
-                </section>
+                  <ToolGrid tools={inCat} staged={staged} reveal />
+                </RevealGroup>
               ) : null;
             })}
             {!staged?.length && <WorkflowCard />}
@@ -343,11 +254,23 @@ export function ToolsHub({
   );
 }
 
-function ToolGrid({ tools, staged }: { tools: ToolDef[]; staged?: File[] | null }) {
+/** A category block that reveals itself (heading, then cards) as it scrolls into view. */
+function RevealGroup({ id, labelledBy, children }: { id: string; labelledBy: string; children: React.ReactNode }) {
+  const ref = useRef<HTMLElement>(null);
+  const state = useReveal(ref);
+  return (
+    <section ref={ref} id={id} aria-labelledby={labelledBy} data-reveal={state} className="scroll-mt-36">
+      {children}
+    </section>
+  );
+}
+
+function ToolGrid({ tools, staged, reveal = false }: { tools: ToolDef[]; staged?: File[] | null; reveal?: boolean }) {
   return (
     <ul className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-      {tools.map((t) => (
-        <li key={t.slug} className="min-w-0">
+      {tools.map((t, i) => (
+        // Cards cascade 50ms apart; past the sixth they arrive together, so no more than six move at once.
+        <li key={t.slug} className={cn("min-w-0", reveal && "fo-r-item")} data-late={reveal && i > 5 ? "" : undefined} style={reveal ? ({ "--i": Math.min(i, 5) } as React.CSSProperties) : undefined}>
           <ToolCard tool={t} staged={staged} />
         </li>
       ))}
@@ -372,7 +295,7 @@ export function ToolCard({ tool: t, staged }: { tool: ToolDef; staged?: File[] |
   ) : null;
   const body = (
     <>
-      <ToolTile tool={t} size="md" />
+      <ToolTile tool={t} size="md" className="transition-[rotate,scale] duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] group-hover:-rotate-6 group-hover:scale-110" />
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="text-[14.5px] font-semibold leading-tight tracking-[-0.01em] text-fg">{t.name}</span>
@@ -380,10 +303,10 @@ export function ToolCard({ tool: t, staged }: { tool: ToolDef; staged?: File[] |
         </span>
         <span className="mt-1 line-clamp-2 text-[13px] leading-snug text-fg-muted">{t.description}</span>
       </span>
-      {!soon && <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-fg-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-fg" aria-hidden="true" />}
+      {!soon && <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-fg-subtle transition-[translate,color] duration-200 group-hover:translate-x-1 group-hover:text-fg" aria-hidden="true" />}
     </>
   );
-  const cls = "group flex h-full items-start gap-3.5 rounded-2xl border border-line bg-surface p-4 transition-colors";
+  const cls = "group flex h-full items-start gap-3.5 rounded-2xl border border-line bg-surface p-4 transition-[border-color,background-color,box-shadow] duration-200";
   return soon ? (
     <div className={cn(cls, "opacity-55")} aria-disabled="true">
       {body}
@@ -398,7 +321,9 @@ export function ToolCard({ tool: t, staged }: { tool: ToolDef; staged?: File[] |
         handFiles(appPath(t), staged);
         router.push(appPath(t));
       }}
-      className={cn(cls, "hover:border-line-strong hover:bg-raised")}
+      // The border lights up in the tool's category colour.
+      style={{ "--cat": CATEGORY_COLOR[t.category] } as React.CSSProperties}
+      className={cn(cls, "hover:border-[color:var(--cat)] hover:bg-raised hover:shadow-[0_10px_30px_-18px_var(--cat)]")}
     >
       {body}
     </Link>

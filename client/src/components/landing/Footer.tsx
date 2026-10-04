@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "../Logo";
+import { MotionToggle } from "../site/MotionToggle";
 
 const COLUMNS = [
   {
@@ -64,7 +65,7 @@ export function Footer() {
               <ul className="mt-3 space-y-2.5">
                 {c.links.map((l) => (
                   <li key={l.label}>
-                    <Link href={l.href} className="text-[14px] text-fg-muted transition-colors hover:text-fg">
+                    <Link href={l.href} className="bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat pb-0.5 text-[14px] text-fg-muted transition-[color,background-size] duration-200 hover:bg-[length:100%_1px] hover:text-fg">
                       {l.label}
                     </Link>
                   </li>
@@ -76,7 +77,10 @@ export function Footer() {
       </div>
       <div className="mx-auto flex flex-col gap-1 border-t border-line px-4 py-5 text-[13px] text-fg-subtle sm:flex-row sm:justify-between sm:px-6 lg:px-8">
         <p>© {new Date().getFullYear()} Fusion Office</p>
-        <p>No sign-up. No watermarks.</p>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+          <MotionToggle />
+          <p>No sign-up. No watermarks.</p>
+        </div>
       </div>
     </footer>
   );

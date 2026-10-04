@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useReducedMotion } from "@/lib/motion";
 import type { FileKind } from "@/lib/tools/handoff";
 /**
  * The homepage's flow diagram around the drop card: file types on the left
@@ -40,27 +40,23 @@ export function KindGlyph({ kind }: { kind: FileKind }) {
   return kind === "pdf" ? <DocGlyph color="#e5534b" label="PDF" /> : <DocGlyph color="#3b6fe0" label="W" />;
 }
 
-/** True when the visitor asked for less motion (SMIL animations ignore the CSS media query). */
-export function useReducedMotion() {
-  const [reduced, setReduced] = useState(true);
-  useEffect(() => {
-    const q = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const on = () => setReduced(q.matches);
-    on();
-    q.addEventListener("change", on);
-    return () => q.removeEventListener("change", on);
-  }, []);
-  return reduced;
-}
-
-/** Glassy tile holding one file type, slightly tilted so the stack feels loose. */
-function FileTile({ x, y, rotate, children }: { x: number; y: number; rotate: number; children: React.ReactNode }) {
+/**
+ * Glassy tile holding one file type, slightly tilted so the stack feels loose.
+ * It flies in on page load, floats, and leans toward the card while a file is
+ * dragged over it (`pull`).
+ */
+function FileTile({ x, y, rotate, index, pull, children }: { x: number; y: number; rotate: number; index: number; pull: boolean; children: React.ReactNode }) {
   return (
     <div
-      className="fo-float absolute flex h-[80px] w-[80px] items-center justify-center rounded-[22px] bg-[linear-gradient(145deg,rgb(157_145_251/0.22),rgb(80_70_170/0.10))] ring-1 ring-inset ring-white/[0.16] shadow-[0_18px_40px_-14px_rgb(0_0_0/0.85),0_0_24px_-6px_rgb(139_124_246/0.35),inset_0_1px_0_rgb(255_255_255/0.14)] backdrop-blur-md"
-      style={{ left: x, top: y, rotate: `${rotate}deg`, animationDelay: `${(x + y) * -0.02}s` }}
+      className="fo-intro-tile absolute transition-transform duration-300 ease-[cubic-bezier(.34,1.4,.64,1)]"
+      style={{ left: x, top: y, animationDelay: `${260 + index * 45}ms`, transform: pull ? `translateX(${14 - index * 2}px)` : undefined }}
     >
-      {children}
+      <div
+        className="fo-float flex h-[80px] w-[80px] items-center justify-center rounded-[22px] bg-[linear-gradient(145deg,rgb(157_145_251/0.22),rgb(80_70_170/0.10))] ring-1 ring-inset ring-white/[0.16] shadow-[0_18px_40px_-14px_rgb(0_0_0/0.85),0_0_24px_-6px_rgb(139_124_246/0.35),inset_0_1px_0_rgb(255_255_255/0.14)] backdrop-blur-md transition-[rotate] duration-300"
+        style={{ rotate: `${pull ? rotate / 3 : rotate}deg`, animationDelay: `${(x + y) * -0.02}s` }}
+      >
+        {children}
+      </div>
     </div>
   );
 }
@@ -84,7 +80,7 @@ export function FlowIn({ active = false }: { active?: boolean }) {
   const reduced = useReducedMotion();
   return (
     <div aria-hidden="true" className="relative h-[420px] w-[180px] shrink-0">
-      <svg viewBox="0 0 180 420" className="absolute inset-0 h-full w-full overflow-visible" fill="none">
+      <svg viewBox="0 0 180 420" className="fo-intro-fade absolute inset-0 h-full w-full overflow-visible [animation-delay:320ms]" fill="none">
         <defs>
           <filter id="flow-glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="3" result="b" />
@@ -122,27 +118,30 @@ export function FlowIn({ active = false }: { active?: boolean }) {
           <circle cx="160" cy="210" r={active ? 5.5 : 4} fill="#fff" className="transition-[r] duration-300" />
         </g>
       </svg>
-      <FileTile x={28} y={18} rotate={-8}>
+      <FileTile x={28} y={18} rotate={-8} index={0} pull={active}>
         <DocGlyph color="#e5534b" label="PDF" />
       </FileTile>
-      <FileTile x={0} y={126} rotate={6}>
+      <FileTile x={0} y={126} rotate={6} index={1} pull={active}>
         <DocGlyph color="#3b6fe0" label="W" />
       </FileTile>
-      <FileTile x={26} y={230} rotate={-7}>
+      <FileTile x={26} y={230} rotate={-7} index={2} pull={active}>
         <DocGlyph color="#2f9e5b" label="X" />
       </FileTile>
-      <FileTile x={6} y={330} rotate={5}>
+      <FileTile x={6} y={330} rotate={5} index={3} pull={active}>
         <ImageGlyph />
       </FileTile>
     </div>
   );
 }
 
-/** Dotted trail → glowing shield → arrow, with the privacy promise underneath. */
-/** `lit`: a file is being processed or is done, so the shield glows harder. */
-export function FlowOut({ lit = false }: { lit?: boolean }) {
+/**
+ * Dotted trail → glowing shield → arrow, with the privacy promise underneath.
+ * `lit`: a file is being processed, so the shield glows harder. `done`: the
+ * result file slides out along the arrow.
+ */
+export function FlowOut({ lit = false, done = false }: { lit?: boolean; done?: boolean }) {
   return (
-    <div className="relative flex w-[180px] shrink-0 items-center" aria-label="Files stay on this device">
+    <div className="fo-intro-pop relative flex w-[180px] shrink-0 items-center [animation-delay:540ms]" aria-label="Files stay on this device">
       <svg aria-hidden="true" viewBox="0 0 180 420" className="pointer-events-none absolute inset-0 -top-[150px] h-[420px] w-full" fill="none">
         <path d="M60 0 V40 L80 60 V120" stroke="#fff" strokeOpacity=".07" />
         <path d="M120 420 V360 L100 340 V300" stroke="#fff" strokeOpacity=".07" />
@@ -155,9 +154,11 @@ export function FlowOut({ lit = false }: { lit?: boolean }) {
         <span className="h-2.5 w-2.5 rounded-full bg-accent shadow-[0_0_10px_#cdf564]" />
       </span>
       <span className="relative shrink-0">
+        {/* Breathing glow behind the shield. */}
+        <span aria-hidden="true" className="fo-breathe pointer-events-none absolute -inset-3 rounded-full bg-accent/30 blur-xl" />
         <span
           className={
-            "flex h-[86px] w-[86px] items-center justify-center rounded-full ring-[1.5px] transition-[box-shadow,background-color] duration-500 " +
+            "relative flex h-[86px] w-[86px] items-center justify-center rounded-full ring-[1.5px] transition-[box-shadow,background-color] duration-500 " +
             (lit
               ? "bg-accent/[0.14] ring-accent shadow-[0_0_44px_rgb(205_245_100/0.6),inset_0_0_26px_rgb(205_245_100/0.3)]"
               : "bg-accent/[0.07] ring-accent/60 shadow-[0_0_28px_rgb(205_245_100/0.35),inset_0_0_22px_rgb(205_245_100/0.15)]")
@@ -170,9 +171,18 @@ export function FlowOut({ lit = false }: { lit?: boolean }) {
         </span>
         <span className="absolute left-1/2 top-full mt-4 -translate-x-1/2 whitespace-nowrap text-[15px] font-semibold text-accent">Stays on this device</span>
       </span>
-      <svg aria-hidden="true" viewBox="0 0 40 16" className="ml-1 h-4 w-10 shrink-0" fill="none">
-        <path d="M0 8 H36 M29 2 36 8 29 14" stroke="#fff" strokeOpacity=".85" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+      <span className="relative ml-1 shrink-0">
+        <svg aria-hidden="true" viewBox="0 0 40 16" className="h-4 w-10" fill="none">
+          <path d="M0 8 H36 M29 2 36 8 29 14" stroke="#fff" strokeOpacity=".85" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        {done && (
+          <span aria-hidden="true" className="fo-slide-out absolute bottom-full left-1 mb-2 flex h-9 w-8 items-center justify-center rounded-[7px] bg-accent text-[#14152b] shadow-[0_0_18px_rgb(205_245_100/0.6)]">
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none">
+              <path d="m5.5 12.5 4 4 9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+        )}
+      </span>
     </div>
   );
 }

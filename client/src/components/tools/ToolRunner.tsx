@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowDown, ArrowUp, Check, Copy, Download, FileText, Loader2, RotateCcw, X } from "lucide-react";
 import { downloadFile, formatBytes, toToolFile, zipFiles, type ToolFile } from "@/lib/tools/files";
 import { openPdf, renderToCanvas } from "@/lib/tools/pdfjs";
@@ -8,6 +8,7 @@ import type { ToolDef } from "@/lib/tools/registry";
 import { Dropzone } from "./Dropzone";
 import { Mascot } from "../mascot/Mascot";
 import { cn } from "../ui/primitives";
+import { isReducedMotion } from "@/lib/motion";
 
 export interface LoadedFile extends ToolFile {
   id: string;
@@ -95,6 +96,27 @@ export function ToolRunner<O>({ tool, spec }: { tool: ToolDef; spec: ToolSpec<O>
       return next;
     });
 
+  // Reordering springs cards into their new places (FLIP: measure, invert, play).
+  const fileList = useRef<HTMLUListElement>(null);
+  const rects = useRef(new Map<string, DOMRect>());
+  useLayoutEffect(() => {
+    const ul = fileList.current;
+    if (!ul) return;
+    const next = new Map<string, DOMRect>();
+    ul.querySelectorAll<HTMLElement>("[data-flip]").forEach((el) => {
+      const id = el.dataset.flip!;
+      const now = el.getBoundingClientRect();
+      next.set(id, now);
+      const before = rects.current.get(id);
+      if (!before || isReducedMotion()) return;
+      const dx = before.left - now.left;
+      const dy = before.top - now.top;
+      if (!dx && !dy) return;
+      el.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "translate(0, 0)" }], { duration: 480, easing: "cubic-bezier(.34,1.45,.64,1)" });
+    });
+    rects.current = next;
+  }, [files]);
+
   const run = async () => {
     const problem =
       (!spec.noFiles && files.length < (spec.minFiles ?? 1) ? `Add at least ${spec.minFiles ?? 1} files.` : null) ?? spec.validate?.(files, options) ?? null;
@@ -122,13 +144,23 @@ export function ToolRunner<O>({ tool, spec }: { tool: ToolDef; spec: ToolSpec<O>
     setOptions(spec.defaults);
   };
 
-  if (result) return <Results result={result} onReset={reset} anchor={resultRef} />;
+  const step = result ? 3 : running ? 2 : !spec.noFiles && files.length === 0 ? 0 : 1;
+  const tracker = spec.noFiles ? null : <StepTracker step={step} />;
+
+  if (result)
+    return (
+      <>
+        {tracker}
+        <Results result={result} onReset={reset} anchor={resultRef} />
+      </>
+    );
 
   const needsFiles = !spec.noFiles && files.length === 0;
   const Options = spec.Options;
 
   return (
     <div>
+      {tracker}
       {needsFiles ? (
         loading ? (
           <div className="card flex flex-col items-center justify-center py-16 md:py-20" role="status">
@@ -146,9 +178,14 @@ export function ToolRunner<O>({ tool, spec }: { tool: ToolDef; spec: ToolSpec<O>
           <div className={cn("min-w-0 space-y-3", spec.noFiles && "hidden")}>
             {!spec.noFiles && (
               <>
-                <ul className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 xl:grid-cols-3">
+                <ul ref={fileList} className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 xl:grid-cols-3">
                   {files.map((f, i) => (
-                    <li key={f.id} className="group relative flex min-w-0 flex-col overflow-hidden rounded-2xl border border-line bg-surface">
+                    <li
+                      key={f.id}
+                      data-flip={f.id}
+                      style={{ animationDelay: `${Math.min(i, 5) * 50}ms` }}
+                      className="fo-rise group relative flex min-w-0 flex-col overflow-hidden rounded-2xl border border-line bg-surface"
+                    >
                       <div className="flex h-44 items-center justify-center bg-sunken p-4">
                         {f.thumb ? (
                           // eslint-disable-next-line @next/next/no-img-element
@@ -277,10 +314,12 @@ function ImagePreview({ file }: { file: ToolFile }) {
 function Results({ result, onReset, anchor }: { result: ToolResult; onReset: () => void; anchor: React.RefObject<HTMLDivElement | null> }) {
   const [copied, setCopied] = useState(false);
   const [winkKey, setWinkKey] = useState(0);
+  const [saved, setSaved] = useState<ToolFile | null>(null);
   const many = result.files.length > 1;
   const total = result.files.reduce((n, f) => n + f.bytes.length, 0);
-  const celebrate = (fn: () => void) => {
-    fn();
+  const celebrate = (file: ToolFile) => {
+    downloadFile(file);
+    setSaved(file);
     setWinkKey((k) => k + 1);
   };
   return (
@@ -294,7 +333,7 @@ function Results({ result, onReset, anchor }: { result: ToolResult; onReset: () 
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <button
               type="button"
-              onClick={() => celebrate(() => downloadFile(many ? zipFiles(result.files) : result.files[0]))}
+              onClick={() => celebrate(many ? zipFiles(result.files) : result.files[0])}
               className="btn btn-primary btn-lg max-w-full px-7"
             >
               <Download className="h-4 w-4" aria-hidden="true" />
@@ -308,7 +347,7 @@ function Results({ result, onReset, anchor }: { result: ToolResult; onReset: () 
               <li key={i} className="flex items-center gap-3 px-4 py-2.5">
                 <span className="min-w-0 flex-1 truncate text-[13px] text-fg">{f.name}</span>
                 <span className="text-[12px] tabular-nums text-fg-muted">{formatBytes(f.bytes.length)}</span>
-                <button type="button" onClick={() => celebrate(() => downloadFile(f))} className="text-[13px] font-semibold text-brand-300 hover:text-brand-200">
+                <button type="button" onClick={() => celebrate(f)} className="text-[13px] font-semibold text-brand-300 hover:text-brand-200">
                   Download
                 </button>
               </li>
@@ -316,6 +355,20 @@ function Results({ result, onReset, anchor }: { result: ToolResult; onReset: () 
           </ul>
         )}
         {many && <p className="mt-2 text-[12px] text-fg-muted">{formatBytes(total)} in total</p>}
+        {saved && (
+          // Download started: the check draws, then a small card for the saved file.
+          <div key={`${saved.name}-${winkKey}`} className="mx-auto mt-5 flex max-w-[420px] items-center gap-3 rounded-2xl bg-sunken p-3 text-left ring-1 ring-line" role="status">
+            <span className="fo-pop flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent">
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden="true">
+                <path d="m5.5 12.5 4 4 9-9" stroke="#14152b" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" pathLength="1" className="fo-draw [animation-delay:150ms]" />
+              </svg>
+            </span>
+            <span className="fo-rise min-w-0 flex-1 [animation-delay:250ms]">
+              <span className="block truncate text-[14px] font-semibold text-fg">{saved.name}</span>
+              <span className="block text-[12.5px] text-fg-muted">{formatBytes(saved.bytes.length)} · Download started. Check your Downloads folder.</span>
+            </span>
+          </div>
+        )}
       </div>
 
       {result.text && (
@@ -353,5 +406,37 @@ function Results({ result, onReset, anchor }: { result: ToolResult; onReset: () 
         </button>
       </div>
     </div>
+  );
+}
+
+const STEP_LABELS = ["Choose files", "Configure", "Process", "Download"];
+
+/** Where you are in the tool: choose → configure → process → download. */
+function StepTracker({ step }: { step: number }) {
+  return (
+    <ol className="mb-5 flex items-center gap-2" aria-label="Progress">
+      {STEP_LABELS.map((label, i) => {
+        const done = i < step || (i === 3 && step === 3);
+        const now = i === step && step !== 3;
+        return (
+          <li key={label} className="flex min-w-0 flex-1 items-center gap-2 last:flex-none" aria-current={now ? "step" : undefined}>
+            <span
+              className={cn(
+                "flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-mono text-[11.5px] font-semibold ring-1 transition-[background-color,color,box-shadow] duration-300",
+                done ? "bg-accent text-on-accent ring-accent" : now ? "bg-brand-500/20 text-brand-200 ring-brand-400 shadow-[0_0_14px_rgb(139_124_246/0.45)]" : "bg-surface text-fg-subtle ring-line-strong",
+              )}
+            >
+              {done ? <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden="true" /> : i + 1}
+            </span>
+            <span className={cn("hidden whitespace-nowrap text-[13px] font-medium transition-colors duration-300 sm:block", done || now ? "text-fg" : "text-fg-subtle")}>{label}</span>
+            {i < STEP_LABELS.length - 1 && (
+              <span className="relative h-[2px] min-w-4 flex-1 overflow-hidden rounded-full bg-line" aria-hidden="true">
+                <span className="absolute inset-0 origin-left rounded-full bg-[linear-gradient(90deg,#8b7cf6,#cdf564)] transition-transform duration-[450ms] ease-[cubic-bezier(.3,.7,.2,1)]" style={{ transform: `scaleX(${i < step ? 1 : 0})` }} />
+              </span>
+            )}
+          </li>
+        );
+      })}
+    </ol>
   );
 }

@@ -23,7 +23,7 @@ const QUICK = ["merge-pdf", "compress-pdf", "pdf-to-word", "resize-image"];
 /** The homepage: a drop area that sends files to the right tool, quick actions, and every tool. */
 export function HomeWorkspace() {
   const [staged, setStaged] = useState<File[] | null>(null);
-  const [activity, setActivity] = useState({ dragging: false, working: false });
+  const [activity, setActivity] = useState({ dragging: false, working: false, done: false });
 
   const stage = useCallback((files: File[]) => {
     if (files.length) setStaged(files);
@@ -58,7 +58,7 @@ export function HomeWorkspace() {
         {/* Circuit-board backdrop: a violet haze over a faint dot grid. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(50%_45%_at_45%_62%,rgb(92_77_204/0.22),transparent_70%),radial-gradient(90%_80%_at_50%_30%,#111331,transparent_75%),radial-gradient(rgb(255_255_255/0.05)_1px,transparent_1px)] [background-size:auto,auto,24px_24px] [mask-image:linear-gradient(to_bottom,black_70%,transparent)]"
+          className="fo-intro-fade pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(50%_45%_at_45%_62%,rgb(92_77_204/0.22),transparent_70%),radial-gradient(90%_80%_at_50%_30%,#111331,transparent_75%),radial-gradient(rgb(255_255_255/0.05)_1px,transparent_1px)] [background-size:auto,auto,24px_24px] [mask-image:linear-gradient(to_bottom,black_70%,transparent)]"
         />
         <Twinkles />
         <div className="grid gap-10 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-center xl:gap-8">
@@ -66,10 +66,11 @@ export function HomeWorkspace() {
             <header className="text-center">
               <h1 className="font-display text-[clamp(2.4rem,6vw,4.5rem)] font-extrabold leading-[1.02] tracking-[-0.035em] text-fg">
                 <span className="mb-5 block font-sans text-[13px] font-semibold uppercase leading-none tracking-[0.12em] text-fg-subtle">Free online PDF, Office &amp; image tools</span>
-                All your files.
-                <br />
-                <span className="bg-[linear-gradient(90deg,#8b7cf6,#b6adff)] bg-clip-text text-transparent">One private</span>{" "}
-                <span className="text-accent">workspace.</span>
+                <span className="fo-intro-rise block [animation-delay:60ms]">All your files.</span>
+                <span className="fo-intro-wipe inline-block [animation-delay:170ms]">
+                  <span className="bg-[linear-gradient(90deg,#8b7cf6,#b6adff)] bg-clip-text text-transparent">One private</span>{" "}
+                  <span className="text-accent">workspace.</span>
+                </span>
               </h1>
             </header>
 
@@ -79,7 +80,7 @@ export function HomeWorkspace() {
               </div>
               <DropStage staged={staged} onFiles={stage} onClear={() => setStaged(null)} matches={matches} onActivity={setActivity} />
               <div className="hidden self-stretch lg:flex">
-                <FlowOut lit={activity.working} />
+                <FlowOut lit={activity.working} done={activity.done} />
               </div>
             </div>
 
@@ -92,7 +93,9 @@ export function HomeWorkspace() {
             </p>
           </div>
 
-          <QuickActions staged={staged} />
+          <div className="fo-intro-rise [animation-delay:600ms]">
+            <QuickActions staged={staged} />
+          </div>
         </div>
       </section>
 
@@ -135,15 +138,15 @@ function QuickActions({ staged }: { staged: File[] | null }) {
               <Link
                 href={toolPath(t)}
                 onClick={() => staged?.length && fitsFiles(t, staged) && handFiles(appPath(t), staged)}
-                className="group flex h-[72px] items-center overflow-hidden rounded-[18px] border border-line bg-raised/50 pr-4 transition-colors hover:border-line-strong hover:bg-raised"
+                className="group flex h-[72px] items-center overflow-hidden rounded-[18px] border border-line bg-raised/50 pr-4 transition-[translate,background-color,border-color,box-shadow] duration-200 hover:-translate-y-1 hover:border-line-strong hover:bg-raised hover:shadow-[0_14px_30px_-16px_rgb(0_0_0/0.9)]"
               >
                 {tile ? (
-                  <span className={cn("flex h-full w-[72px] shrink-0 items-center justify-center rounded-[18px] transition-transform duration-200 group-hover:scale-[1.04]", tile.bg, tile.fg)}>{tile.icon}</span>
+                  <span className={cn("fo-pulse-once flex h-full w-[72px] shrink-0 items-center justify-center rounded-[18px]", tile.bg, tile.fg)}>{tile.icon}</span>
                 ) : (
                   <ToolTile tool={t} size="lg" className="ml-3" />
                 )}
                 <span className="min-w-0 flex-1 truncate pl-4 text-[15px] font-semibold text-fg">{t.name}</span>
-                <ChevronRight className="h-5 w-5 shrink-0 text-fg-muted transition-transform group-hover:translate-x-0.5 group-hover:text-fg" aria-hidden="true" />
+                <ChevronRight className="h-5 w-5 shrink-0 text-fg-muted transition-[translate,color] duration-200 group-hover:translate-x-1.5 group-hover:text-fg" aria-hidden="true" />
               </Link>
             </li>
           );
@@ -163,7 +166,7 @@ const TWINKLES = Array.from({ length: 22 }, (_, i) => ({
 
 function Twinkles() {
   return (
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+    <div aria-hidden="true" className="fo-intro-fade pointer-events-none absolute inset-0 -z-10">
       {TWINKLES.map((t, i) => (
         <span key={i} className="fo-twinkle absolute h-[3px] w-[3px] rounded-full bg-white" style={{ left: t.left, top: t.top, animationDelay: t.delay, animationDuration: t.duration }} />
       ))}

@@ -96,7 +96,7 @@ export function DropStage({
   /** Every tool that can open the staged files, best first. */
   matches: ToolDef[];
   /** Tells the page when a file is over the card (wakes the flow lines) and when work is happening. */
-  onActivity?: (a: { dragging: boolean; working: boolean }) => void;
+  onActivity?: (a: { dragging: boolean; working: boolean; done: boolean }) => void;
 }) {
   const [phase, setPhase] = useState<Phase>("idle");
   const [kind, setKind] = useState<FileKind>("pdf");
@@ -111,7 +111,7 @@ export function DropStage({
   const frame = useRef(0);
 
   useEffect(() => {
-    onActivity?.({ dragging: over, working: phase === "landing" || phase === "running" || phase === "done" });
+    onActivity?.({ dragging: over, working: phase === "landing" || phase === "running" || phase === "done", done: phase === "done" });
   }, [over, phase, onActivity]);
 
   // A new set of files: play the landing while they're read on this device.
@@ -234,7 +234,7 @@ export function DropStage({
     <div
       ref={root}
       className={cn(
-        "relative w-full min-w-0 max-w-[560px] flex-1 transition-transform duration-[250ms] ease-[cubic-bezier(.2,.8,.2,1)]",
+        "fo-intro-scale relative w-full min-w-0 max-w-[560px] flex-1 transition-transform duration-[250ms] ease-[cubic-bezier(.2,.8,.2,1)]",
         over ? "scale-[1.04]" : hot && idle ? "-translate-y-1" : "",
       )}
       onPointerEnter={(e) => e.pointerType === "mouse" && setHot(true)}
@@ -436,7 +436,7 @@ function Landing({ file, count }: { file: File; count: number }) {
           <path d="m8.4 12.2 2.5 2.5 4.7-5" stroke="#cdf564" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" pathLength="1" className="fo-draw [animation-delay:750ms]" />
         </svg>
       </div>
-      <p className="fo-fade mt-6 font-display text-[22px] font-bold tracking-[-0.02em] [animation-delay:250ms]">Processing on your device</p>
+      <p className="fo-fade mt-6 font-display text-[22px] font-bold tracking-[-0.02em] [animation-delay:250ms]">Processing locally — no upload</p>
       <p className="mt-1 max-w-full truncate text-[13.5px] text-[#5d5f78]">{count > 1 ? `${count} files` : file.name}</p>
     </div>
   );

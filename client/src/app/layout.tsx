@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Dancing_Script, Plus_Jakarta_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/seo/site";
+import { motionInitScript } from "@/lib/motion";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const signature = Dancing_Script({ subsets: ["latin"], variable: "--font-signature-face", weight: ["600"], display: "swap" });
@@ -25,7 +26,11 @@ export const viewport: Viewport = { themeColor: "#0a0c11", colorScheme: "dark" }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${signature.variable} ${display.variable} ${mono.variable}`}>
+    // The motion script sets data-motion on <html> before paint, so React must not fight it.
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${signature.variable} ${display.variable} ${mono.variable}`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: motionInitScript }} />
+      </head>
       <body className="bg-app font-sans text-fg">{children}</body>
     </html>
   );

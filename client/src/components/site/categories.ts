@@ -12,3 +12,16 @@ export const CATEGORY_META: Record<Category, { short: string; title: string; ico
   intelligence: { short: "AI", title: "AI & compare", icon: "Sparkles" },
   image: { short: "Images", title: "Image tools", icon: "Image" },
 };
+
+/** Each category's colour (matches its icon tiles), for hover borders and glows. */
+export const CATEGORY_COLOR: Record<Category, string> = {
+  office: "#80a6ff",
+  organize: "#ffa365",
+  optimize: "#62dbb2",
+  "convert-to": "#ffcb66",
+  "convert-from": "#72c6ff",
+  edit: "#b7a2ff",
+  security: "#c4cad6",
+  intelligence: "#a3a3ff",
+  image: "#63d5cf",
+};

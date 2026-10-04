@@ -224,10 +224,9 @@ input[type="color"]::-moz-color-swatch {
 .fo-float { animation: fo-float 6s ease-in-out infinite; }
 @keyframes fo-flow-dash { to { stroke-dashoffset: -60; } }
 .fo-flow-dash { stroke-dasharray: 3 27; animation: fo-flow-dash 1.8s linear infinite; }
-@media (prefers-reduced-motion: reduce) {
-  .fo-float { animation: none; }
-  .fo-flow-dash { animation: none; stroke-opacity: 0; }
-}
+/* Reduced motion (system setting or the footer switch; see lib/motion.ts). */
+:root[data-motion="reduced"] .fo-float { animation: none; }
+:root[data-motion="reduced"] .fo-flow-dash { animation: none; stroke-opacity: 0; }
 
 /* Homepage drop stage (components/home/DropStage.tsx): "private file flow".
    Springs for things you touch (files, buttons); linear for machine work
@@ -237,7 +236,7 @@ input[type="color"]::-moz-color-swatch {
 .fo-press:active { scale: 0.96; }
 
 @keyframes fo-sweep { to { rotate: 360deg; } }
-.fo-sweep { animation: fo-sweep 6s linear infinite; }
+.fo-sweep { animation: fo-sweep 5s linear infinite; }
 
 @keyframes fo-twinkle { 0%, 100% { opacity: 0.04; } 50% { opacity: 0.55; } }
 .fo-twinkle { opacity: 0.04; animation: fo-twinkle 5s ease-in-out infinite; }
@@ -298,11 +297,101 @@ input[type="color"]::-moz-color-swatch {
 @keyframes fo-particle { from { translate: 0 0; opacity: 1; scale: 1; } to { translate: var(--dx) var(--dy); opacity: 0; scale: 0.4; } }
 .fo-particle { opacity: 0; animation: fo-particle 800ms cubic-bezier(.2,.7,.3,1) 120ms both; }
 
-@media (prefers-reduced-motion: reduce) {
-  .fo-sweep, .fo-twinkle, .fo-float-sm, .fo-dash-march, .fo-fade, .fo-rise, .fo-pop, .fo-drop-in, .fo-scan, .fo-ripple,
-  .fo-draw, .fo-chip-pulse, .fo-packet, .fo-streak, .fo-burst, .fo-particle { animation: none; }
-  .fo-press:active { scale: 1; }
+/* ── Site-wide motion system ────────────────────────────────────────
+   Durations: hover 150–200ms · tabs 220–280ms · reveals 350–500ms ·
+   drop 600–900ms · ambient 4–6s. Transform and opacity only, almost always. */
+
+/* Page-load intro, under 900ms in all: grid → headline → files → card → shield → quick actions. */
+@keyframes fo-intro-fade { from { opacity: 0; } }
+@keyframes fo-intro-rise { from { opacity: 0; translate: 0 14px; } }
+@keyframes fo-intro-wipe { from { clip-path: inset(-10% 100% -10% 0); } to { clip-path: inset(-10% 0 -10% 0); } }
+@keyframes fo-intro-tile { from { opacity: 0; translate: -28px 6px; scale: 0.9; } }
+@keyframes fo-intro-scale { from { opacity: 0; scale: 0.95; } }
+@keyframes fo-intro-pop { from { opacity: 0; scale: 0.85; } }
+.fo-intro-fade { animation: fo-intro-fade 600ms ease-out backwards; }
+.fo-intro-rise { animation: fo-intro-rise 380ms cubic-bezier(.2,.8,.2,1) backwards; }
+.fo-intro-wipe { animation: fo-intro-wipe 460ms cubic-bezier(.6,0,.2,1) backwards; }
+.fo-intro-tile { animation: fo-intro-tile 420ms cubic-bezier(.34,1.3,.64,1) backwards; }
+.fo-intro-scale { animation: fo-intro-scale 420ms cubic-bezier(.2,.8,.2,1) 300ms backwards; }
+.fo-intro-pop { animation: fo-intro-pop 340ms cubic-bezier(.34,1.56,.64,1) backwards; }
+
+/* Shield breathing, result file sliding out along the arrow. */
+@keyframes fo-breathe { 0%, 100% { opacity: 0.35; scale: 0.92; } 50% { opacity: 0.8; scale: 1.06; } }
+.fo-breathe { animation: fo-breathe 4.5s ease-in-out infinite; }
+@keyframes fo-slide-out { from { opacity: 0; translate: -70px 0; scale: 0.7; } 70% { opacity: 1; } }
+.fo-slide-out { animation: fo-slide-out 600ms cubic-bezier(.34,1.3,.64,1) 200ms backwards; }
+
+/* Sidebar active pill grows from the left; quick-action tiles pulse once on hover. */
+@keyframes fo-grow-x { from { transform: scaleX(0.15); opacity: 0.4; } }
+.fo-grow-x { transform-origin: left; animation: fo-grow-x 320ms cubic-bezier(.3,.7,.2,1) backwards; }
+@keyframes fo-pulse-once { 0% { scale: 1; } 45% { scale: 1.1; } 100% { scale: 1; } }
+.group:hover .fo-pulse-once { animation: fo-pulse-once 380ms cubic-bezier(.34,1.56,.64,1); }
+
+/* Command palette. */
+@keyframes fo-palette-in { from { opacity: 0; scale: 0.96; translate: 0 -8px; } }
+@keyframes fo-palette-out { to { opacity: 0; scale: 0.97; } }
+@keyframes fo-fade-out { to { opacity: 0; } }
+.fo-palette-in { animation: fo-palette-in 220ms cubic-bezier(.2,.8,.2,1) backwards; }
+.fo-palette-out { animation: fo-palette-out 160ms ease-in forwards; }
+.fo-fade-out { animation: fo-fade-out 160ms ease-in forwards; }
+@keyframes fo-zoom-forward { to { scale: 1.04; } }
+.fo-zoom-forward { animation: fo-zoom-forward 200ms cubic-bezier(.2,.8,.2,1) forwards; }
+@keyframes fo-preview { 0% { rotate: 0deg; scale: 1; } 30% { rotate: -9deg; scale: 1.12; } 60% { rotate: 6deg; scale: 1.06; } 100% { rotate: 0deg; scale: 1; } }
+.fo-preview { display: inline-block; animation: fo-preview 420ms cubic-bezier(.34,1.56,.64,1); }
+
+/* Scroll reveal (lib/motion.ts useReveal): heading rises 16px, then items cascade. */
+@keyframes fo-rise-16 { from { opacity: 0; translate: 0 16px; } }
+[data-reveal="hidden"] :is(.fo-r-head, .fo-r-item) { opacity: 0; }
+[data-reveal="shown"] .fo-r-head { animation: fo-rise-16 420ms cubic-bezier(.2,.8,.2,1) backwards; }
+[data-reveal="shown"] .fo-r-item { animation: fo-rise-16 450ms cubic-bezier(.2,.8,.2,1) backwards; animation-delay: calc(var(--i, 0) * 50ms + 80ms); }
+[data-reveal="shown"] .fo-r-item[data-late] { animation: fo-intro-fade 350ms ease-out backwards; animation-delay: 380ms; }
+
+/* Privacy diagrams (components/landing/PrivacyFlows.tsx): loops that play only on screen. */
+.fo-pd :is(.fo-pd-packet, .fo-pd-out, .fo-pd-back, .fo-pd-line, .fo-pd-strip, .fo-pd-chip) { transform-box: fill-box; }
+.fo-pd-packet, .fo-pd-out, .fo-pd-back, .fo-pd-line, .fo-pd-chip { opacity: 0; }
+[data-reveal="hidden"] .fo-pd * { animation-play-state: paused !important; }
+@keyframes fo-pd-packet {
+  0% { transform: translateX(0); opacity: 0; } 6% { opacity: 1; }
+  28% { transform: translateX(52px); opacity: 1; } 31% { opacity: 0; }
+  52% { transform: translateX(98px); opacity: 0; } 55% { opacity: 1; }
+  76% { transform: translateX(142px); opacity: 1; } 79%, 100% { transform: translateX(142px); opacity: 0; }
 }
+.fo-pd-packet { animation: fo-pd-packet 4.8s linear infinite; }
+@keyframes fo-pd-chip { 0%, 30%, 56%, 100% { opacity: 0; } 40% { opacity: 1; } }
+.fo-pd-chip { animation: fo-pd-chip 4.8s ease-in-out infinite; }
+@keyframes fo-pd-result { 0%, 76% { opacity: 0.35; scale: 1; } 84% { opacity: 1; scale: 1.15; } 92%, 100% { opacity: 1; scale: 1; } }
+.fo-pd-result { transform-box: fill-box; transform-origin: center; animation: fo-pd-result 4.8s ease-out infinite; }
+@keyframes fo-pd-out { 0% { transform: translateX(0); opacity: 0; } 5% { opacity: 1; } 28% { transform: translateX(92px); opacity: 1; } 31%, 100% { transform: translateX(92px); opacity: 0; } }
+.fo-pd-out { animation: fo-pd-out 5.2s linear infinite; }
+@keyframes fo-pd-back { 0%, 36% { transform: translateX(0); opacity: 0; } 40% { opacity: 1; } 60% { transform: translateX(-92px); opacity: 1; } 63%, 100% { transform: translateX(-92px); opacity: 0; } }
+.fo-pd-back { animation: fo-pd-back 5.2s linear infinite; }
+@keyframes fo-pd-strip { 0%, 64% { transform: translateY(0); opacity: 1; } 82%, 100% { transform: translateY(16px); opacity: 0; } }
+.fo-pd-strip { animation: fo-pd-strip 5.2s cubic-bezier(.5,0,.8,.4) infinite; }
+@keyframes fo-pd-deleted { 0%, 74% { opacity: 0; } 82%, 96% { opacity: 1; } 100% { opacity: 0; } }
+.fo-pd-deleted { animation: fo-pd-deleted 5.2s ease-out infinite; }
+@keyframes fo-pd-line { 0% { transform: translateX(0); opacity: 0; } 8% { opacity: 1; } 55% { transform: translateX(150px); opacity: 1; } 62%, 100% { transform: translateX(160px); opacity: 0; } }
+.fo-pd-line { animation: fo-pd-line 3.6s cubic-bezier(.4,0,.2,1) infinite; }
+@keyframes fo-pd-node { 0%, 40%, 100% { opacity: 0.4; scale: 1; } 60% { opacity: 1; scale: 1.18; } }
+.fo-pd-node { transform-box: fill-box; transform-origin: center; animation: fo-pd-node 1.2s ease-in-out infinite; }
+
+/* FAQ: answers open with a smooth height change where the browser supports it. */
+:root { interpolate-size: allow-keywords; }
+.fo-faq::details-content { block-size: 0; overflow: hidden; transition: block-size 300ms cubic-bezier(.3,.7,.2,1), content-visibility 300ms allow-discrete; }
+.fo-faq[open]::details-content { block-size: auto; }
+
+/* Reduced motion: no floating, no loops, no scroll effects; states still change clearly. */
+:root[data-motion="reduced"] :is(
+  .fo-sweep, .fo-twinkle, .fo-float-sm, .fo-dash-march, .fo-fade, .fo-rise, .fo-pop, .fo-drop-in, .fo-scan, .fo-ripple,
+  .fo-draw, .fo-chip-pulse, .fo-packet, .fo-streak, .fo-burst, .fo-particle,
+  .fo-intro-fade, .fo-intro-rise, .fo-intro-wipe, .fo-intro-tile, .fo-intro-scale, .fo-intro-pop, .fo-breathe, .fo-slide-out,
+  .fo-grow-x, .fo-pulse-once, .fo-palette-in, .fo-zoom-forward, .fo-preview, .fo-r-head, .fo-r-item,
+  .fo-pd-packet, .fo-pd-chip, .fo-pd-result, .fo-pd-out, .fo-pd-back, .fo-pd-strip, .fo-pd-deleted, .fo-pd-line, .fo-pd-node
+) { animation: none !important; }
+:root[data-motion="reduced"] .fo-press:active { scale: 1; }
+:root[data-motion="reduced"] .fo-faq::details-content { transition: none; }
+:root[data-motion="reduced"] [data-reveal] :is(.fo-r-head, .fo-r-item) { opacity: 1; }
+:root[data-motion="reduced"] .fo-pd-deleted, :root[data-motion="reduced"] .fo-pd-result { opacity: 1; }
+
 
 /* ── Folio, the mascot (components/mascot/Mascot.tsx) ───────────── */
 @property --m-a { syntax: "<color>"; inherits: true; initial-value: #b3a8ff; }
@@ -375,6 +464,8 @@ input[type="color"]::-moz-color-swatch {
   .mascot *, .m-bubble { animation: none !important; transition-duration: 0ms !important; }
   .mascot .m-orbit { display: none; }
 }
+:root[data-motion="reduced"] :is(.mascot *, .m-bubble) { animation: none !important; transition-duration: 0ms !important; }
+:root[data-motion="reduced"] .mascot .m-orbit { display: none; }
 
 /* AI answers in Chat with PDF. */
 .chat-answer > * + * { margin-top: 0.6em; }

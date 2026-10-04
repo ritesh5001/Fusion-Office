@@ -11,6 +11,7 @@ import { CATEGORY_META } from "./categories";
 import { CATEGORIES, type Category } from "@/lib/tools/registry";
 import { cn } from "@/lib/cn";
 import { categoryHref } from "@/lib/seo/clusters";
+import { scrollBehavior } from "@/lib/motion";
 
 /**
  * Frame for every content page: top navigation, a category rail on wide
@@ -54,31 +55,65 @@ function SideRail({ active }: { active?: Category }) {
     return () => observer.disconnect();
   }, [pathname, active]);
 
+  const index = inView ? CATEGORIES.findIndex((c) => c.id === inView) : -1;
+
+  // On a page that lists the category, glide to it instead of reloading.
+  const go = (e: React.MouseEvent, id: Category) => {
+    const el = document.getElementById(`cat-${id}`);
+    if (!el) return;
+    e.preventDefault();
+    el.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
+    history.replaceState(null, "", `#cat-${id}`);
+    setInView(id);
+  };
+
   return (
     <aside aria-label="Tool categories" className="hidden w-[208px] shrink-0 border-r border-line xl:block">
       <div className="sticky top-16 flex h-[calc(100dvh-4rem)] flex-col px-3 py-6">
         <p className="eyebrow px-3">Tools</p>
-        <ul className="mt-2 space-y-0.5">
-          {CATEGORIES.map((c) => {
-            const on = inView === c.id;
-            return (
-              <li key={c.id}>
-                <a
-                  href={categoryHref(c.id)}
-                  aria-current={on ? "true" : undefined}
-                  className={cn(
-                    "group flex h-10 items-center gap-3 rounded-[10px] px-3 text-[14px] font-medium transition-colors",
-                    on ? "bg-accent text-on-accent" : "text-fg-muted hover:bg-raised hover:text-fg",
-                  )}
-                >
-                  <ToolIcon name={CATEGORY_META[c.id].icon} className={cn("h-[18px] w-[18px] shrink-0", on ? "" : "text-fg-subtle group-hover:text-fg-muted")} strokeWidth={1.8} />
-                  <span className="flex-1 truncate">{CATEGORY_META[c.id].short}</span>
-                  {on && <ChevronRight className="h-4 w-4" aria-hidden="true" />}
-                </a>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="relative mt-2 pl-2.5">
+          {/* Tracking line: where you are in the tool library. */}
+          <span aria-hidden="true" className="absolute bottom-1 left-0 top-1 w-px bg-line" />
+          <span
+            aria-hidden="true"
+            className={cn(
+              "absolute left-[-0.5px] top-0 h-10 w-[2px] rounded-full bg-accent shadow-[0_0_10px_#cdf564] transition-[transform,opacity] duration-300 ease-[cubic-bezier(.3,.7,.2,1)]",
+              index < 0 && "opacity-0",
+            )}
+            style={{ transform: `translateY(${Math.max(0, index) * 42}px)` }}
+          />
+          <ul className="space-y-0.5">
+            {CATEGORIES.map((c) => {
+              const on = inView === c.id;
+              return (
+                <li key={c.id}>
+                  <a
+                    href={categoryHref(c.id)}
+                    onClick={(e) => go(e, c.id)}
+                    aria-current={on ? "true" : undefined}
+                    className={cn(
+                      "group relative flex h-10 items-center gap-3 overflow-hidden rounded-[10px] px-3 text-[14px] font-medium transition-colors duration-200",
+                      on ? "text-on-accent" : "text-fg-muted hover:bg-raised hover:text-fg",
+                    )}
+                  >
+                    {/* The active pill grows in from the left. */}
+                    {on && <span key={c.id} aria-hidden="true" className="fo-grow-x absolute inset-0 rounded-[10px] bg-accent shadow-[0_0_18px_rgb(205_245_100/0.35)]" />}
+                    <ToolIcon
+                      name={CATEGORY_META[c.id].icon}
+                      className={cn(
+                        "relative h-[18px] w-[18px] shrink-0 transition-[scale,color,rotate] duration-200 group-hover:-rotate-6 group-hover:scale-[1.15]",
+                        on ? "" : "text-fg-subtle group-hover:text-accent",
+                      )}
+                      strokeWidth={1.8}
+                    />
+                    <span className="relative flex-1 truncate">{CATEGORY_META[c.id].short}</span>
+                    {on && <ChevronRight className="relative h-4 w-4" aria-hidden="true" />}
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
 
         <div className="mt-auto px-3 pt-6">
           <div className="mb-4 h-px w-6 bg-line-strong" />

@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { ArrowRight, BookOpen, Plus, Server, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen } from "lucide-react";
 import { SiteShell } from "@/components/site/SiteShell";
 import { HomeWorkspace } from "@/components/home/HomeWorkspace";
 import { HowItWorks } from "@/components/landing/HowItWorks";
+import { PrivacyFlows } from "@/components/landing/PrivacyFlows";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ToolTile } from "@/components/tools/icons";
 import { TOOLS, toolBySlug, type ToolDef } from "@/lib/tools/registry";
@@ -53,27 +54,6 @@ const FAQ = [
 export default function Home() {
   const ready = TOOLS.filter((t) => t.status === "ready");
   const count = (runs: string) => ready.filter((t) => t.runs === runs).length;
-
-  const privacy = [
-    {
-      icon: ShieldCheck,
-      title: "On your device",
-      count: count("browser"),
-      text: "The file is opened, changed and saved inside your browser. It never reaches our server.",
-    },
-    {
-      icon: Server,
-      title: "Converted on our server",
-      count: count("server"),
-      text: "Formats browsers can't handle (like Word to PDF) are converted on our server and deleted straight after.",
-    },
-    {
-      icon: Sparkles,
-      title: "With AI",
-      count: count("ai"),
-      text: "Only the document's text is sent to our AI provider to answer you. Nothing is stored.",
-    },
-  ];
 
   return (
     <SiteShell>
@@ -131,22 +111,7 @@ export default function Home() {
                 Every tool says where it runs before you use it. No account, no tracking of your documents, no watermarks.
               </p>
             </div>
-            <ul className="mt-10 grid gap-3 md:grid-cols-3">
-              {privacy.map((p) => (
-                <li key={p.title} className="card p-5">
-                  <div className="flex items-center justify-between">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-raised text-fg ring-1 ring-inset ring-line-strong">
-                      <p.icon className="h-5 w-5" aria-hidden="true" />
-                    </span>
-                    <span className="text-[13px] tabular-nums text-fg-subtle">
-                      {p.count} tool{p.count === 1 ? "" : "s"}
-                    </span>
-                  </div>
-                  <h3 className="mt-5 text-[16px] font-semibold tracking-[-0.01em] text-fg">{p.title}</h3>
-                  <p className="mt-1.5 text-[14px] leading-relaxed text-fg-muted">{p.text}</p>
-                </li>
-              ))}
-            </ul>
+            <PrivacyFlows counts={{ device: count("browser"), server: count("server"), ai: count("ai") }} />
           </div>
         </section>
 
@@ -168,9 +133,13 @@ export default function Home() {
             <ul className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {GUIDES.slice(0, 6).map((g) => (
                 <li key={g.slug}>
-                  <Link href={`/guides/${g.slug}`} className="group flex h-full items-start gap-3 rounded-2xl border border-line bg-surface p-4 transition-colors hover:border-line-strong hover:bg-raised">
-                    <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-fg-subtle group-hover:text-fg-muted" aria-hidden="true" />
-                    <span className="text-[15px] font-medium leading-snug text-fg">{g.h1}</span>
+                  <Link
+                    href={`/guides/${g.slug}`}
+                    className="group flex h-full items-start gap-3 rounded-2xl border border-line bg-surface p-4 transition-[translate,border-color,background-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:bg-raised hover:shadow-[0_12px_28px_-18px_rgb(0_0_0/0.9)]"
+                  >
+                    <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-fg-subtle transition-colors group-hover:text-brand-300" aria-hidden="true" />
+                    <span className="flex-1 text-[15px] font-medium leading-snug text-fg">{g.h1}</span>
+                    <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 -translate-x-1.5 text-fg-muted opacity-0 transition-[opacity,translate] duration-200 group-hover:translate-x-0 group-hover:opacity-100" aria-hidden="true" />
                   </Link>
                 </li>
               ))}
@@ -185,11 +154,13 @@ export default function Home() {
             </h2>
             <div className="card mt-8 divide-y divide-line">
               {FAQ.map((f) => (
-                <details key={f.q} className="group px-5 md:px-6">
+                <details key={f.q} className="fo-faq group px-5 md:px-6">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-5 text-left [&::-webkit-details-marker]:hidden">
                     <span className="text-[15px] font-semibold text-fg">{f.q}</span>
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-raised text-fg-muted ring-1 ring-inset ring-line transition-transform duration-200 group-open:rotate-45">
-                      <Plus className="h-4 w-4" aria-hidden="true" />
+                    {/* Plus that morphs into a minus: the vertical bar folds away. */}
+                    <span aria-hidden="true" className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-raised text-fg-muted ring-1 ring-inset ring-line transition-colors group-open:text-fg">
+                      <span className="absolute h-[1.75px] w-3.5 rounded-full bg-current" />
+                      <span className="absolute h-3.5 w-[1.75px] rounded-full bg-current transition-[rotate,scale] duration-[250ms] ease-[cubic-bezier(.3,.7,.2,1)] group-open:rotate-90 group-open:scale-y-0" />
                     </span>
                   </summary>
                   <p className="max-w-[64ch] pb-5 text-[14.5px] leading-relaxed text-fg-muted">{f.a}</p>

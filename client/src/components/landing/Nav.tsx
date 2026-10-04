@@ -7,6 +7,7 @@ import { ArrowRight, ChevronDown, Menu, Search, X } from "lucide-react";
 import { Logo } from "../Logo";
 import { AccountLinks } from "../home/AccountLinks";
 import { ToolsMenu } from "./ToolsMenu";
+import { CommandPalette, openCommandPalette } from "../site/CommandPalette";
 import { CATEGORY_META } from "../site/categories";
 import { ToolIcon } from "../tools/icons";
 import { CATEGORIES } from "@/lib/tools/registry";
@@ -44,6 +45,7 @@ export function Nav() {
   const link = "inline-flex h-9 items-center rounded-lg px-3 text-[14px] font-medium text-fg-muted transition-colors hover:bg-raised hover:text-fg";
 
   return (
+    <>
     <header ref={panel} className="sticky top-0 z-40 border-b border-line bg-app/85 backdrop-blur-xl">
       <nav aria-label="Main" className="mx-auto flex h-16 items-center gap-4 px-4 sm:px-6 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:px-8">
         <Link href="/" className="flex shrink-0 items-center gap-2.5 font-display text-[18px] font-bold tracking-[-0.02em] text-fg">
@@ -74,9 +76,15 @@ export function Nav() {
         </ul>
 
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2 lg:justify-self-end">
-          <a href="/#search" aria-label="Search tools" className="flex h-10 w-10 items-center justify-center rounded-lg text-fg-muted transition-colors hover:bg-raised hover:text-fg">
+          <button
+            type="button"
+            onClick={openCommandPalette}
+            aria-label="Search tools (press /)"
+            title="Search tools (/)"
+            className="fo-press flex h-10 w-10 items-center justify-center rounded-lg text-fg-muted transition-colors hover:bg-raised hover:text-fg"
+          >
             <Search className="h-[18px] w-[18px]" aria-hidden="true" />
-          </a>
+          </button>
           <AccountLinks />
           <Link href="/editor" className="btn btn-primary group hidden sm:inline-flex">
             Launch workspace
@@ -135,5 +143,7 @@ export function Nav() {
         </div>
       )}
     </header>
+    <CommandPalette />
+    </>
   );
 }
