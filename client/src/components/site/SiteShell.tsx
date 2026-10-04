@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { Nav } from "../landing/Nav";
 import { Footer } from "../landing/Footer";
+import { Feedback } from "./Feedback";
 import { ToolIcon } from "../tools/icons";
 import { CATEGORY_META } from "./categories";
 import { CATEGORIES, type Category } from "@/lib/tools/registry";
@@ -32,6 +33,7 @@ export function SiteShell({ children, active, rail = true }: { children: ReactNo
         <div className="min-w-0 flex-1">{children}</div>
       </div>
       <Footer />
+      <Feedback />
     </div>
   );
 }

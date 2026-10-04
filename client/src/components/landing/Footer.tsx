@@ -42,6 +42,7 @@ const COLUMNS = [
       { href: "/#privacy", label: "Privacy" },
       { href: "/#how-it-works", label: "How it works" },
       { href: "/#faq", label: "FAQ" },
+      { href: "#feedback", label: "Send feedback" },
       { href: "/dashboard", label: "My documents" },
     ],
   },
@@ -67,9 +68,16 @@ export function Footer() {
               <ul className="mt-3 space-y-2.5">
                 {c.links.map((l) => (
                   <li key={l.label}>
-                    <Link href={l.href} className="bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat pb-0.5 text-[14px] text-fg-muted transition-[color,background-size] duration-200 hover:bg-[length:100%_1px] hover:text-fg">
-                      {l.label}
-                    </Link>
+                    {l.href.startsWith("#") ? (
+                      // In-page action (opens the feedback form): a plain link fires the hash change it listens for.
+                      <a href={l.href} className="bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat pb-0.5 text-[14px] text-fg-muted transition-[color,background-size] duration-200 hover:bg-[length:100%_1px] hover:text-fg">
+                        {l.label}
+                      </a>
+                    ) : (
+                      <Link href={l.href} className="bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat pb-0.5 text-[14px] text-fg-muted transition-[color,background-size] duration-200 hover:bg-[length:100%_1px] hover:text-fg">
+                        {l.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

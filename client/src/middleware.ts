@@ -6,12 +6,28 @@ import { COMING_SOON_PATH, PREVIEW_COOKIE, isLaunched } from "@/lib/launch";
  * stays the same, so the page opens by itself once the timer ends). Static
  * files, the API proxy and Google's verification file are left alone.
  *
+ * Admin panel: served only at the secret ADMIN_PATH (env); /x-admin itself is a 404.
+ *
  * Developer preview: /any-page?preview=<PREVIEW_TOKEN> sets a 30-day cookie
  * that opens the real site; ?preview=off removes it. PREVIEW_TOKEN lives only
  * in the environment (the repo is public), never in code.
  */
+/** Where the admin panel page really lives. Never reachable directly: only via ADMIN_PATH. */
+const ADMIN_INTERNAL = "/x-admin";
+
 export function middleware(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
+
+  // Admin panel: hidden behind a secret path from the environment (the repo is
+  // public, so the path isn't in code). Works before launch too.
+  const adminPath = normalizePath(process.env.ADMIN_PATH);
+  if (adminPath && pathname.replace(/\/$/, "") === adminPath) {
+    return withPrivateHeaders(NextResponse.rewrite(new URL(ADMIN_INTERNAL, req.url)));
+  }
+  if (pathname === ADMIN_INTERNAL || pathname.startsWith(`${ADMIN_INTERNAL}/`)) {
+    // Looks exactly like any other missing page.
+    return NextResponse.rewrite(new URL("/_not-found", req.url), { status: 404 });
+  }
 
   if (isLaunched()) {
     // After launch the countdown page has nothing to show.
@@ -41,6 +57,20 @@ export function middleware(req: NextRequest) {
 
   if (pathname === COMING_SOON_PATH) return withGateHeaders(NextResponse.next());
   return withGateHeaders(NextResponse.rewrite(new URL(COMING_SOON_PATH, req.url)));
+}
+
+/** "/my-panel/" or "my-panel" → "/my-panel"; empty or "/" means no admin path. */
+function normalizePath(p: string | undefined) {
+  const v = (p ?? "").trim().replace(/\/+$/, "");
+  if (!v || v === "/") return "";
+  return v.startsWith("/") ? v : `/${v}`;
+}
+
+function withPrivateHeaders(res: NextResponse) {
+  res.headers.set("Cache-Control", "no-store");
+  res.headers.set("X-Robots-Tag", "noindex, nofollow");
+  res.headers.set("Referrer-Policy", "no-referrer");
+  return res;
 }
 
 /** Never cache the countdown in place of a real page, and keep it out of search results. */

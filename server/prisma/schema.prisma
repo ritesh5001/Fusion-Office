@@ -99,3 +99,22 @@ model DocumentVersion {
 
   @@unique([documentId, number])
 }
+
+// ─── Feedback ──────────────────────────────────────────────────────
+
+/** Feedback sent from the website's feedback form; read in the admin panel. */
+model Feedback {
+  id        String   @id @default(cuid())
+  name      String
+  message   String   @db.Text
+  /** Optional 1–5 rating. */
+  rating    Int?
+  /** The page it was sent from, e.g. /tools/merge-pdf. */
+  page      String?
+  userAgent String?
+  read      Boolean  @default(false)
+  starred   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}

@@ -4,6 +4,8 @@ import { documents } from "./routes/documents.js";
 import { files } from "./routes/files.js";
 import { convert } from "./routes/convert.js";
 import { ai } from "./routes/ai.js";
+import { feedback } from "./routes/feedback.js";
+import { admin } from "./routes/admin.js";
 import { errorHandler, signedInWhenAvailable } from "./lib/http.js";
 import { rateLimit } from "./lib/rateLimit.js";
 import { corsPolicy, originGuard, securityHeaders } from "./lib/security.js";
@@ -75,6 +77,19 @@ export function createApp() {
     rateLimit({ name: "ai", windowMs: 60 * 60_000, max: Number(process.env.AI_RATE_LIMIT) || 20 }),
     signedInWhenAvailable,
     ai,
+  );
+
+  // Feedback form: origin-checked, at most 6 submissions an hour per IP.
+  app.use("/api/feedback", originGuard(), rateLimit({ name: "feedback", windowMs: 60 * 60_000, max: Number(process.env.FEEDBACK_RATE_LIMIT) || 6 }), feedback);
+  // Admin panel (feedback inbox). Responses are private and never cached.
+  app.use(
+    "/api/admin",
+    originGuard(),
+    (_req, res, next) => {
+      res.set("Cache-Control", "no-store");
+      next();
+    },
+    admin,
   );
 
   app.use("/api", (_req, res) => {
