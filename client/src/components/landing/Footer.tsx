@@ -78,7 +78,17 @@ export function Footer() {
         </nav>
       </div>
       <div className="mx-auto flex flex-col items-center gap-4 border-t border-line px-4 py-5 text-[13px] text-fg-subtle sm:px-6 lg:flex-row lg:justify-between lg:px-8">
-        <p>© {new Date().getFullYear()} Fusion Office</p>
+        <p>
+          © {new Date().getFullYear()} Fusion Office ·{" "}
+          <a
+            href="https://nextgenfusion.in"
+            target="_blank"
+            rel="noopener"
+            className="bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat pb-0.5 font-medium text-fg-muted transition-[color,background-size] duration-200 hover:bg-[length:100%_1px] hover:text-fg"
+          >
+            nextgenfusion.in
+          </a>
+        </p>
         <p className="group inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-[14px] text-fg-muted shadow-[0_0_24px_-8px_rgb(139_124_246/0.6)] transition-shadow duration-200 hover:shadow-[0_0_28px_-6px_rgb(205_245_100/0.45)]">
           Made with
           <svg viewBox="0 0 24 24" className="fo-heartbeat h-4 w-4 fill-[#ff5a6e] drop-shadow-[0_0_6px_rgb(255_90_110/0.7)]" role="img" aria-label="love">
