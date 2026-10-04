@@ -15,7 +15,7 @@ export function AppBanner() {
         />
         <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-px bg-[linear-gradient(90deg,transparent,rgb(182_173_255/0.6),rgb(205_245_100/0.5),transparent)]" />
 
-        <div className="grid items-center gap-10 md:grid-cols-[minmax(0,1fr)_auto] md:gap-12">
+        <div className="grid items-center gap-10 md:grid-cols-2 md:gap-12">
           <div className="max-w-[560px]">
             <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.12em] text-accent">
               <span className="relative flex h-2 w-2">
@@ -95,7 +95,7 @@ function StoreBadge({ store }: { store: "apple" | "google" }) {
 /** A phone showing the app's home screen, built in CSS so it stays sharp and light. */
 function PhoneMock() {
   return (
-    <div aria-hidden="true" className="relative mx-auto hidden h-[400px] w-[260px] sm:block md:mx-0">
+    <div aria-hidden="true" className="relative mx-auto hidden h-[400px] w-[260px] sm:block">
       <div className="absolute inset-x-6 bottom-2 h-10 rounded-full bg-[#8b7cf6]/40 blur-2xl" />
       <div className="fo-float-sm relative mx-auto h-[392px] w-[196px] rotate-[6deg] rounded-[38px] bg-[linear-gradient(145deg,#2a2d4a,#14152b)] p-[7px] shadow-[0_30px_60px_-20px_rgb(0_0_0/0.9),inset_0_0_0_1px_rgb(255_255_255/0.12)]">
         <div className="relative h-full overflow-hidden rounded-[31px] bg-[#0b0d1f]">
@@ -106,13 +106,13 @@ function PhoneMock() {
               <Logo className="h-4 w-4" />
               <span className="text-[10px] font-bold text-white">Fusion Office</span>
             </div>
-            <p className="mt-4 font-display text-[17px] font-extrabold leading-[1.05] tracking-[-0.03em] text-white">
+            <p className="mt-4 font-display text-[15px] font-extrabold leading-[1.15] tracking-[-0.03em] text-white">
               All your files.
               <br />
               <span className="text-[#b6adff]">One private</span> <span className="text-accent">app.</span>
             </p>
             {/* Mini glowing drop card */}
-            <div className="relative mt-4 rounded-[16px] bg-[linear-gradient(100deg,#9d91fb,#cfc8ff_48%,#cdf564)] p-[2px] shadow-[-6px_0_18px_rgb(139_124_246/0.55),6px_0_18px_rgb(205_245_100/0.4)]">
+            <div className="relative mt-5 rounded-[16px] bg-[linear-gradient(100deg,#9d91fb,#cfc8ff_48%,#cdf564)] p-[2px] shadow-[-6px_0_18px_rgb(139_124_246/0.55),6px_0_18px_rgb(205_245_100/0.4)]">
               <div className="flex flex-col items-center rounded-[14px] bg-[#f5f4f0] px-2 py-4 text-[#14152b]">
                 <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -138,7 +138,7 @@ function PhoneMock() {
         </div>
       </div>
       {/* Floating privacy chip */}
-      <div className="absolute -left-6 top-24 flex items-center gap-1.5 rounded-full bg-[#14152b]/90 px-3 py-1.5 text-[11px] font-semibold text-accent shadow-[0_10px_24px_-10px_rgb(0_0_0/0.9)] ring-1 ring-accent/30 backdrop-blur">
+      <div className="absolute -left-8 top-[214px] flex items-center gap-1.5 rounded-full bg-[#14152b]/90 px-3 py-1.5 text-[11px] font-semibold text-accent shadow-[0_10px_24px_-10px_rgb(0_0_0/0.9)] ring-1 ring-accent/30 backdrop-blur">
         <svg viewBox="0 0 24 24" className="h-3.5 w-3.5">
           <path d="M12 2 4 5v6c0 5.1 3.4 9.4 8 11 4.6-1.6 8-5.9 8-11V5z" fill="#cdf564" />
           <path d="m8.4 12.2 2.5 2.5 4.7-5" stroke="#0c0f06" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
