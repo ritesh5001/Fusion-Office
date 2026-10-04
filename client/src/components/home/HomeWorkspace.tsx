@@ -63,7 +63,7 @@ export function HomeWorkspace() {
         {/* Circuit-board backdrop: a violet haze over a faint dot grid. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(55%_60%_at_45%_50%,rgb(92_77_204/0.16),transparent_70%),radial-gradient(rgb(255_255_255/0.05)_1px,transparent_1px)] [background-size:auto,24px_24px] [mask-image:linear-gradient(to_bottom,black_70%,transparent)]"
+          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(50%_45%_at_45%_62%,rgb(92_77_204/0.22),transparent_70%),radial-gradient(90%_80%_at_50%_30%,#111331,transparent_75%),radial-gradient(rgb(255_255_255/0.05)_1px,transparent_1px)] [background-size:auto,auto,24px_24px] [mask-image:linear-gradient(to_bottom,black_70%,transparent)]"
         />
         <div className="grid gap-10 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-center xl:gap-8">
           <div className="min-w-0">
@@ -148,11 +148,11 @@ function DropHub({ staged, onFiles, onClear, matches }: { staged: File[] | null;
       <div
         aria-hidden="true"
         className={cn(
-          "pointer-events-none absolute -inset-3 rounded-[40px] bg-[linear-gradient(100deg,#8b7cf6,#a99cff_45%,#cdf564)] blur-2xl transition-opacity duration-300",
-          over ? "opacity-80" : "opacity-45",
+          "pointer-events-none absolute -inset-4 rounded-[44px] bg-[linear-gradient(100deg,#8b7cf6,#a99cff_45%,#cdf564)] blur-3xl transition-opacity duration-300",
+          over ? "opacity-90" : "opacity-60",
         )}
       />
-      <div className="relative rounded-[30px] bg-[linear-gradient(100deg,#9d91fb,#cfc8ff_48%,#cdf564)] p-[2.5px] shadow-[0_0_18px_rgb(139_124_246/0.55),0_0_34px_rgb(205_245_100/0.2)]">
+      <div className="relative rounded-[30px] bg-[linear-gradient(100deg,#9d91fb,#cfc8ff_48%,#cdf564)] p-[3px] shadow-[-10px_0_30px_rgb(139_124_246/0.6),10px_0_30px_rgb(205_245_100/0.45),0_0_60px_rgb(139_124_246/0.25)]">
         <div className="rounded-[28px] bg-[#f5f4f0] p-3 text-[#14152b]">
           <div
             onClick={staged ? undefined : browse}
@@ -219,7 +219,7 @@ function DropHub({ staged, onFiles, onClear, matches }: { staged: File[] | null;
                             className="group flex items-center gap-3 rounded-xl bg-white p-2 pr-3 ring-1 ring-[#e3e1ec] transition-shadow hover:ring-brand-400 hover:shadow-[0_6px_16px_-8px_rgb(92_77_204/0.45)]"
                           >
                             <ToolTile tool={t} size="sm" />
-                            <span className="min-w-0 flex-1 truncate text-[14px] font-medium">{t.name}</span>
+                            <span className="min-w-0 flex-1 text-[14px] font-medium leading-tight">{t.name}</span>
                             <ChevronRight className="h-4 w-4 shrink-0 text-[#8a8ca3] group-hover:text-[#14152b]" aria-hidden="true" />
                           </Link>
                         </li>

@@ -10,7 +10,7 @@ const LIME = "#cdf564";
 /** A document glyph with a folded corner and a label, like a file icon. */
 function DocGlyph({ color, label }: { color: string; label: string }) {
   return (
-    <svg viewBox="0 0 40 48" className="h-11 w-9 drop-shadow-[0_4px_10px_rgb(0_0_0/0.35)]">
+    <svg viewBox="0 0 40 48" className="h-[50px] w-[42px] drop-shadow-[0_4px_10px_rgb(0_0_0/0.35)]">
       <path d="M4 0h22l14 14v30a4 4 0 0 1-4 4H4a4 4 0 0 1-4-4V4a4 4 0 0 1 4-4z" fill={color} />
       <path d="M26 0v10a4 4 0 0 0 4 4h10z" fill="#fff" fillOpacity=".55" />
       <text x="20" y="36" textAnchor="middle" fill="#fff" fontSize={label.length > 1 ? 11 : 15} fontWeight="800" fontFamily="ui-sans-serif, system-ui, sans-serif">
@@ -22,7 +22,7 @@ function DocGlyph({ color, label }: { color: string; label: string }) {
 
 function ImageGlyph() {
   return (
-    <svg viewBox="0 0 44 40" className="h-10 w-11 drop-shadow-[0_4px_10px_rgb(0_0_0/0.35)]">
+    <svg viewBox="0 0 44 40" className="h-11 w-12 drop-shadow-[0_4px_10px_rgb(0_0_0/0.35)]">
       <rect width="44" height="40" rx="7" fill="#8b7cf6" />
       <circle cx="31" cy="12" r="4.5" fill="#fff" />
       <path d="M5 33 17 17l9 11 5-6 8 11z" fill="#fff" />
@@ -34,7 +34,7 @@ function ImageGlyph() {
 function FileTile({ x, y, rotate, children }: { x: number; y: number; rotate: number; children: React.ReactNode }) {
   return (
     <div
-      className="fo-float absolute flex h-[76px] w-[76px] items-center justify-center rounded-[20px] bg-white/[0.06] ring-1 ring-inset ring-white/[0.12] shadow-[0_18px_40px_-16px_rgb(0_0_0/0.8),inset_0_1px_0_rgb(255_255_255/0.08)] backdrop-blur-md"
+      className="fo-float absolute flex h-[80px] w-[80px] items-center justify-center rounded-[22px] bg-[linear-gradient(145deg,rgb(157_145_251/0.22),rgb(80_70_170/0.10))] ring-1 ring-inset ring-white/[0.16] shadow-[0_18px_40px_-14px_rgb(0_0_0/0.85),0_0_24px_-6px_rgb(139_124_246/0.35),inset_0_1px_0_rgb(255_255_255/0.14)] backdrop-blur-md"
       style={{ left: x, top: y, rotate: `${rotate}deg`, animationDelay: `${(x + y) * -0.02}s` }}
     >
       {children}
