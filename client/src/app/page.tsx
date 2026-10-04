@@ -6,11 +6,8 @@ import { HowItWorks } from "@/components/landing/HowItWorks";
 import { PrivacyFlows } from "@/components/landing/PrivacyFlows";
 import { TestimonialsSection } from "@/components/ui/testimonials";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { ToolTile } from "@/components/tools/icons";
-import { TOOLS, toolBySlug, type ToolDef } from "@/lib/tools/registry";
-import { CLUSTERS, type ClusterId } from "@/lib/seo/clusters";
+import { TOOLS } from "@/lib/tools/registry";
 import { GUIDES } from "@/lib/seo/guides";
-import { contentFor } from "@/lib/seo/toolContent";
 import { faqPage, organization, website } from "@/lib/seo/jsonld";
 import { SITE_DESCRIPTION, TOOL_COUNT, pageMetadata } from "@/lib/seo/site";
 
@@ -19,15 +16,6 @@ export const metadata = pageMetadata({
   description: `Free online tools to edit, compress, merge, split, convert and sign PDFs, edit Word, Excel and PowerPoint files, and compress or resize images. ${TOOL_COUNT} tools, no sign-up, most run privately in your browser.`,
   path: "/",
 });
-
-/** The tools each category card on the homepage leads with. */
-const CLUSTER_PICKS: Record<ClusterId, string[]> = {
-  "pdf-tools": ["edit-pdf", "compress-pdf", "merge-pdf", "split-pdf", "sign-pdf", "protect-pdf"],
-  "pdf-converter": ["pdf-to-word", "word-to-pdf", "pdf-to-jpg", "jpg-to-pdf", "pdf-to-excel"],
-  "office-tools": ["word-editor", "excel-editor", "powerpoint-editor", "excel-to-pdf"],
-  "image-tools": ["compress-image", "resize-image", "crop-image", "convert-image"],
-  "ai-pdf-tools": ["chat-with-pdf", "summarize-pdf", "translate-pdf", "compare-pdf"],
-};
 
 const FAQ = [
   {
@@ -61,45 +49,6 @@ export default function Home() {
       <JsonLd data={[organization(), website(), faqPage(FAQ.map((f) => [f.q, f.a]))]} />
       <main id="main">
         <HomeWorkspace />
-
-        <section id="categories" aria-labelledby="categories-title" className="scroll-mt-20 border-t border-line">
-          <div className="px-4 py-16 sm:px-6 md:py-20 lg:px-8">
-            <div className="max-w-[640px]">
-              <p className="eyebrow">Tool categories</p>
-              <h2 id="categories-title" className="mt-3 text-balance font-display text-[clamp(1.75rem,3.4vw,2.5rem)] font-bold leading-[1.1] tracking-[-0.035em] text-fg">
-                Every document task, grouped by what you need to do.
-              </h2>
-            </div>
-            <ul className="mt-10 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {CLUSTERS.map((c) => {
-                const picks = CLUSTER_PICKS[c.id].map(toolBySlug).filter((t): t is ToolDef => !!t);
-                return (
-                  <li key={c.id} className="card flex flex-col p-5">
-                    <h3 className="text-[17px] font-semibold tracking-[-0.01em] text-fg">
-                      <Link href={c.path} className="hover:text-brand-200">
-                        {c.h1}
-                      </Link>
-                    </h3>
-                    <p className="mt-1.5 text-[14px] leading-relaxed text-fg-muted">{c.description}</p>
-                    <ul className="mt-4 space-y-1">
-                      {picks.map((t) => (
-                        <li key={t.slug}>
-                          <Link href={`/tools/${t.slug}`} className="-mx-2 flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-[14px] text-fg-muted hover:bg-raised hover:text-fg">
-                            <ToolTile tool={t} size="xs" />
-                            {contentFor(t).anchor}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                    <Link href={c.path} className="mt-auto inline-flex items-center gap-1 pt-4 text-[13px] font-semibold text-brand-300 hover:text-brand-200">
-                      {c.anchor} <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </section>
 
         <TestimonialsSection />
 

@@ -398,6 +398,11 @@ input[type="color"]::-moz-color-swatch {
 :root[data-motion="reduced"] :is(.fo-testimonial-x, .fo-testimonial-x-rev) { animation: none; }
 :root[data-motion="reduced"] .fo-testimonial-row { overflow-x: auto; scrollbar-width: none; }
 
+/* Launch countdown (components/launch/ComingSoon.tsx): each new digit slides up into place. */
+@keyframes fo-digit { from { transform: translateY(60%); opacity: 0; } }
+.fo-digit { animation: fo-digit 320ms cubic-bezier(.2,.8,.2,1); }
+:root[data-motion="reduced"] .fo-digit { animation: none; }
+
 /* Inside the mobile app (?app=1): the app supplies navigation, so the site's own chrome is hidden. */
 :root[data-embed="app"] .site-chrome { display: none !important; }
 
