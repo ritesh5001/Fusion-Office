@@ -1,9 +1,10 @@
 import express from "express";
 import { authEnabled, authHandler, cloudEnabled, currentUser } from "./auth.js";
+import { aiEnabled } from "./lib/ai.js";
 import { documents } from "./routes/documents.js";
 import { files } from "./routes/files.js";
 import { convert } from "./routes/convert.js";
-import { ai } from "./routes/ai.js";
+import { ai, speech } from "./routes/ai.js";
 import { feedback } from "./routes/feedback.js";
 import { admin } from "./routes/admin.js";
 import { errorHandler, signedInWhenAvailable } from "./lib/http.js";
@@ -55,6 +56,7 @@ export function createApp() {
       res.json({
         authEnabled,
         cloudEnabled,
+        aiEnabled,
         user: user ? { name: user.name ?? null, email: user.email ?? null, image: user.image ?? null } : null,
       });
     } catch (err) {
@@ -70,6 +72,14 @@ export function createApp() {
     originGuard(),
     rateLimit({ name: "convert", windowMs: 10 * 60_000, max: Number(process.env.CONVERT_RATE_LIMIT) || 40 }),
     convert,
+  );
+  // Natural voice for PDF to Audio: one request per sentence, so its own, larger allowance.
+  app.use(
+    "/api/ai/speak",
+    originGuard(),
+    rateLimit({ name: "speak", windowMs: 60 * 60_000, max: Number(process.env.SPEAK_RATE_LIMIT) || 600 }),
+    signedInWhenAvailable,
+    speech,
   );
   app.use(
     "/api/ai",

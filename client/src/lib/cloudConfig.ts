@@ -12,6 +12,8 @@ export interface CloudUser {
 export interface CloudConfig {
   authEnabled: boolean;
   cloudEnabled: boolean;
+  /** The server can run the AI tools (an API key is set). */
+  aiEnabled?: boolean;
   user: CloudUser | null;
 }
 

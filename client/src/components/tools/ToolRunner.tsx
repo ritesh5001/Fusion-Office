@@ -9,6 +9,7 @@ import { Dropzone } from "./Dropzone";
 import { Mascot } from "../mascot/Mascot";
 import { cn } from "../ui/primitives";
 import { isReducedMotion } from "@/lib/motion";
+import { renderSafeMarkdown } from "@/lib/tools/safeMarkdown";
 
 export interface LoadedFile extends ToolFile {
   id: string;
@@ -313,9 +314,12 @@ function ImagePreview({ file }: { file: ToolFile }) {
 
 function Results({ result, onReset, anchor }: { result: ToolResult; onReset: () => void; anchor: React.RefObject<HTMLDivElement | null> }) {
   const [copied, setCopied] = useState(false);
+  const [raw, setRaw] = useState(false);
   const [winkKey, setWinkKey] = useState(0);
   const [saved, setSaved] = useState<ToolFile | null>(null);
   const many = result.files.length > 1;
+  // Markdown results (summaries, translations) read as a document; other text stays plain.
+  const formatted = !!result.text && /\.(md|markdown)$/i.test(result.text.filename);
   const total = result.files.reduce((n, f) => n + f.bytes.length, 0);
   const celebrate = (file: ToolFile) => {
     downloadFile(file);
@@ -374,7 +378,18 @@ function Results({ result, onReset, anchor }: { result: ToolResult; onReset: () 
       {result.text && (
         <div className="card mt-4 overflow-hidden">
           <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
-            <span className="min-w-0 truncate font-mono text-[12px] text-fg-muted">{result.text.filename}</span>
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="min-w-0 truncate font-mono text-[12px] text-fg-muted">{result.text.filename}</span>
+              {formatted && (
+                <div role="tablist" aria-label="View" className="flex shrink-0 rounded-full bg-sunken p-0.5 ring-1 ring-line">
+                  {[false, true].map((r) => (
+                    <button key={String(r)} type="button" role="tab" aria-selected={raw === r} onClick={() => setRaw(r)} className={cn("h-7 rounded-full px-3 text-[12px] font-medium transition-colors", raw === r ? "bg-fg text-app" : "text-fg-muted hover:text-fg")}>
+                      {r ? "Markdown" : "Formatted"}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <div className="flex gap-1">
               <button
                 type="button"
@@ -396,7 +411,11 @@ function Results({ result, onReset, anchor }: { result: ToolResult; onReset: () 
               </button>
             </div>
           </div>
-          <pre className="thin-scroll max-h-[520px] overflow-auto whitespace-pre-wrap p-4 font-mono text-[13px] leading-relaxed text-fg">{result.text.content}</pre>
+          {formatted && !raw ? (
+            <div className="rich-text thin-scroll max-h-[640px] overflow-auto px-5 py-5 sm:px-7 sm:py-6" dangerouslySetInnerHTML={{ __html: renderSafeMarkdown(result.text.content) }} />
+          ) : (
+            <pre className="thin-scroll max-h-[520px] overflow-auto whitespace-pre-wrap p-4 font-mono text-[13px] leading-relaxed text-fg">{result.text.content}</pre>
+          )}
         </div>
       )}
 

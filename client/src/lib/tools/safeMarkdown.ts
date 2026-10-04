@@ -27,5 +27,8 @@ const md = new Marked({
 });
 
 export function renderSafeMarkdown(text: string): string {
-  return md.parse(text, { async: false }) as string;
+  // A line that is only bold ("**Overview**") is a section title: keep it a block of its own,
+  // even when the model puts the text on the very next line.
+  const spaced = text.replace(/^[ \t]*(\*\*[^*\n]+\*\*)[ \t]*:?[ \t]*\n(?=[^\n])/gm, "$1\n\n");
+  return md.parse(spaced, { async: false }) as string;
 }

@@ -81,3 +81,45 @@ test("chat sends the document first, then the conversation in order", async () =
   assert.ok(msgs[1].content.startsWith("<document>") && msgs[1].content.endsWith("Which vessel?"));
   assert.equal(msgs[3].content, "When?");
 });
+
+test("narrate rewrites each page for speech, keeps page order, and skips empty pages", async () => {
+  seen.length = 0;
+  queue.length = 0;
+  queue.push(answer("Page one, spoken."), answer("Page three, spoken."));
+  const out = await (await ai()).narrate(["Skills • React. js | Node. js", "   ", "Projects & awards"]);
+  assert.deepEqual(out, ["Page one, spoken.", "", "Page three, spoken."]);
+  assert.equal(seen.length, 2, "the blank page costs no AI call");
+  const system = (seen[0].body.messages as { role: string; content: string }[])[0].content;
+  assert.match(system, /read aloud by a text-to-speech voice/);
+  assert.match(system, /never add facts/);
+});
+
+test("narrateSummary asks for a short spoken briefing of the whole document", async () => {
+  seen.length = 0;
+  queue.length = 0;
+  queue.push(answer(" This document is a resume. "));
+  const out = await (await ai()).narrateSummary(["one", "two"]);
+  assert.equal(out, "This document is a resume.");
+  const msgs = seen[0].body.messages as { role: string; content: string }[];
+  assert.match(msgs[0].content, /spoken briefing/);
+  assert.ok(msgs[1].content.includes('<page number="2">'));
+});
+
+test("speak sends one sentence to the Orpheus voice and returns the audio", async () => {
+  seen.length = 0;
+  queue.length = 0;
+  queue.push({ status: 200, body: { fake: "wav" } });
+  const audio = await (await ai()).speak("Hello there.", "hannah");
+  assert.ok(audio.length > 0);
+  assert.equal(seen[0].body.model, "canopylabs/orpheus-v1-english");
+  assert.equal(seen[0].body.voice, "hannah");
+  assert.equal(seen[0].body.input, "Hello there.");
+});
+
+test("speak explains the one-time terms step and rate limits plainly", async () => {
+  queue.length = 0;
+  queue.push({ status: 400, body: { error: { message: "requires terms acceptance", code: "model_terms_required" } } });
+  await assert.rejects((await ai()).speak("Hi.", "troy"), (e: { status?: number; message: string }) => e.status === 503 && /one-time setup/.test(e.message));
+  queue.push({ status: 429, body: { error: { message: "slow down" } } });
+  await assert.rejects((await ai()).speak("Hi.", "troy"), (e: { status?: number }) => e.status === 429);
+});
