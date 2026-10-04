@@ -6,7 +6,7 @@ import { CornerDownLeft, Search, Server, Sparkles, X } from "lucide-react";
 import { TOOLS, toolBySlug, type ToolDef } from "@/lib/tools/registry";
 import { searchTools } from "@/lib/tools/search";
 import { toolPath } from "@/lib/tools/handoff";
-import { isReducedMotion } from "@/lib/motion";
+import { isReducedMotion, useScrollLock } from "@/lib/motion";
 import { ToolTile } from "../tools/icons";
 import { CATEGORY_META } from "./categories";
 import { cn } from "@/lib/cn";
@@ -77,14 +77,9 @@ export function CommandPalette() {
   }, []);
 
   // While open: focus the field and keep the page behind from scrolling.
+  useScrollLock(open);
   useEffect(() => {
-    if (!open) return;
-    input.current?.focus();
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
+    if (open) input.current?.focus({ preventScroll: true });
   }, [open]);
 
   useEffect(() => setActive(0), [query]);

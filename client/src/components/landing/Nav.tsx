@@ -8,6 +8,7 @@ import { Logo } from "../Logo";
 import { AccountLinks } from "../home/AccountLinks";
 import { ToolsMenu } from "./ToolsMenu";
 import { CommandPalette, openCommandPalette } from "../site/CommandPalette";
+import { scrollBehavior, useScrollLock } from "@/lib/motion";
 import { CATEGORY_META } from "../site/categories";
 import { ToolIcon } from "../tools/icons";
 import { CATEGORIES } from "@/lib/tools/registry";
@@ -25,6 +26,23 @@ export function Nav() {
   const pathname = usePathname();
   const [menu, setMenu] = useState<"tools" | "mobile" | null>(null);
   const panel = useRef<HTMLDivElement>(null);
+
+  // The page behind the mobile menu stays put while the menu scrolls.
+  useScrollLock(menu === "mobile");
+
+  // Menu links to a section of this page: close the menu (unpinning the page)
+  // first, then go to the section, so the jump isn't undone by the scroll restore.
+  const follow = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    setMenu(null);
+    const url = new URL(e.currentTarget.href);
+    if (url.pathname !== window.location.pathname || !url.hash) return;
+    e.preventDefault();
+    requestAnimationFrame(() => {
+      history.pushState(null, "", url.hash);
+      document.getElementById(url.hash.slice(1))?.scrollIntoView({ behavior: scrollBehavior() });
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    });
+  };
 
   // Close menus on navigation, Escape, or a click outside.
   useEffect(() => setMenu(null), [pathname]);
@@ -112,14 +130,14 @@ export function Nav() {
       )}
 
       {menu === "mobile" && (
-        <div className="absolute inset-x-0 top-full max-h-[calc(100dvh-4rem)] overflow-y-auto border-b border-line bg-surface px-4 pb-6 pt-4 shadow-pop sm:px-6 lg:hidden">
+        <div className="absolute inset-x-0 top-full max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-b border-line bg-surface px-4 pb-6 pt-4 shadow-pop sm:px-6 lg:hidden">
           <p className="eyebrow px-1">Tools</p>
           <ul className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
             {CATEGORIES.map((c) => (
               <li key={c.id}>
                 <a
                   href={categoryHref(c.id)}
-                  onClick={() => setMenu(null)}
+                  onClick={follow}
                   className="flex h-11 items-center gap-2.5 rounded-xl bg-raised px-3 text-[14px] font-medium text-fg ring-1 ring-line"
                 >
                   <ToolIcon name={CATEGORY_META[c.id].icon} className="h-4 w-4 shrink-0 text-fg-muted" />
@@ -131,7 +149,7 @@ export function Nav() {
           <ul className="mt-4 space-y-1 border-t border-line pt-4">
             {[...LINKS, { href: "/dashboard", label: "My documents" }].map((l) => (
               <li key={l.href}>
-                <a href={l.href} onClick={() => setMenu(null)} className="flex h-10 items-center rounded-lg px-2 text-[15px] font-medium text-fg-muted hover:bg-raised hover:text-fg">
+                <a href={l.href} onClick={follow} className="flex h-10 items-center rounded-lg px-2 text-[15px] font-medium text-fg-muted hover:bg-raised hover:text-fg">
                   {l.label}
                 </a>
               </li>
@@ -143,6 +161,8 @@ export function Nav() {
         </div>
       )}
     </header>
+    {/* Dims the page behind the mobile menu; tapping it closes the menu (outside click). */}
+    {menu === "mobile" && <div aria-hidden="true" className="fo-intro-fade fixed inset-x-0 bottom-0 top-16 z-30 bg-[#05060a]/60 backdrop-blur-[2px] [animation-duration:200ms] lg:hidden" />}
     <CommandPalette />
     </>
   );

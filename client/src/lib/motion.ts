@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useState, type RefObject } from "react";
 
 /**
  * Motion preference. The visitor's choice (footer toggle) wins; without one
@@ -86,4 +86,24 @@ export function useReveal<T extends Element>(ref: RefObject<T | null>, margin = 
     return () => io.disconnect();
   }, [ref, margin]);
   return state;
+}
+
+/**
+ * Freezes the page behind an open menu or sheet. Pinning <body> (rather than
+ * overflow: hidden alone) also stops iOS Safari from scrolling underneath;
+ * the scroll position is restored on close. A layout effect, so the page is
+ * unpinned before a link's own navigation (e.g. to #privacy) happens.
+ */
+export function useScrollLock(active: boolean) {
+  useLayoutEffect(() => {
+    if (!active) return;
+    const y = window.scrollY;
+    const b = document.body.style;
+    const prev = { position: b.position, top: b.top, left: b.left, right: b.right, width: b.width, overflow: b.overflow };
+    Object.assign(b, { position: "fixed", top: `-${y}px`, left: "0", right: "0", width: "100%", overflow: "hidden" });
+    return () => {
+      Object.assign(b, prev);
+      window.scrollTo({ top: y, behavior: "instant" as ScrollBehavior });
+    };
+  }, [active]);
 }
