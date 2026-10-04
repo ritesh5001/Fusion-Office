@@ -379,13 +379,20 @@ input[type="color"]::-moz-color-swatch {
 .fo-faq::details-content { block-size: 0; overflow: hidden; transition: block-size 300ms cubic-bezier(.3,.7,.2,1), content-visibility 300ms allow-discrete; }
 .fo-faq[open]::details-content { block-size: auto; }
 
+/* Footer: app banner "coming soon" dot, and the heart in "Made with love". */
+@keyframes fo-ping { 75%, 100% { scale: 2.4; opacity: 0; } }
+.fo-ping { animation: fo-ping 1.6s cubic-bezier(0,0,.2,1) infinite; }
+@keyframes fo-heartbeat { 0%, 60%, 100% { scale: 1; } 15% { scale: 1.22; } 30% { scale: 1; } 45% { scale: 1.14; } }
+.fo-heartbeat { animation: fo-heartbeat 1.6s ease-in-out infinite; }
+
 /* Reduced motion: no floating, no loops, no scroll effects; states still change clearly. */
 :root[data-motion="reduced"] :is(
   .fo-sweep, .fo-twinkle, .fo-float-sm, .fo-dash-march, .fo-fade, .fo-rise, .fo-pop, .fo-drop-in, .fo-scan, .fo-ripple,
   .fo-draw, .fo-chip-pulse, .fo-packet, .fo-streak, .fo-burst, .fo-particle,
   .fo-intro-fade, .fo-intro-rise, .fo-intro-wipe, .fo-intro-tile, .fo-intro-scale, .fo-intro-pop, .fo-breathe, .fo-slide-out,
   .fo-grow-x, .fo-pulse-once, .fo-palette-in, .fo-zoom-forward, .fo-preview, .fo-r-head, .fo-r-item,
-  .fo-pd-packet, .fo-pd-chip, .fo-pd-result, .fo-pd-out, .fo-pd-back, .fo-pd-strip, .fo-pd-deleted, .fo-pd-line, .fo-pd-node
+  .fo-pd-packet, .fo-pd-chip, .fo-pd-result, .fo-pd-out, .fo-pd-back, .fo-pd-strip, .fo-pd-deleted, .fo-pd-line, .fo-pd-node,
+  .fo-ping, .fo-heartbeat
 ) { animation: none !important; }
 :root[data-motion="reduced"] .fo-press:active { scale: 1; }
 :root[data-motion="reduced"] .fo-faq::details-content { transition: none; }

@@ -40,19 +40,34 @@ function SideRail({ active }: { active?: Category }) {
   const pathname = usePathname();
   const [inView, setInView] = useState<Category | undefined>(active);
 
-  // On pages that list categories (the homepage, category pages), follow the section being read.
+  // On pages that list categories (the homepage, category pages), follow the
+  // section being read: the last one whose top has passed a line 35% down the
+  // screen. Past the end of the last one (privacy, FAQ…) nothing is marked.
   useEffect(() => {
     setInView(active);
-    const sections = CATEGORIES.map((c) => document.getElementById(`cat-${c.id}`)).filter((el): el is HTMLElement => !!el);
-    if (!sections.length) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) if (e.isIntersecting) setInView(e.target.id.slice(4) as Category);
-      },
-      { rootMargin: "-30% 0px -60% 0px" },
-    );
-    sections.forEach((s) => observer.observe(s));
-    return () => observer.disconnect();
+    let frame = 0;
+    const update = () => {
+      const sections = CATEGORIES.map((c) => document.getElementById(`cat-${c.id}`)).filter((el): el is HTMLElement => !!el);
+      if (!sections.length) return setInView(active);
+      const line = window.innerHeight * 0.35;
+      let current: HTMLElement | null = null;
+      for (const el of sections) if (el.getBoundingClientRect().top <= line) current = el;
+      const last = sections[sections.length - 1];
+      if (!current || (current === last && last.getBoundingClientRect().bottom < line - 80)) return setInView(active);
+      setInView(current.id.slice(4) as Category);
+    };
+    const onScroll = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, [pathname, active]);
 
   const index = inView ? CATEGORIES.findIndex((c) => c.id === inView) : -1;

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Logo } from "../Logo";
 import { MotionToggle } from "../site/MotionToggle";
+import { AppBanner } from "../site/AppBanner";
 
 const COLUMNS = [
   {
@@ -49,6 +50,7 @@ const COLUMNS = [
 export function Footer() {
   return (
     <footer className="border-t border-line bg-app">
+      <AppBanner />
       <div className="mx-auto grid gap-10 px-4 py-12 sm:px-6 md:grid-cols-12 lg:px-8">
         <div className="md:col-span-4">
           <Link href="/" className="flex items-center gap-2.5 font-display text-[17px] font-bold tracking-[-0.02em] text-fg">
@@ -75,9 +77,24 @@ export function Footer() {
           ))}
         </nav>
       </div>
-      <div className="mx-auto flex flex-col gap-1 border-t border-line px-4 py-5 text-[13px] text-fg-subtle sm:flex-row sm:justify-between sm:px-6 lg:px-8">
+      <div className="mx-auto flex flex-col items-center gap-4 border-t border-line px-4 py-5 text-[13px] text-fg-subtle sm:px-6 lg:flex-row lg:justify-between lg:px-8">
         <p>© {new Date().getFullYear()} Fusion Office</p>
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+        <p className="group inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-[14px] text-fg-muted shadow-[0_0_24px_-8px_rgb(139_124_246/0.6)] transition-shadow duration-200 hover:shadow-[0_0_28px_-6px_rgb(205_245_100/0.45)]">
+          Made with
+          <svg viewBox="0 0 24 24" className="fo-heartbeat h-4 w-4 fill-[#ff5a6e] drop-shadow-[0_0_6px_rgb(255_90_110/0.7)]" role="img" aria-label="love">
+            <path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 2.9 4.5 6.6 4.5c2.2 0 3.6 1.2 4.4 2.5.8-1.3 2.2-2.5 4.4-2.5 3.7 0 5.7 3.9 4.2 7.3C19.5 16.4 12 21 12 21z" />
+          </svg>
+          by
+          <a
+            href="https://nextgenfusion.in"
+            target="_blank"
+            rel="noopener"
+            className="bg-[linear-gradient(90deg,#b6adff,#cdf564)] bg-clip-text font-bold tracking-[-0.01em] text-transparent transition-[filter] duration-200 hover:brightness-125"
+          >
+            NextGen Fusion
+          </a>
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
           <MotionToggle />
           <p>No sign-up. No watermarks.</p>
         </div>
