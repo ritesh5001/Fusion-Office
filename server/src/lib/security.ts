@@ -41,7 +41,8 @@ export function corsPolicy(origins = allowedOrigins()): RequestHandler {
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "X-Requested-With", "X-Filename"],
+    allowedHeaders: ["Content-Type", "X-Requested-With", "X-Filename", "CF-Turnstile-Response"],
+    exposedHeaders: ["X-Human-Pass-Expires"],
     maxAge: 600,
   });
 }

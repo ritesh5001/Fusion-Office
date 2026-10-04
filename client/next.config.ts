@@ -21,7 +21,8 @@ const csp = [
   "default-src 'self'",
   // Next.js injects inline bootstrap scripts; dev mode also needs eval for fast refresh.
   // 'wasm-unsafe-eval' only permits WebAssembly (the in-browser OCR engine), not eval().
-  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ""}`,
+  // challenges.cloudflare.com: the Turnstile bot check shown before server conversions.
+  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://challenges.cloudflare.com${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   // Thumbnails, signatures and images placed on pages are data:/blob: URLs.
   "img-src 'self' data: blob:",
@@ -30,8 +31,8 @@ const csp = [
   `connect-src 'self' ${apiOrigin} blob: data:${isDev ? " ws: wss:" : ""}`,
   // PDF.js runs in a worker served from /public.
   "worker-src 'self' blob:",
-  // Printing loads the exported PDF into a blob: iframe.
-  "frame-src 'self' blob:",
+  // Printing loads the exported PDF into a blob: iframe; Turnstile renders in an iframe.
+  "frame-src 'self' blob: https://challenges.cloudflare.com",
   "object-src 'none'",
   "base-uri 'self'",
   // Auth.js sign-in forms post here and then redirect to the OAuth providers.

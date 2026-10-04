@@ -9,6 +9,7 @@ const organize = () => import("@/lib/tools/processors/organize");
 const stamp = () => import("@/lib/tools/processors/stamp");
 const security = () => import("@/lib/tools/processors/security");
 import { apiFetch } from "@/lib/api";
+import { turnstileHeaders } from "@/lib/turnstile";
 import type { LoadedFile, ToolResult, ToolSpec } from "./ToolRunner";
 import { ColorField, NumberField, PagesField, PositionPicker, Segmented, Slider, TextInput, Toggle } from "./controls";
 import { IMAGE_SPECS } from "./imageSpecs";
@@ -288,7 +289,7 @@ const officeTo: ToolSpec<Record<string, never>> = {
     files: await eachFile(files, progress, async (f) => {
       const res = await apiFetch("/api/convert/office", {
         method: "POST",
-        headers: { "content-type": "application/octet-stream", "x-filename": encodeURIComponent(f.name) },
+        headers: { "content-type": "application/octet-stream", "x-filename": encodeURIComponent(f.name), ...(await turnstileHeaders()) },
         body: new Blob([f.bytes as BlobPart]),
       });
       if (!res.ok) throw await serverError(res);
@@ -312,7 +313,7 @@ const htmlToPdf: ToolSpec<HtmlOpts> = {
   validate: (_f, o) => (/^https?:\/\/\S+\.\S+/.test(o.url.trim()) ? null : "Enter a full web address, starting with https://"),
   run: async (_f, o, progress) => {
     progress("Loading the page…");
-    const res = await apiFetch("/api/convert/html", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...o, url: o.url.trim() }) });
+    const res = await apiFetch("/api/convert/html", { method: "POST", headers: { "content-type": "application/json", ...(await turnstileHeaders()) }, body: JSON.stringify({ ...o, url: o.url.trim() }) });
     if (!res.ok) throw await serverError(res);
     const host = new URL(o.url.trim()).hostname.replace(/^www\./, "");
     return { files: [pdfOut(`${host}.pdf`, new Uint8Array(await res.arrayBuffer()))] };

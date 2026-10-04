@@ -25,7 +25,7 @@ test("health check", async () => {
 
 test("config reports cloud disabled without env", async () => {
   const res = await fetch(`${base}/api/config`);
-  assert.deepEqual(await res.json(), { authEnabled: false, cloudEnabled: false, aiEnabled: !!process.env.GROQ_API_KEY, user: null });
+  assert.deepEqual(await res.json(), { authEnabled: false, cloudEnabled: false, aiEnabled: !!process.env.GROQ_API_KEY, turnstileSiteKey: null, user: null });
 });
 
 test("documents API answers 503 when cloud is not configured", async () => {
@@ -63,7 +63,7 @@ test("Auth.js routes resolve under /api/auth when auth is configured", async () 
     assert.ok(providers?.github, "github provider should be listed");
     const cfg = await fetch(`http://127.0.0.1:${port}/api/config`).then((r) => r.json());
     // Disk storage is always available, so auth + database is all cloud save needs.
-    assert.deepEqual(cfg, { authEnabled: true, cloudEnabled: true, aiEnabled: typeof cfg.aiEnabled === "boolean" ? cfg.aiEnabled : null, user: null });
+    assert.deepEqual(cfg, { authEnabled: true, cloudEnabled: true, aiEnabled: typeof cfg.aiEnabled === "boolean" ? cfg.aiEnabled : null, turnstileSiteKey: null, user: null });
   } finally {
     child.kill();
   }

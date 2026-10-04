@@ -14,6 +14,8 @@ export interface CloudConfig {
   cloudEnabled: boolean;
   /** The server can run the AI tools (an API key is set). */
   aiEnabled?: boolean;
+  /** Cloudflare Turnstile site key when conversions require a human check. */
+  turnstileSiteKey?: string | null;
   user: CloudUser | null;
 }
 

@@ -10,6 +10,7 @@ import { admin } from "./routes/admin.js";
 import { errorHandler, signedInWhenAvailable } from "./lib/http.js";
 import { rateLimit } from "./lib/rateLimit.js";
 import { corsPolicy, originGuard, securityHeaders } from "./lib/security.js";
+import { turnstileEnabled, turnstileGuard, turnstileSiteKey } from "./lib/turnstile.js";
 
 /**
  * @auth/express builds OAuth callback URLs from the raw Host header. Behind the
@@ -57,6 +58,8 @@ export function createApp() {
         authEnabled,
         cloudEnabled,
         aiEnabled,
+        // Cloudflare Turnstile site key when server work requires a human check.
+        turnstileSiteKey: turnstileEnabled ? turnstileSiteKey : null,
         user: user ? { name: user.name ?? null, email: user.email ?? null, image: user.image ?? null } : null,
       });
     } catch (err) {
@@ -66,11 +69,14 @@ export function createApp() {
 
   app.use("/api/documents", originGuard(), documents);
   app.use("/api/files", files);
-  // Heavy work (LibreOffice, headless Chrome, Claude): origin-checked and rate limited per IP.
+  // Heavy work (LibreOffice, headless Chrome): origin-checked, rate limited per IP,
+  // and (when configured) a Cloudflare Turnstile check so bots can't drive it.
+  // The AI, voice, feedback and admin-login routes below get the same check.
   app.use(
     "/api/convert",
     originGuard(),
     rateLimit({ name: "convert", windowMs: 10 * 60_000, max: Number(process.env.CONVERT_RATE_LIMIT) || 40 }),
+    turnstileGuard(),
     convert,
   );
   // Natural voice for PDF to Audio: one request per sentence, so its own, larger allowance.
@@ -78,6 +84,7 @@ export function createApp() {
     "/api/ai/speak",
     originGuard(),
     rateLimit({ name: "speak", windowMs: 60 * 60_000, max: Number(process.env.SPEAK_RATE_LIMIT) || 600 }),
+    turnstileGuard(),
     signedInWhenAvailable,
     speech,
   );
@@ -85,12 +92,15 @@ export function createApp() {
     "/api/ai",
     originGuard(),
     rateLimit({ name: "ai", windowMs: 60 * 60_000, max: Number(process.env.AI_RATE_LIMIT) || 20 }),
+    turnstileGuard(),
     signedInWhenAvailable,
     ai,
   );
 
   // Feedback form: origin-checked, at most 6 submissions an hour per IP.
-  app.use("/api/feedback", originGuard(), rateLimit({ name: "feedback", windowMs: 60 * 60_000, max: Number(process.env.FEEDBACK_RATE_LIMIT) || 6 }), feedback);
+  app.use("/api/feedback", originGuard(), rateLimit({ name: "feedback", windowMs: 60 * 60_000, max: Number(process.env.FEEDBACK_RATE_LIMIT) || 6 }), turnstileGuard(), feedback);
+  // Password guessing on the admin login needs a solved human check too.
+  app.use("/api/admin/login", turnstileGuard());
   // Admin panel (feedback inbox). Responses are private and never cached.
   app.use(
     "/api/admin",

@@ -66,6 +66,11 @@ services:
       # Optional: a different Groq model (default openai/gpt-oss-120b).
       - key: AI_MODEL
         sync: false
+      # Cloudflare Turnstile bot check on conversions (both keys, or neither).
+      - key: TURNSTILE_SITE_KEY
+        sync: false
+      - key: TURNSTILE_SECRET_KEY
+        sync: false
       - key: CONVERT_CONCURRENCY
         value: "1"
       - key: HTML_CONCURRENCY
