@@ -1,7 +1,6 @@
 "use client";
 
 import { apiFetch } from "../api";
-import { turnstileHeaders } from "../turnstile";
 
 export type ServerTarget = "pdf" | "docx" | "xlsx" | "pptx";
 
@@ -13,7 +12,7 @@ export type ServerTarget = "pdf" | "docx" | "xlsx" | "pptx";
 export async function convertOnServer(name: string, bytes: Uint8Array, to: ServerTarget): Promise<Uint8Array> {
   const res = await apiFetch(`/api/convert/office?to=${to}`, {
     method: "POST",
-    headers: { "content-type": "application/octet-stream", "x-filename": encodeURIComponent(name), ...(await turnstileHeaders()) },
+    headers: { "content-type": "application/octet-stream", "x-filename": encodeURIComponent(name) },
     body: new Blob([bytes as BlobPart]),
   });
   if (!res.ok) {

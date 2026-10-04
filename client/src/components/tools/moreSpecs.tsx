@@ -7,7 +7,6 @@
 import { useEffect } from "react";
 import { PDF, derived, formatBytes, selectPages, stem, zipFiles, type ToolFile } from "@/lib/tools/files";
 import { apiFetch } from "@/lib/api";
-import { turnstileHeaders } from "@/lib/turnstile";
 import type { Position } from "@/lib/tools/processors/stamp";
 import type { PiiKind } from "@/lib/tools/pii";
 import type { LoadedFile, ToolSpec } from "./ToolRunner";
@@ -39,7 +38,7 @@ const decodeText = (f: LoadedFile) => new TextDecoder().decode(f.bytes);
 async function printHtml(html: string, name: string, landscape = false): Promise<Uint8Array> {
   const res = await apiFetch("/api/convert/html", {
     method: "POST",
-    headers: { "content-type": "application/json", ...(await turnstileHeaders()) },
+    headers: { "content-type": "application/json" },
     body: JSON.stringify({ html, name, landscape }),
   });
   if (!res.ok) {
