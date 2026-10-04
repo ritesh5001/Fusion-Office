@@ -1,9 +1,11 @@
+import { pickerAccept } from "@/lib/tools/pickerAccept";
+
 /** Open the native file picker and resolve with the chosen files (empty if cancelled). */
 export function pickFiles(accept: string, multiple = false): Promise<File[]> {
   return new Promise((resolve) => {
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = accept;
+    input.accept = pickerAccept(accept);
     input.multiple = multiple;
     input.style.display = "none";
     let settled = false;

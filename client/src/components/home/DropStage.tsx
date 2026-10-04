@@ -10,6 +10,7 @@ import type { LoadedFile, ToolSpec } from "../tools/ToolRunner";
 import { ToolTile } from "../tools/icons";
 import { KindGlyph } from "./FlowArt";
 import { cn } from "@/lib/cn";
+import { pickerAccept } from "@/lib/tools/pickerAccept";
 
 /**
  * The homepage drop card as a "processing stage". The motion tells the
@@ -160,7 +161,7 @@ export function DropStage({
   const browse = useCallback(() => {
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = KIND_ACCEPT[kind];
+    input.accept = pickerAccept(KIND_ACCEPT[kind]);
     input.multiple = true;
     input.onchange = () => onFiles(Array.from(input.files ?? []));
     input.click();

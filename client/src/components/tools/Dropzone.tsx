@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { FilePlus2, Upload } from "lucide-react";
 import { takeFiles } from "@/lib/tools/handoff";
 import { cn } from "../ui/primitives";
+import { pickerAccept } from "@/lib/tools/pickerAccept";
 
 /** Plain-words name for an accept list ("PDF files", "images"). */
 function describe(accept: string, multiple: boolean) {
@@ -53,7 +54,7 @@ export function Dropzone({
   const pick = () => {
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = accept;
+    input.accept = pickerAccept(accept);
     input.multiple = multiple;
     input.onchange = () => onFiles(Array.from(input.files ?? []));
     input.click();

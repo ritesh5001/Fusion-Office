@@ -10,6 +10,7 @@ import { takeFiles } from "@/lib/tools/handoff";
 import { Logo } from "../Logo";
 import { Menu, cn } from "../ui/primitives";
 import { Toaster } from "../editor/Toaster";
+import { pickerAccept } from "@/lib/tools/pickerAccept";
 
 export interface AppIdentity {
   kind: DraftKind;
@@ -208,7 +209,7 @@ export function StartScreen({
             <span className="mt-3 truncate px-1 text-[14px] font-semibold text-fg">{busy ?? "Open a file"}</span>
             <span className="px-1 text-[12px] text-fg-muted">Or drop it anywhere on this page</span>
           </button>
-          <input ref={input} type="file" accept={accept} className="sr-only" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
+          <input ref={input} type="file" accept={pickerAccept(accept)} className="sr-only" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
           {templates.map((t) => (
             <button
               key={t.label}

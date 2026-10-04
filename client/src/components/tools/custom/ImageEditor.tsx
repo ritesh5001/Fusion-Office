@@ -17,6 +17,7 @@ import { Dropzone } from "../Dropzone";
 import { NumberField, Segmented, Slider, Toggle } from "../controls";
 import { Chips, TargetSize } from "../imageSpecs";
 import { cn } from "../../ui/primitives";
+import { pickerAccept } from "@/lib/tools/pickerAccept";
 
 type Panel = "crop" | "adjust" | "filters" | "text" | "save";
 type Handle = "move" | "nw" | "ne" | "sw" | "se";
@@ -266,7 +267,7 @@ export function ImageEditor({ mode = "editor" }: { mode?: "editor" | "crop" }) {
           </button>
           <label className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full px-3 text-[13px] ring-1 ring-line-strong hover:bg-raised">
             <ImagePlus className="h-4 w-4" aria-hidden="true" /> Open another
-            <input type="file" accept={ACCEPT} className="sr-only" onChange={(e) => e.target.files && load([...e.target.files])} />
+            <input type="file" accept={pickerAccept(ACCEPT)} className="sr-only" onChange={(e) => e.target.files && load([...e.target.files])} />
           </label>
         </div>
 

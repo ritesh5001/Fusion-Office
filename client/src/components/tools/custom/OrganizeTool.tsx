@@ -110,7 +110,7 @@ export function OrganizeTool() {
         </button>
         <label className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full px-3 text-[13px] ring-1 ring-line-strong hover:bg-raised">
           <Plus className="h-4 w-4" aria-hidden="true" /> Add PDF
-          <input type="file" accept="application/pdf" multiple className="sr-only" onChange={(e) => e.target.files && add(Array.from(e.target.files))} />
+          <input type="file" accept=".pdf" multiple className="sr-only" onChange={(e) => e.target.files && add(Array.from(e.target.files))} />
         </label>
         <button type="button" onClick={save} disabled={!!busy} className="btn inline-flex h-10 items-center gap-2 rounded-full bg-accent px-5 text-[14px] font-medium text-on-accent hover:bg-accent-hover">
           {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Download className="h-4 w-4" aria-hidden="true" />}

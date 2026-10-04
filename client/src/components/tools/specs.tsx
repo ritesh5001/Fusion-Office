@@ -354,7 +354,7 @@ const watermark: ToolSpec<WmOpts> = {
             <span className="text-[13px] font-medium">Image (PNG or JPG)</span>
             <input
               type="file"
-              accept="image/png,image/jpeg"
+              accept=".png,.jpg,.jpeg"
               onChange={async (e) => {
                 const f = e.target.files?.[0];
                 if (f) set({ image: { bytes: new Uint8Array(await f.arrayBuffer()), type: f.type, name: f.name } });
