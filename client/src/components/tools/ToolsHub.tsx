@@ -267,7 +267,7 @@ function RevealGroup({ id, labelledBy, children }: { id: string; labelledBy: str
 
 function ToolGrid({ tools, staged, reveal = false }: { tools: ToolDef[]; staged?: File[] | null; reveal?: boolean }) {
   return (
-    <ul className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+    <ul className="mt-3 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-3 2xl:grid-cols-4">
       {tools.map((t, i) => (
         // Cards cascade 50ms apart; past the sixth they arrive together, so no more than six move at once.
         <li key={t.slug} className={cn("min-w-0", reveal && "fo-r-item")} data-late={reveal && i > 5 ? "" : undefined} style={reveal ? ({ "--i": Math.min(i, 5) } as React.CSSProperties) : undefined}>
@@ -298,15 +298,16 @@ export function ToolCard({ tool: t, staged }: { tool: ToolDef; staged?: File[] |
       <ToolTile tool={t} size="md" className="transition-[rotate,scale] duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] group-hover:-rotate-6 group-hover:scale-110" />
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="text-[14.5px] font-semibold leading-tight tracking-[-0.01em] text-fg">{t.name}</span>
+          <span className="text-[14px] font-semibold leading-tight tracking-[-0.01em] text-fg sm:text-[14.5px]">{t.name}</span>
           {badge}
         </span>
-        <span className="mt-1 line-clamp-2 text-[13px] leading-snug text-fg-muted">{t.description}</span>
+        <span className="mt-1 line-clamp-3 text-[12.5px] leading-snug text-fg-muted sm:line-clamp-2 sm:text-[13px]">{t.description}</span>
       </span>
-      {!soon && <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-fg-subtle transition-[translate,color] duration-200 group-hover:translate-x-1 group-hover:text-fg" aria-hidden="true" />}
+      {!soon && <ChevronRight className="absolute right-3 top-4 h-4 w-4 shrink-0 text-fg-subtle sm:static sm:mt-0.5 transition-[translate,color] duration-200 group-hover:translate-x-1 group-hover:text-fg" aria-hidden="true" />}
     </>
   );
-  const cls = "group flex h-full items-start gap-3.5 rounded-2xl border border-line bg-surface p-4 transition-[border-color,background-color,box-shadow] duration-200";
+  // Phones show two cards per row, so the icon sits above the text; from sm up it's a row.
+  const cls = "group relative flex h-full min-h-[44px] flex-col items-start gap-3 rounded-2xl border border-line bg-surface p-3.5 transition-[border-color,background-color,box-shadow] duration-200 sm:flex-row sm:gap-3.5 sm:p-4";
   return soon ? (
     <div className={cn(cls, "opacity-55")} aria-disabled="true">
       {body}

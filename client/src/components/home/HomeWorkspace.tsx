@@ -130,7 +130,7 @@ function QuickActions({ staged }: { staged: File[] | null }) {
       <h2 id="quick-title" className="px-1 font-display text-[20px] font-bold tracking-[-0.015em] text-fg">
         Quick actions
       </h2>
-      <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
+      <ul className="mt-4 grid grid-cols-2 gap-3 xl:grid-cols-1">
         {tools.map((t) => {
           const tile = QUICK_TILE[t.slug];
           return (
@@ -138,15 +138,15 @@ function QuickActions({ staged }: { staged: File[] | null }) {
               <Link
                 href={toolPath(t)}
                 onClick={() => staged?.length && fitsFiles(t, staged) && handFiles(appPath(t), staged)}
-                className="group flex h-[72px] items-center overflow-hidden rounded-[18px] border border-line bg-raised/50 pr-4 transition-[translate,background-color,border-color,box-shadow] duration-200 hover:-translate-y-1 hover:border-line-strong hover:bg-raised hover:shadow-[0_14px_30px_-16px_rgb(0_0_0/0.9)]"
+                className="group relative flex h-full flex-col items-start gap-3 overflow-hidden rounded-[18px] border border-line bg-raised/50 p-3 transition-[translate,background-color,border-color,box-shadow] duration-200 sm:h-[72px] sm:flex-row sm:items-center sm:gap-0 sm:p-0 sm:pr-4 hover:-translate-y-1 hover:border-line-strong hover:bg-raised hover:shadow-[0_14px_30px_-16px_rgb(0_0_0/0.9)]"
               >
                 {tile ? (
-                  <span className={cn("fo-pulse-once flex h-full w-[72px] shrink-0 items-center justify-center rounded-[18px]", tile.bg, tile.fg)}>{tile.icon}</span>
+                  <span className={cn("fo-pulse-once flex h-14 w-14 shrink-0 items-center justify-center rounded-[16px] sm:h-full sm:w-[72px] sm:rounded-[18px]", tile.bg, tile.fg)}>{tile.icon}</span>
                 ) : (
-                  <ToolTile tool={t} size="lg" className="ml-3" />
+                  <ToolTile tool={t} size="lg" className="sm:ml-3" />
                 )}
-                <span className="min-w-0 flex-1 truncate pl-4 text-[15px] font-semibold text-fg">{t.name}</span>
-                <ChevronRight className="h-5 w-5 shrink-0 text-fg-muted transition-[translate,color] duration-200 group-hover:translate-x-1.5 group-hover:text-fg" aria-hidden="true" />
+                <span className="min-w-0 flex-1 text-[14px] font-semibold leading-tight text-fg sm:truncate sm:pl-4 sm:text-[15px]">{t.name}</span>
+                <ChevronRight className="absolute right-3 top-3 h-5 w-5 shrink-0 text-fg-muted transition-[translate,color] sm:static duration-200 group-hover:translate-x-1.5 group-hover:text-fg" aria-hidden="true" />
               </Link>
             </li>
           );
