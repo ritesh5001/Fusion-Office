@@ -27,7 +27,7 @@ export function Segmented<T extends string | number>({
   return (
     <fieldset>
       <legend className="mb-1.5 text-[13px] font-medium text-fg">{label}</legend>
-      <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${Math.min(options.length, 3)}, minmax(0, 1fr))` }}>
+      <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${Math.min(options.length, 3)}, minmax(min-content, 1fr))` }}>
         {options.map((o) => (
           <button
             key={String(o.value)}

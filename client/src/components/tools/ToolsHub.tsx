@@ -94,16 +94,19 @@ const SYNONYMS: Record<string, string> = {
   txt: "text",
 };
 
+/** Does `text` contain the word, or one of its synonyms? */
+const hit = (text: string, w: string) => text.includes(w) || (SYNONYMS[w] ?? "").split(" ").some((s) => s && text.includes(s));
+
 /** Every word must match the tool's name, description or category (directly or through a synonym). */
 function matches(t: ToolDef, words: string[]) {
   const hay = `${t.name} ${t.description} ${CATEGORIES.find((c) => c.id === t.category)?.label ?? ""}`.toLowerCase();
-  return words.every((w) => hay.includes(w) || (SYNONYMS[w] ?? "").split(" ").some((s) => s && hay.includes(s)));
+  return words.every((w) => hit(hay, w));
 }
 
-/** Name matches first, then ready tools before "soon". */
+/** Name matches first (synonyms count: "shrink pdf" finds Compress PDF), then ready tools before "soon". */
 function rank(t: ToolDef, words: string[]) {
   const name = t.name.toLowerCase();
-  return (words.every((w) => name.includes(w)) ? 0 : 1) * 2 + (t.status === "soon" ? 1 : 0);
+  return (words.every((w) => hit(name, w)) ? 0 : 1) * 2 + (t.status === "soon" ? 1 : 0);
 }
 
 /** Can every staged file go to this tool? */
