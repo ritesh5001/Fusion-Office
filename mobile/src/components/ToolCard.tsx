@@ -27,10 +27,10 @@ export function ToolCard({ tool: t, index = 0, width, onPress, onLongPress }: { 
         onLongPress={onLongPress}
         delayLongPress={320}
         accessibilityLabel={soon ? `${t.name}, coming soon` : t.name}
-        style={{ minHeight: 140, borderRadius: 18, borderWidth: 1, borderColor: C.line, backgroundColor: C.surface, paddingHorizontal: 10, paddingVertical: 18, alignItems: "center", justifyContent: "center", opacity: soon ? 0.55 : 1 }}
+        style={{ aspectRatio: 1, borderRadius: 18, borderWidth: 1, borderColor: C.line, backgroundColor: C.surface, paddingHorizontal: 6, paddingVertical: 8, alignItems: "center", justifyContent: "center", opacity: soon ? 0.55 : 1 }}
       >
-        <ToolTile tool={t} size={48} />
-        <T weight="semibold" numberOfLines={2} style={{ marginTop: 12, fontSize: 14.5, lineHeight: 19, letterSpacing: -0.2, textAlign: "center" }}>{t.name}</T>
+        <ToolTile tool={t} size={40} />
+        <T weight="semibold" numberOfLines={2} maxFontSizeMultiplier={1.25} style={{ marginTop: 8, fontSize: 12.5, lineHeight: 16, letterSpacing: -0.1, textAlign: "center" }}>{t.name}</T>
       </PressScale>
     </Animated.View>
   );

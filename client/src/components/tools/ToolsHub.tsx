@@ -267,7 +267,7 @@ function RevealGroup({ id, labelledBy, children }: { id: string; labelledBy: str
 
 function ToolGrid({ tools, staged, reveal = false }: { tools: ToolDef[]; staged?: File[] | null; reveal?: boolean }) {
   return (
-    <ul className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+    <ul className="mt-3 grid grid-cols-3 gap-2 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
       {tools.map((t, i) => (
         // Cards cascade 50ms apart; past the sixth they arrive together, so no more than six move at once.
         <li key={t.slug} className={cn("min-w-0", reveal && "fo-r-item")} data-late={reveal && i > 5 ? "" : undefined} style={reveal ? ({ "--i": Math.min(i, 5) } as React.CSSProperties) : undefined}>
@@ -284,12 +284,12 @@ export function ToolCard({ tool: t, staged }: { tool: ToolDef; staged?: File[] |
   const soon = t.status === "soon";
   const body = (
     <>
-      <ToolTile tool={t} size="lg" className="transition-[rotate,scale] duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] group-hover:-rotate-6 group-hover:scale-110" />
-      <span className="text-balance text-[14px] font-semibold leading-tight tracking-[-0.01em] text-fg">{t.name}</span>
+      <ToolTile tool={t} size="md" className="sm:h-12 sm:w-12 sm:rounded-[13px] transition-[rotate,scale] duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] group-hover:-rotate-6 group-hover:scale-110" />
+      <span className="text-balance text-[12.5px] font-semibold leading-tight tracking-[-0.01em] text-fg sm:text-[14px]">{t.name}</span>
       {soon && <span className="sr-only">(coming soon)</span>}
     </>
   );
-  const cls = "group relative flex h-full min-h-[120px] flex-col items-center justify-center gap-3 rounded-2xl border border-line bg-surface px-3 py-5 text-center transition-[border-color,background-color,box-shadow] duration-200";
+  const cls = "group relative flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-2xl border border-line bg-surface p-2 text-center sm:gap-3 sm:p-3 transition-[border-color,background-color,box-shadow] duration-200";
   return soon ? (
     <div className={cn(cls, "opacity-55")} aria-disabled="true">
       {body}

@@ -20,7 +20,8 @@ export function QuickActions() {
   const reduced = useReduced();
   const { columns, cardWidth, gap } = useColumns();
   // 2×2 on phones, one row of four on tablets.
-  const width = columns >= 3 ? (cardWidth * columns + gap * (columns - 1) - gap * 3) / 4 : cardWidth;
+  const row = cardWidth * columns + gap * (columns - 1);
+  const width = columns >= 4 ? (row - 10 * 3) / 4 : (row - 10) / 2;
   return (
     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
       {QUICK.map((q, i) => {

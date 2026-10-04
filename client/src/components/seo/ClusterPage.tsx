@@ -59,13 +59,13 @@ export function ClusterPage({ id }: { id: ClusterId }) {
                   {s.heading}
                 </h2>
                 <p className="mt-1.5 max-w-[70ch] text-[15px] leading-relaxed text-fg-muted">{s.blurb}</p>
-                <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                <ul className="mt-5 grid grid-cols-3 gap-2 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                   {tools.map((t) => {
                     return (
                       <li key={t.slug} className="min-w-0">
-                        <Link href={toolUrl(t)} className="group flex h-full min-h-[120px] flex-col items-center justify-center gap-3 rounded-2xl border border-line bg-surface px-3 py-5 text-center transition-colors hover:border-line-strong hover:bg-raised">
-                          <ToolTile tool={t} size="lg" className="transition-transform duration-200 group-hover:scale-110" />
-                          <span className="text-balance text-[14px] font-semibold leading-tight text-fg">{t.name}</span>
+                        <Link href={toolUrl(t)} className="group flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-2xl border border-line bg-surface p-2 text-center sm:gap-3 sm:p-3 transition-colors hover:border-line-strong hover:bg-raised">
+                          <ToolTile tool={t} size="md" className="sm:h-12 sm:w-12 sm:rounded-[13px] transition-transform duration-200 group-hover:scale-110" />
+                          <span className="text-balance text-[12.5px] font-semibold leading-tight text-fg sm:text-[14px]">{t.name}</span>
                         </Link>
                       </li>
                     );

@@ -95,21 +95,35 @@ export function useReveal<T extends Element>(ref: RefObject<T | null>, margin = 
 }
 
 /**
- * Freezes the page behind an open menu or sheet. Pinning <body> (rather than
- * overflow: hidden alone) also stops iOS Safari from scrolling underneath;
- * the scroll position is restored on close. A layout effect, so the page is
- * unpinned before a link's own navigation (e.g. to #privacy) happens.
+ * Freezes the page behind an open menu or sheet, so scrolling over it scrolls
+ * only the menu. Touch screens pin <body> (overflow: hidden alone doesn't stop
+ * iOS Safari) and restore the scroll position on close; mouse and trackpad
+ * screens just hide overflow and pad for the scrollbar, so nothing jumps.
+ * A layout effect, so the page is unlocked before a link's own navigation.
  */
 export function useScrollLock(active: boolean) {
   useLayoutEffect(() => {
     if (!active) return;
-    const y = window.scrollY;
+    const html = document.documentElement;
     const b = document.body.style;
-    const prev = { position: b.position, top: b.top, left: b.left, right: b.right, width: b.width, overflow: b.overflow };
-    Object.assign(b, { position: "fixed", top: `-${y}px`, left: "0", right: "0", width: "100%", overflow: "hidden" });
+    const touch = window.matchMedia("(pointer: coarse)").matches;
+    const prev = { position: b.position, top: b.top, left: b.left, right: b.right, width: b.width, overflow: b.overflow, paddingRight: b.paddingRight, htmlOverflow: html.style.overflow };
+
+    if (touch) {
+      const y = window.scrollY;
+      Object.assign(b, { position: "fixed", top: `-${y}px`, left: "0", right: "0", width: "100%", overflow: "hidden" });
+      return () => {
+        Object.assign(b, { position: prev.position, top: prev.top, left: prev.left, right: prev.right, width: prev.width, overflow: prev.overflow });
+        window.scrollTo({ top: y, behavior: "instant" as ScrollBehavior });
+      };
+    }
+
+    const scrollbar = window.innerWidth - html.clientWidth;
+    html.style.overflow = "hidden";
+    if (scrollbar > 0) b.paddingRight = `${scrollbar}px`;
     return () => {
-      Object.assign(b, prev);
-      window.scrollTo({ top: y, behavior: "instant" as ScrollBehavior });
+      html.style.overflow = prev.htmlOverflow;
+      b.paddingRight = prev.paddingRight;
     };
   }, [active]);
 }

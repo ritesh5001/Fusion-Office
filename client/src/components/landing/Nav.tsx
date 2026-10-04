@@ -27,8 +27,8 @@ export function Nav() {
   const [menu, setMenu] = useState<"tools" | "mobile" | null>(null);
   const panel = useRef<HTMLDivElement>(null);
 
-  // The page behind the mobile menu stays put while the menu scrolls.
-  useScrollLock(menu === "mobile");
+  // While either menu is open, the page behind stays put; scrolling moves only the menu.
+  useScrollLock(menu !== null);
 
   // Menu links to a section of this page: close the menu (unpinning the page)
   // first, then go to the section, so the jump isn't undone by the scroll restore.
@@ -123,7 +123,7 @@ export function Nav() {
       {menu === "tools" && (
         <div
           id="tools-menu"
-          className="absolute inset-x-0 top-full hidden max-h-[calc(100dvh-4rem)] overflow-y-auto border-b border-line bg-surface shadow-pop lg:block"
+          className="absolute inset-x-0 top-full hidden max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-b border-line bg-surface shadow-pop lg:block"
         >
           <ToolsMenu onNavigate={() => setMenu(null)} />
         </div>
