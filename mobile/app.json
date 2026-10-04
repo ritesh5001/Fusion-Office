@@ -48,7 +48,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#0a0c11"
         }
-      ]
+      ],
+      "./plugins/with-release-signing"
     ],
     "experiments": {
       "typedRoutes": true

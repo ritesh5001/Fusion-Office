@@ -29,6 +29,25 @@ src/lib/            native tool engine, file picking & saving, recents, runner, 
 src/theme.ts        design tokens (colours, fonts, timings) matching the website
 ```
 
-## Builds
+## Build the Android app locally (Gradle, no cloud)
+
+```sh
+cd mobile
+npm run build:apk     # → dist/fusion-office-<version>.apk  (install on any Android phone)
+npm run build:aab     # → dist/fusion-office-<version>.aab  (upload to Google Play)
+```
+
+Needs JDK 17 and the Android SDK (`ANDROID_HOME`). The script regenerates `android/` with
+`npx expo prebuild` (never edit that folder by hand; it's gitignored) and runs Gradle.
+The first build downloads Gradle and all dependencies and takes a while; later builds are faster.
+
+**Signing.** Release builds are signed with the upload key named in `~/.gradle/gradle.properties`
+(`FUSION_UPLOAD_STORE_FILE`, `…_STORE_PASSWORD`, `…_KEY_ALIAS`, `…_KEY_PASSWORD`), applied by
+`plugins/with-release-signing.js`. Keep the `.jks` file and its password backed up somewhere safe:
+Google Play needs the same key for every update. Without these settings, builds fall back to the debug key.
+
+To install on a connected phone (USB debugging on): `adb install -r dist/fusion-office-<version>.apk`.
+
+## Cloud builds (optional)
 
 `npx eas-cli@latest build --platform ios|android` builds store binaries in the cloud. Bundle IDs are `in.nextgenfusion.fusionoffice` (set in `app.json`).

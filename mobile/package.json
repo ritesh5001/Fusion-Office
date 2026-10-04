@@ -47,11 +47,13 @@
   },
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "build:apk": "bash scripts/build-android.sh apk",
+    "build:aab": "bash scripts/build-android.sh aab"
   },
   "private": true
 }
