@@ -15,7 +15,7 @@ export function AppBanner() {
         />
         <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-px bg-[linear-gradient(90deg,transparent,rgb(182_173_255/0.6),rgb(205_245_100/0.5),transparent)]" />
 
-        <div className="grid items-center gap-10 md:grid-cols-2 md:gap-12">
+        <div className="grid items-center gap-10 md:grid-cols-[minmax(0,1fr)_220px] md:gap-10 lg:grid-cols-2 lg:gap-12">
           <div className="max-w-[560px]">
             <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.12em] text-accent">
               <span className="relative flex h-2 w-2">
@@ -42,7 +42,7 @@ export function AppBanner() {
               ))}
             </ul>
 
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-col gap-3 min-[480px]:flex-row min-[480px]:flex-wrap">
               <StoreBadge store="apple" />
               <StoreBadge store="google" />
             </div>
@@ -61,7 +61,7 @@ function StoreBadge({ store }: { store: "apple" | "google" }) {
     <div
       role="img"
       aria-label={apple ? "App Store: coming soon" : "Google Play: coming soon"}
-      className="group relative flex h-[58px] min-w-[178px] items-center gap-3 rounded-[14px] bg-black px-4 ring-1 ring-white/20 transition-[translate,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_30px_-12px_rgb(139_124_246/0.6)]"
+      className="group relative flex h-[58px] w-full items-center gap-2.5 min-[480px]:w-auto min-[480px]:min-w-[164px] rounded-[14px] bg-black px-3.5 ring-1 ring-white/20 transition-[translate,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_30px_-12px_rgb(139_124_246/0.6)]"
     >
       {apple ? (
         <svg viewBox="0 0 24 24" className="h-7 w-7 fill-white" aria-hidden="true">
@@ -85,7 +85,7 @@ function StoreBadge({ store }: { store: "apple" | "google" }) {
       )}
       <span className="flex flex-col leading-none text-white">
         <span className="text-[10.5px] font-medium tracking-[0.02em] text-white/70">{apple ? "Coming soon on the" : "Coming soon on"}</span>
-        <span className="mt-1 text-[19px] font-semibold tracking-[-0.01em]">{apple ? "App Store" : "Google Play"}</span>
+        <span className="mt-1 text-[18px] font-semibold tracking-[-0.01em]">{apple ? "App Store" : "Google Play"}</span>
       </span>
       <span className="absolute -right-2 -top-2 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-on-accent shadow-[0_0_12px_rgb(205_245_100/0.5)]">Soon</span>
     </div>
@@ -95,7 +95,7 @@ function StoreBadge({ store }: { store: "apple" | "google" }) {
 /** A phone showing the app's home screen, built in CSS so it stays sharp and light. */
 function PhoneMock() {
   return (
-    <div aria-hidden="true" className="relative mx-auto hidden h-[400px] w-[260px] sm:block">
+    <div aria-hidden="true" className="relative mx-auto hidden h-[400px] w-[220px] sm:block">
       <div className="absolute inset-x-6 bottom-2 h-10 rounded-full bg-[#8b7cf6]/40 blur-2xl" />
       <div className="fo-float-sm relative mx-auto h-[392px] w-[196px] rotate-[6deg] rounded-[38px] bg-[linear-gradient(145deg,#2a2d4a,#14152b)] p-[7px] shadow-[0_30px_60px_-20px_rgb(0_0_0/0.9),inset_0_0_0_1px_rgb(255_255_255/0.12)]">
         <div className="relative h-full overflow-hidden rounded-[31px] bg-[#0b0d1f]">

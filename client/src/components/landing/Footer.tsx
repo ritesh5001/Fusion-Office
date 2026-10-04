@@ -51,8 +51,8 @@ export function Footer() {
   return (
     <footer className="border-t border-line bg-app">
       <AppBanner />
-      <div className="mx-auto grid gap-10 px-4 py-12 sm:px-6 md:grid-cols-12 lg:px-8">
-        <div className="md:col-span-4">
+      <div className="mx-auto grid gap-10 px-4 py-12 sm:px-6 lg:grid-cols-12 lg:px-8">
+        <div className="lg:col-span-4">
           <Link href="/" className="flex items-center gap-2.5 font-display text-[17px] font-bold tracking-[-0.02em] text-fg">
             <Logo className="h-7 w-7" /> Fusion Office
           </Link>
@@ -60,7 +60,7 @@ export function Footer() {
             Free tools for PDFs, Office documents and images. Most of them run in your browser, so your files stay with you.
           </p>
         </div>
-        <nav aria-label="Footer" className="grid grid-cols-2 gap-8 sm:grid-cols-4 md:col-span-8">
+        <nav aria-label="Footer" className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4 lg:col-span-8">
           {COLUMNS.map((c) => (
             <div key={c.title}>
               <p className="eyebrow">{c.title}</p>
