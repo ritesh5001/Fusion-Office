@@ -385,6 +385,12 @@ input[type="color"]::-moz-color-swatch {
 @keyframes fo-heartbeat { 0%, 60%, 100% { scale: 1; } 15% { scale: 1.22; } 30% { scale: 1; } 45% { scale: 1.14; } }
 .fo-heartbeat { animation: fo-heartbeat 1.6s ease-in-out infinite; }
 
+/* Testimonials (components/ui/testimonials.tsx): columns drift upward; hover pauses one. */
+@keyframes fo-testimonial-col { to { transform: translateY(-50%); } }
+.fo-testimonial-col { animation: fo-testimonial-col 40s linear infinite; }
+.group:hover > .fo-testimonial-col, .group:focus-within > .fo-testimonial-col { animation-play-state: paused; }
+:root[data-motion="reduced"] .fo-testimonial-col { animation: none; }
+
 /* Inside the mobile app (?app=1): the app supplies navigation, so the site's own chrome is hidden. */
 :root[data-embed="app"] .site-chrome { display: none !important; }
 

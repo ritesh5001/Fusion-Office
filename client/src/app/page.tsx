@@ -4,6 +4,7 @@ import { SiteShell } from "@/components/site/SiteShell";
 import { HomeWorkspace } from "@/components/home/HomeWorkspace";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { PrivacyFlows } from "@/components/landing/PrivacyFlows";
+import { TestimonialsSection } from "@/components/ui/testimonials";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ToolTile } from "@/components/tools/icons";
 import { TOOLS, toolBySlug, type ToolDef } from "@/lib/tools/registry";
@@ -99,6 +100,8 @@ export default function Home() {
             </ul>
           </div>
         </section>
+
+        <TestimonialsSection />
 
         <section id="privacy" aria-labelledby="privacy-title" className="scroll-mt-20 border-t border-line">
           <div className="px-4 py-16 sm:px-6 md:py-20 lg:px-8">
