@@ -108,11 +108,11 @@ const initials = (name: string) =>
     .map((w) => w[0]!.toUpperCase())
     .join("");
 
-function Card({ t, hidden }: { t: Testimonial; hidden?: boolean }) {
+function Card({ t, hidden, className = "w-full max-w-[340px]" }: { t: Testimonial; hidden?: boolean; className?: string }) {
   return (
     <li
       aria-hidden={hidden || undefined}
-      className="w-full max-w-[340px] rounded-3xl border border-line bg-surface p-7 shadow-card transition-[translate,border-color,box-shadow] duration-300 hover:-translate-y-1.5 hover:border-line-strong hover:shadow-[0_24px_48px_-20px_rgb(0_0_0/0.8)]"
+      className={`${className} rounded-3xl border border-line bg-surface p-7 shadow-card transition-[translate,border-color,box-shadow] duration-300 hover:-translate-y-1.5 hover:border-line-strong hover:shadow-[0_24px_48px_-20px_rgb(0_0_0/0.8)]`}
     >
       <blockquote className="m-0">
         <p className="text-[15px] leading-relaxed text-fg-muted">“{t.text}”</p>
@@ -154,6 +154,26 @@ function Column({ items, duration, className = "" }: { items: Testimonial[]; dur
   );
 }
 
+/**
+ * One row that slides sideways forever (phones). The list is doubled so the
+ * loop is seamless; `reverse` runs it the other way. With reduced motion it
+ * stops and becomes a row you can swipe through.
+ */
+function Row({ items, duration, reverse = false }: { items: Testimonial[]; duration: number; reverse?: boolean }) {
+  return (
+    <div className="fo-testimonial-row group -mx-4 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)] sm:-mx-6">
+      <ul
+        className={`m-0 flex w-max list-none p-0 ${reverse ? "fo-testimonial-x-rev" : "fo-testimonial-x"}`}
+        style={{ animationDuration: `${duration}s` }}
+      >
+        {[false, true].map((copy) =>
+          items.map((t) => <Card key={`${t.name}-${copy}`} t={t} hidden={copy} className="mr-4 w-[280px] shrink-0 !p-6" />),
+        )}
+      </ul>
+    </div>
+  );
+}
+
 export function TestimonialsSection({ testimonials = TESTIMONIALS }: { testimonials?: Testimonial[] }) {
   // Everyone appears at every size: one column on phones, two on tablets, three on desktops.
   const split = (n: number) => {
@@ -161,7 +181,6 @@ export function TestimonialsSection({ testimonials = TESTIMONIALS }: { testimoni
     return Array.from({ length: n }, (_, i) => testimonials.slice(i * per, (i + 1) * per));
   };
   const layouts = [
-    { cols: split(1), className: "flex md:hidden", durations: [90] },
     { cols: split(2), className: "hidden md:flex lg:hidden", durations: [52, 60] },
     { cols: split(3), className: "hidden lg:flex", durations: [38, 46, 42] },
   ];
@@ -179,6 +198,14 @@ export function TestimonialsSection({ testimonials = TESTIMONIALS }: { testimoni
           </p>
         </div>
 
+        {/* Phones: rows that slide sideways, alternating direction. */}
+        <div role="region" aria-label="Testimonials" className="mt-10 flex flex-col gap-4 md:hidden">
+          {split(3).map((items, i) => (
+            <Row key={i} items={items} duration={[46, 38, 54][i]} reverse={i % 2 === 1} />
+          ))}
+        </div>
+
+        {/* Tablets and desktops: columns that drift upward. */}
         {layouts.map((l) => (
           <div
             key={l.className}

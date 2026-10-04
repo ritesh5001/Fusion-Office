@@ -390,6 +390,13 @@ input[type="color"]::-moz-color-swatch {
 .fo-testimonial-col { animation: fo-testimonial-col 40s linear infinite; }
 .group:hover > .fo-testimonial-col, .group:focus-within > .fo-testimonial-col { animation-play-state: paused; }
 :root[data-motion="reduced"] .fo-testimonial-col { animation: none; }
+/* Phones: rows slide sideways, alternating direction (linear, like a ticker). */
+@keyframes fo-testimonial-x { to { transform: translateX(-50%); } }
+.fo-testimonial-x { animation: fo-testimonial-x 46s linear infinite; }
+.fo-testimonial-x-rev { animation: fo-testimonial-x 46s linear infinite reverse; }
+.group:hover > :is(.fo-testimonial-x, .fo-testimonial-x-rev), .group:focus-within > :is(.fo-testimonial-x, .fo-testimonial-x-rev) { animation-play-state: paused; }
+:root[data-motion="reduced"] :is(.fo-testimonial-x, .fo-testimonial-x-rev) { animation: none; }
+:root[data-motion="reduced"] .fo-testimonial-row { overflow-x: auto; scrollbar-width: none; }
 
 /* Inside the mobile app (?app=1): the app supplies navigation, so the site's own chrome is hidden. */
 :root[data-embed="app"] .site-chrome { display: none !important; }
