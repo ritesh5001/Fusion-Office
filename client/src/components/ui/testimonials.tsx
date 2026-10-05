@@ -44,6 +44,7 @@ export const TESTIMONIALS: Testimonial[] = [
   },
   {
     name: "Rahul Yadav",
+    image: "/testimonials/rahul-yadav.webp",
     role: "Software Engineer",
     text: "I use it for KYC documents. Compress, add a password, and it's under the portal's size limit. No account, no watermark on the result.",
   },
@@ -103,11 +104,13 @@ export const TESTIMONIALS: Testimonial[] = [
   },
   {
     name: "Aman Singh Yadav",
+    image: "/testimonials/aman-singh-yadav.webp",
     role: "Software Engineer",
     text: "Chat with PDF is handy for long RFCs and documentation. I ask where something is defined and it points me to the right section.",
   },
   {
     name: "Vinit Yadav",
+    image: "/testimonials/vinit-yadav.webp",
     role: "Electrical Engineer",
     text: "I deal with big datasheets and scanned schematics. Compressing them for email without losing readable detail is exactly what I needed.",
   },

@@ -11,7 +11,7 @@ import { cn } from "@/lib/cn";
 export const openFeedback = () => window.dispatchEvent(new Event("fo-open-feedback"));
 
 const MAX = 2000;
-/** Example names the name field's placeholder cycles through, one every 3 seconds. */
+/** Example names the name field's placeholder cycles through, one every second. */
 const NAMES = ["Iqra", "Archana", "Priya", "Shreya", "Tamanna", "Ghurliya", "Gunja", "Naincy"];
 type State = { kind: "idle" } | { kind: "sending" } | { kind: "sent" } | { kind: "error"; message: string };
 
@@ -67,7 +67,7 @@ export function Feedback() {
   // Cycle the placeholder name while the form is open and the field is empty.
   useEffect(() => {
     if (!open || name) return;
-    const t = window.setInterval(() => setExample((i) => (i + 1) % NAMES.length), 3000);
+    const t = window.setInterval(() => setExample((i) => (i + 1) % NAMES.length), 1000);
     return () => window.clearInterval(t);
   }, [open, name]);
 
