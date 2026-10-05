@@ -149,17 +149,27 @@ export function Feedback() {
                 <label htmlFor={`${id}-name`} className="mt-5 block text-[13px] font-medium text-fg">
                   Your name
                 </label>
-                <input
-                  ref={nameInput}
-                  id={`${id}-name`}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  maxLength={80}
-                  required
-                  autoComplete="name"
-                  className="mt-1.5 h-11 w-full rounded-xl border border-line-strong bg-sunken px-3.5 text-[15px] text-fg outline-none transition placeholder:text-fg-subtle focus:border-brand-500 focus:ring-[3px] focus:ring-brand-500/20"
-                  placeholder={`e.g. ${NAMES[example]}`}
-                />
+                <div className="relative mt-1.5">
+                  <input
+                    ref={nameInput}
+                    id={`${id}-name`}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    maxLength={80}
+                    required
+                    autoComplete="name"
+                    className="h-11 w-full rounded-xl border border-line-strong bg-sunken px-3.5 text-[15px] text-fg outline-none transition focus:border-brand-500 focus:ring-[3px] focus:ring-brand-500/20"
+                  />
+                  {/* Placeholder that rolls through example names (a real placeholder can't animate). */}
+                  {!name && (
+                    <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center overflow-hidden text-[15px] text-fg-subtle">
+                      e.g.&nbsp;
+                      <span key={example} className="fo-digit inline-block">
+                        {NAMES[example]}
+                      </span>
+                    </span>
+                  )}
+                </div>
 
                 <fieldset className="mt-4">
                   <legend className="text-[13px] font-medium text-fg">
