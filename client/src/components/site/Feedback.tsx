@@ -11,6 +11,8 @@ import { cn } from "@/lib/cn";
 export const openFeedback = () => window.dispatchEvent(new Event("fo-open-feedback"));
 
 const MAX = 2000;
+/** Example names the name field's placeholder cycles through, one every 3 seconds. */
+const NAMES = ["Iqra", "Archana", "Priya", "Shreya", "Tamanna", "Ghurliya", "Gunja"];
 type State = { kind: "idle" } | { kind: "sending" } | { kind: "sent" } | { kind: "error"; message: string };
 
 /**
@@ -24,6 +26,7 @@ export function Feedback() {
   const [message, setMessage] = useState("");
   const [rating, setRating] = useState(0);
   const [state, setState] = useState<State>({ kind: "idle" });
+  const [example, setExample] = useState(0);
   const nameInput = useRef<HTMLInputElement>(null);
   const opener = useRef<HTMLElement | null>(null);
   const id = useId();
@@ -60,6 +63,13 @@ export function Feedback() {
       window.removeEventListener("keydown", onKey);
     };
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Cycle the placeholder name while the form is open and the field is empty.
+  useEffect(() => {
+    if (!open || name) return;
+    const t = window.setInterval(() => setExample((i) => (i + 1) % NAMES.length), 3000);
+    return () => window.clearInterval(t);
+  }, [open, name]);
 
   const close = () => {
     setOpen(false);
@@ -148,7 +158,7 @@ export function Feedback() {
                   required
                   autoComplete="name"
                   className="mt-1.5 h-11 w-full rounded-xl border border-line-strong bg-sunken px-3.5 text-[15px] text-fg outline-none transition placeholder:text-fg-subtle focus:border-brand-500 focus:ring-[3px] focus:ring-brand-500/20"
-                  placeholder="e.g. Priya Sharma"
+                  placeholder={`e.g. ${NAMES[example]}`}
                 />
 
                 <fieldset className="mt-4">
