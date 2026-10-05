@@ -41,6 +41,7 @@ const COLUMNS = [
       { href: "/guides", label: "Guides" },
       { href: "/#privacy", label: "Privacy" },
       { href: "/#how-it-works", label: "How it works" },
+      { href: "/how-we-built-it", label: "How we built it" },
       { href: "/#faq", label: "FAQ" },
       { href: "#feedback", label: "Send feedback" },
       { href: "/dashboard", label: "My documents" },

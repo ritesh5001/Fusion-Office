@@ -25,6 +25,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...TOOLS.filter(isIndexable).map((t) => entry(`/tools/${t.slug}`, 0.8)),
     entry("/tools/workflows", 0.6),
     entry("/guides", 0.6),
+    entry("/how-we-built-it", 0.6),
     ...GUIDES.map((g) => entry(`/guides/${g.slug}`, 0.6, new Date(`${g.updated}T00:00:00Z`))),
   ];
 }
