@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronDown, Menu, Search, X } from "lucide-react";
 import { Logo } from "../Logo";
-import { AccountLinks } from "../home/AccountLinks";
+import { AccountLinks, SHOW_MY_DOCUMENTS } from "../home/AccountLinks";
 import { ToolsMenu } from "./ToolsMenu";
 import { CommandPalette, openCommandPalette } from "../site/CommandPalette";
 import { scrollBehavior, useScrollLock } from "@/lib/motion";
@@ -147,7 +147,7 @@ export function Nav() {
             ))}
           </ul>
           <ul className="mt-4 space-y-1 border-t border-line pt-4">
-            {[...LINKS, { href: "/dashboard", label: "My documents" }].map((l) => (
+            {[...LINKS, ...(SHOW_MY_DOCUMENTS ? [{ href: "/dashboard", label: "My documents" }] : [])].map((l) => (
               <li key={l.href}>
                 <a href={l.href} onClick={follow} className="flex h-10 items-center rounded-lg px-2 text-[15px] font-medium text-fg-muted hover:bg-raised hover:text-fg">
                   {l.label}

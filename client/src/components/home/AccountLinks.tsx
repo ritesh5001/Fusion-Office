@@ -4,11 +4,14 @@ import Link from "next/link";
 import { FileText } from "lucide-react";
 import { signInUrl, signOutUrl, useCloudConfig } from "@/lib/cloudConfig";
 
+/** "My documents" links (header and mobile menu). Hidden for now; set to true to bring them back. */
+export const SHOW_MY_DOCUMENTS = false;
+
 /** My Documents / avatar / Sign in — shown only when the backend has auth on. */
 export function AccountLinks() {
   const { authEnabled, user, loading } = useCloudConfig();
   if (loading || !authEnabled) return null;
-  const docs = (
+  const docs = SHOW_MY_DOCUMENTS && (
     <Link
       href="/dashboard"
       className="btn btn-ghost hidden md:inline-flex"

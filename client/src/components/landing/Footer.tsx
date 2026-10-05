@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Instagram, Mail, MessageCircle } from "lucide-react";
+import { ArrowUpRight, ChevronDown, Instagram, Mail, MessageCircle } from "lucide-react";
 import { Logo } from "../Logo";
 import { COMPANY } from "@/lib/company";
 import { MotionToggle } from "../site/MotionToggle";
@@ -63,7 +63,7 @@ export function Footer() {
     <footer className="site-chrome border-t border-line bg-app">
       <AppBanner />
       <div className="mx-auto grid gap-12 px-4 py-14 sm:px-6 lg:grid-cols-12 lg:gap-10 lg:px-8">
-        <div className="lg:col-span-4">
+        <div className="flex flex-col items-center text-center sm:items-start sm:text-left lg:col-span-4">
           <Link href="/" className="flex items-center gap-2.5 font-display text-[17px] font-bold tracking-[-0.02em] text-fg">
             <Logo className="h-7 w-7" /> Fusion Office
           </Link>
@@ -72,7 +72,7 @@ export function Footer() {
           </p>
 
           {/* The team behind it. */}
-          <div className="group relative mt-6 max-w-[380px] overflow-hidden rounded-2xl border border-line bg-surface p-5 transition-colors hover:border-line-strong">
+          <div className="group relative mt-6 w-full max-w-[380px] overflow-hidden rounded-2xl border border-line bg-surface p-5 transition-colors hover:border-line-strong">
             <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[radial-gradient(circle,rgb(139_124_246/0.28),transparent_70%)] transition-transform duration-500 group-hover:scale-125" />
             <p className="relative text-[11.5px] font-semibold uppercase tracking-[0.12em] text-fg-subtle">A product by</p>
             <a href={COMPANY.url} target="_blank" rel="noopener" className="relative mt-1 inline-flex items-center gap-1 font-display text-[19px] font-bold tracking-[-0.02em]">
@@ -82,7 +82,7 @@ export function Footer() {
             <p className="relative mt-1.5 text-[13.5px] leading-relaxed text-fg-muted">
               Our Team Develops Websites, online stores, apps and custom software.
             </p>
-            <div className="relative mt-4 flex items-center gap-2">
+            <div className="relative mt-4 flex items-center justify-center gap-2 sm:justify-start">
               <a href={COMPANY.url} target="_blank" rel="noopener" className="btn btn-secondary btn-sm">
                 Work with us
               </a>
@@ -105,7 +105,35 @@ export function Footer() {
             </div>
           </div>
         </div>
-        <nav aria-label="Footer" className="grid grid-cols-2 gap-x-6 gap-y-9 sm:grid-cols-3 lg:col-span-8 lg:grid-cols-5">
+        {/* Phones: one row per section that opens in place, centred. */}
+        <nav aria-label="Footer" className="-mx-1 divide-y divide-line border-y border-line sm:hidden">
+          {COLUMNS.map((c) => (
+            <details key={c.title} className="fo-faq group">
+              <summary className="flex h-14 cursor-pointer list-none items-center justify-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-fg-muted transition-colors hover:text-fg group-open:text-fg [&::-webkit-details-marker]:hidden">
+                {c.title}
+                <ChevronDown className="h-4 w-4 transition-transform duration-300 group-open:rotate-180" aria-hidden="true" />
+              </summary>
+              <ul className="flex flex-col items-center gap-3.5 pb-5 pt-1">
+                {c.links.map((l) =>
+                  l.href.startsWith("#") ? (
+                    <li key={l.label}>
+                      <a href={l.href} className="text-[15px] text-fg-muted hover:text-fg">
+                        {l.label}
+                      </a>
+                    </li>
+                  ) : (
+                    <li key={l.label}>
+                      <Link href={l.href} className="text-[15px] text-fg-muted hover:text-fg">
+                        {l.label}
+                      </Link>
+                    </li>
+                  ),
+                )}
+              </ul>
+            </details>
+          ))}
+        </nav>
+        <nav aria-label="Footer" className="hidden gap-x-6 gap-y-9 sm:grid sm:grid-cols-3 lg:col-span-8 lg:grid-cols-5">
           {COLUMNS.map((c) => (
             <div key={c.title}>
               <p className="eyebrow">{c.title}</p>
