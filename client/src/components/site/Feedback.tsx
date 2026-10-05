@@ -14,7 +14,7 @@ export const openFeedback = (rating?: number) => window.dispatchEvent(new Custom
 const MAX = 2000;
 /** Example names the name field's placeholder cycles through, one every second. */
 const NAMES = ["Iqra", "Archana", "Priya", "Shreya", "Tamanna", "Ghurliya", "Gunja", "Naincy", "Kirti", "Rabina", "Arpita"];
-type State = { kind: "idle" } | { kind: "sending" } | { kind: "sent" } | { kind: "error"; message: string };
+type State = { kind: "idle" } | { kind: "sending" } | { kind: "sent" } | { kind: "error"; message: string; code?: string; at: number };
 
 /**
  * The feedback form: a floating button on every page that opens a short form
@@ -96,13 +96,20 @@ export function Feedback() {
         body: JSON.stringify({ name, message, rating: rating || undefined, page: pathname, website }),
       });
       if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        const body = (await res.json().catch(() => ({}))) as { error?: string; code?: string };
+        // Moderation said no: abuse clears the message, junk keeps it for editing.
+        if (body.code === "abusive") setMessage("");
+        if (body.code === "abusive" || body.code === "fake") {
+          setState({ kind: "error", message: body.error ?? "Please send real feedback.", code: body.code, at: Date.now() });
+          window.setTimeout(() => document.getElementById(`${id}-message`)?.focus(), 50);
+          return;
+        }
         throw new Error(res.status === 429 ? "You've sent a lot of feedback just now. Please try again in a little while." : body.error ?? "Couldn't send feedback. Please try again.");
       }
       setState({ kind: "sent" });
       markFeedbackSent();
     } catch (err) {
-      setState({ kind: "error", message: (err as Error).message });
+      setState({ kind: "error", message: (err as Error).message, at: Date.now() });
     }
   };
 
@@ -218,7 +225,14 @@ export function Feedback() {
                 <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 opacity-0" />
 
                 {state.kind === "error" && (
-                  <p role="alert" className="mt-3 rounded-lg bg-red-500/10 px-3 py-2 text-[13px] text-red-300 ring-1 ring-inset ring-red-500/25">
+                  <p
+                    key={state.at}
+                    role="alert"
+                    className={cn(
+                      "fo-shake mt-3 rounded-lg px-3 py-2 ring-1 ring-inset",
+                      state.code === "abusive" ? "bg-[#ff5a6e]/10 text-[14px] font-semibold text-[#ff8fa3] ring-[#ff5a6e]/30" : "bg-red-500/10 text-[13px] text-red-300 ring-red-500/25",
+                    )}
+                  >
                     {state.message}
                   </p>
                 )}
