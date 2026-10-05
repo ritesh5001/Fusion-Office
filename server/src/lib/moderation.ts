@@ -31,6 +31,12 @@ export const ROASTS = [
   "Kanjar energy skip. Normal sentence try kar.",
   "Raand-level abuse blocked. Dubara, saaf.",
   "Lavdya, feedback do. Gaali ghar le ja.",
+  "Bhenchod, yeh feedback hai, gaali ka competition nahi.",
+  "ma ke lode, gaali mat de. Seedha point de.",
+  "bsdk, yeh form hai, gaali ka stage nahi. Feedback de.",
+  "bc, gaali mat de. Seedha masla likh.",
+  "mc, yeh feedback hai, gaali ka audition nahi. Point de.",
+
 ];
 
 export const ABUSE_REPLY_TAIL = "Ab dubara real feedback de.";
@@ -42,7 +48,7 @@ export const roast = (pick = Math.random()) => `${ROASTS[Math.floor(pick * ROAST
 /**
  * Common Hindi/Hinglish and English abuse, as stems matched inside words
  * ("bhosdike", "bhosdiwala"), plus short forms matched only as whole words
- * ("bsdk", "lund") so ordinary words that contain them aren't flagged.
+ * ("bc", "mc", "bsdk") so ordinary words that contain them aren't flagged.
  */
 const STEMS = [
   "bhosd", "bhosad", "chutiy", "chutia", "choot", "madarchod", "madar chod", "maderchod", "behenchod", "behen chod", "bhenchod", "bhen chod", "benchod",
@@ -50,14 +56,14 @@ const STEMS = [
   "fuck", "motherfuck", "bitch", "bastard", "asshole", "dickhead", "whore", "slut",
   "भोसड", "चूतिय", "मादरचोद", "बहनचोद", "भेनचोद", "गांड", "लंड", "रंडी", "हरामी", "कमीन",
 ];
-// "bc"/"mc" are left to the AI: in English chat "bc" usually means "because".
-const SHORT = ["bsdk", "bkl", "mkc", "bkc", "lodu", "loda", "lode", "lund", "laude", "lavdya", "gand", "chut", "randi", "raand", "kutti", "cunt", "stfu"];
+const SHORT = ["bc", "mc", "bsdk", "bkl", "mkc", "bkc", "lodu", "loda", "lode", "lund", "laude", "lavdya", "gand", "chut", "randi", "raand", "kutti", "cunt", "wtf", "stfu"];
 
 export function hasAbuse(text: string): boolean {
-  // Undo common masking (f*ck, ch@tiya, b$dk, ch0d): a masked letter may stand for a vowel or "u".
-  const lower = text.toLowerCase().replace(/\$/g, "s").replace(/0/g, "o");
-  const readings = ["u", "a", "i"].map((v) => lower.replace(/[*@]/g, v));
-  return readings.some((t) => STEMS.some((s) => t.includes(s)) || t.split(/[^\p{L}\p{N}]+/u).some((w) => SHORT.includes(w)));
+  // Undo common masking: f*ck, ch@tiya, b$dk, ch0d.
+  const unmasked = text.toLowerCase().replace(/\*/g, "u").replace(/@/g, "a").replace(/\$/g, "s").replace(/0/g, "o");
+  if (STEMS.some((s) => unmasked.includes(s))) return true;
+  const words = unmasked.split(/[^\p{L}\p{N}]+/u);
+  return words.some((w) => SHORT.includes(w));
 }
 
 /** Decide what to do with a submission. Never throws. */
