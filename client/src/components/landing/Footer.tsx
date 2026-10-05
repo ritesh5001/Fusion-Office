@@ -80,7 +80,7 @@ export function Footer() {
               <ArrowUpRight className="h-4 w-4 text-fg-subtle transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-fg" aria-hidden="true" />
             </a>
             <p className="relative mt-1.5 text-[13.5px] leading-relaxed text-fg-muted">
-              Websites, online stores, apps and custom software, built in Lucknow and Mumbai.
+              Our Team Develops Websites, online stores, apps and custom software.
             </p>
             <div className="relative mt-4 flex items-center gap-2">
               <a href={COMPANY.url} target="_blank" rel="noopener" className="btn btn-secondary btn-sm">
