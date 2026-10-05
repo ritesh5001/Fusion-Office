@@ -144,6 +144,7 @@ function solveTurnstile(siteKey: string): Promise<string> {
     card.focus();
 
     let widget: string | null = null;
+    let failures = 0;
     let done = false;
     const finish = (err: Error | null, token?: string) => {
       if (done) return;
@@ -181,7 +182,18 @@ function solveTurnstile(siteKey: string): Promise<string> {
           appearance: "always",
           callback: (token: string) => finish(null, token),
           "expired-callback": () => widget && ts.reset(widget),
-          "error-callback": () => {
+          "error-callback": (code?: string) => {
+            // 1101xx/1102xx/1104xx: the widget isn't set up for this site (wrong key, domain not
+            // allowed, bad action). Retrying can't fix that, so stop with a clear message.
+            if (/^110[124]/.test(String(code ?? ""))) {
+              console.error(`[turnstile] setup error ${code} on ${location.hostname}: add this domain to the Turnstile widget's hostnames in Cloudflare.`);
+              finish(new Error("The security check isn’t set up for this address yet. Please try again in a little while."));
+              return true;
+            }
+            if (++failures >= 3) {
+              finish(new Error("The security check couldn't finish. Check your connection, turn off strict blockers for this site, and try again."));
+              return true;
+            }
             status.textContent = "The check hit a snag. Retrying…";
           },
         });
