@@ -15,6 +15,8 @@ import { BackHeader } from "./Screen";
 import { Segmented } from "./Segmented";
 import { DoneCard, ErrorCard, PrivacyStrip, ProgressCard } from "./Stage";
 import { StepTracker } from "./StepTracker";
+import { GlowCard } from "./GlowCard";
+import { BeforeAfter, ToolDropCard } from "./ToolStage";
 import { Backdrop, KindGlyph, PressScale, T, ToolTile } from "./ui";
 
 const PICK_TYPES = { pdf: "application/pdf", image: "image/*", document: "*/*" } as const;
@@ -77,14 +79,24 @@ export function ToolRunnerScreen({ tool, native, useStaged }: { tool: ToolDef; n
         </View>
 
         {working ? (
-          <View style={{ marginTop: 20, borderRadius: 24, backgroundColor: C.paper, padding: 16 }}>
+          <GlowCard hot={state.phase === "running"} style={{ marginTop: 20 }} inner={{ padding: 14 }}>
+            {state.phase === "running" && <BeforeAfter tool={tool} files={files} verb={state.verb} />}
             <PrivacyStrip state={state.phase === "running" ? "running" : state.phase === "done" ? "done" : "ready"} step={state.phase === "running" ? state.step : 0} device={native.runs === "device"} />
             <View style={{ marginTop: 14 }}>
               {state.phase === "running" && <ProgressCard state={state} />}
               {state.phase === "done" && <DoneCard state={state} onAgain={() => (reset(), setFiles([]))} />}
               {state.phase === "error" && <ErrorCard message={state.message} onBack={reset} />}
             </View>
-          </View>
+          </GlowCard>
+        ) : files.length === 0 ? (
+          <>
+            <GlowCard style={{ marginTop: 20 }}>
+              <ToolDropCard native={native} multiple={!!tool.multiple} onFiles={() => add("files")} onPhotos={() => add("photos")} onCamera={() => add("camera")} />
+            </GlowCard>
+            {native.runs === "server" && (
+              <T style={{ marginTop: 12, fontSize: 12.5, color: C.fgMuted }}>This conversion runs on the Fusion Office server: the file is uploaded, converted, and deleted straight after.</T>
+            )}
+          </>
         ) : (
           <>
             <View style={{ marginTop: 20, gap: 8 }}>
