@@ -11,6 +11,7 @@ import { ToolTile } from "../tools/icons";
 import { KindGlyph } from "./FlowArt";
 import { cn } from "@/lib/cn";
 import { pickerAccept } from "@/lib/tools/pickerAccept";
+import { taskDone } from "@/lib/taskDone";
 
 /**
  * The homepage drop card as a "processing stage". The motion tells the
@@ -201,6 +202,7 @@ export function DropStage({
         compress: tool.slug.startsWith("compress"),
       });
       setPhase("done");
+      taskDone();
     } catch (e) {
       setError((e as Error).message || "Something went wrong.");
       setPhase("error");

@@ -10,6 +10,7 @@ import { Mascot } from "../mascot/Mascot";
 import { cn } from "../ui/primitives";
 import { isReducedMotion } from "@/lib/motion";
 import { renderSafeMarkdown } from "@/lib/tools/safeMarkdown";
+import { taskDone } from "@/lib/taskDone";
 
 export interface LoadedFile extends ToolFile {
   id: string;
@@ -127,6 +128,7 @@ export function ToolRunner<O>({ tool, spec }: { tool: ToolDef; spec: ToolSpec<O>
     try {
       const res = await spec.run(files, options, (message, fraction) => setRunning({ message, fraction }));
       setResult(res);
+      taskDone();
     } catch (e) {
       setError((e as Error).message || "Something went wrong.");
     } finally {

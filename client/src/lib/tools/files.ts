@@ -1,4 +1,5 @@
 import { zipSync } from "fflate";
+import { taskDone } from "../taskDone";
 
 /** A file flowing in or out of a tool. */
 export interface ToolFile {
@@ -64,6 +65,7 @@ export function downloadFile(file: ToolFile) {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  taskDone();
 }
 
 export const formatBytes = (n: number) =>

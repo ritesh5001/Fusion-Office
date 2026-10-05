@@ -6,9 +6,10 @@ import { MessageSquareHeart, Star, X } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useScrollLock } from "@/lib/motion";
 import { cn } from "@/lib/cn";
+import { FeedbackNudge, markFeedbackSent } from "./FeedbackNudge";
 
-/** Opens the feedback form from anywhere (e.g. the footer link). */
-export const openFeedback = () => window.dispatchEvent(new Event("fo-open-feedback"));
+/** Opens the feedback form from anywhere (e.g. the footer link), optionally with a star rating chosen. */
+export const openFeedback = (rating?: number) => window.dispatchEvent(new CustomEvent("fo-open-feedback", { detail: { rating } }));
 
 const MAX = 2000;
 /** Example names the name field's placeholder cycles through, one every second. */
@@ -35,8 +36,10 @@ export function Feedback() {
 
   // Opens from openFeedback() or any link to #feedback (the footer's "Send feedback").
   useEffect(() => {
-    const show = () => {
+    const show = (e?: Event) => {
       opener.current = document.activeElement as HTMLElement | null;
+      const r = (e as CustomEvent<{ rating?: number }> | undefined)?.detail?.rating;
+      if (r) setRating(r);
       setOpen(true);
     };
     const onHash = () => {
@@ -97,6 +100,7 @@ export function Feedback() {
         throw new Error(res.status === 429 ? "You've sent a lot of feedback just now. Please try again in a little while." : body.error ?? "Couldn't send feedback. Please try again.");
       }
       setState({ kind: "sent" });
+      markFeedbackSent();
     } catch (err) {
       setState({ kind: "error", message: (err as Error).message });
     }
@@ -104,6 +108,7 @@ export function Feedback() {
 
   return (
     <>
+      <FeedbackNudge paused={open} />
       <button
         type="button"
         onClick={(e) => {

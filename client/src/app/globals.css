@@ -403,6 +403,14 @@ input[type="color"]::-moz-color-swatch {
 .fo-digit { animation: fo-digit 320ms cubic-bezier(.2,.8,.2,1); }
 :root[data-motion="reduced"] .fo-digit { animation: none; }
 
+/* Feedback prompt after a task (components/site/FeedbackNudge.tsx): springs up, stars pop in one by one. */
+@keyframes fo-nudge-in { from { opacity: 0; translate: 0 28px; scale: 0.92; } 60% { opacity: 1; translate: 0 -4px; scale: 1.01; } to { translate: 0 0; scale: 1; } }
+@keyframes fo-nudge-out { to { opacity: 0; translate: 0 14px; scale: 0.96; } }
+@keyframes fo-star-in { from { opacity: 0; scale: 0.3; rotate: -35deg; } 70% { opacity: 1; scale: 1.2; rotate: 8deg; } to { scale: 1; rotate: 0deg; } }
+.fo-nudge-in { animation: fo-nudge-in 620ms cubic-bezier(.34,1.56,.64,1) backwards; }
+.fo-nudge-out { animation: fo-nudge-out 200ms cubic-bezier(.4,0,1,1) forwards; }
+.fo-star-in { animation: fo-star-in 520ms cubic-bezier(.34,1.56,.64,1) backwards; }
+
 /* Inside the mobile app (?app=1): the app supplies navigation, so the site's own chrome is hidden. */
 :root[data-embed="app"] .site-chrome { display: none !important; }
 
@@ -413,7 +421,7 @@ input[type="color"]::-moz-color-swatch {
   .fo-intro-fade, .fo-intro-rise, .fo-intro-wipe, .fo-intro-tile, .fo-intro-scale, .fo-intro-pop, .fo-breathe, .fo-slide-out,
   .fo-grow-x, .fo-pulse-once, .fo-palette-in, .fo-zoom-forward, .fo-preview, .fo-r-head, .fo-r-item,
   .fo-pd-packet, .fo-pd-chip, .fo-pd-result, .fo-pd-out, .fo-pd-back, .fo-pd-strip, .fo-pd-deleted, .fo-pd-line, .fo-pd-node,
-  .fo-ping, .fo-heartbeat
+  .fo-ping, .fo-heartbeat, .fo-nudge-in, .fo-star-in
 ) { animation: none !important; }
 :root[data-motion="reduced"] .fo-press:active { scale: 1; }
 :root[data-motion="reduced"] .fo-faq::details-content { transition: none; }
