@@ -7,6 +7,7 @@ import type { ToolSeo } from "./content/types";
 import type { Cluster } from "./clusters";
 import type { Guide } from "./guides";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, absoluteUrl } from "./site";
+import { alternateNames, searchName } from "./brand";
 
 const ORG_ID = `${SITE_URL}/#organization`;
 const SITE_ID = `${SITE_URL}/#website`;
@@ -50,7 +51,8 @@ const APP_CATEGORY: Record<ToolDef["category"], string> = {
 export const toolApplication = (tool: ToolDef, content: ToolSeo, path: string) => ({
   "@type": "WebApplication",
   "@id": `${absoluteUrl(path)}#app`,
-  name: tool.name,
+  name: searchName(tool),
+  alternateName: alternateNames(tool),
   url: absoluteUrl(path),
   description: content.description,
   applicationCategory: APP_CATEGORY[tool.category],

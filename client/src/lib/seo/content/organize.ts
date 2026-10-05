@@ -143,7 +143,7 @@ export const ORGANIZE: Record<string, ToolSeo> = {
     related: ["rotate-pdf", "organize-pdf"],
   },
   "split-in-half": {
-    title: "Split PDF Pages in Half – Separate Two-Page Book Scans",
+    title: "Split PDF in Half – Separate Two-Page Book Scans",
     description: "Cut every PDF page down the middle (or across) to turn two-page book spreads into single pages. Supports right-to-left books. Free, in your browser.",
     intent: ["split pdf page in half", "split scanned book pages", "cut pdf page in two", "separate two pages in one pdf page", "split double page pdf"],
     anchor: "Cut PDF pages in half",
@@ -155,7 +155,7 @@ export const ORGANIZE: Record<string, ToolSeo> = {
     related: ["crop-pdf", "ocr-pdf", "organize-pdf", "pages-per-sheet"],
   },
   "split-by-size": {
-    title: "Split PDF by File Size – Keep Every Part Under a Limit",
+    title: "Split PDF by Size – Keep Every Part Under a File Limit",
     description: "Break a large PDF into parts that are each under a size you choose, like 5 MB or 10 MB, for email attachments and upload portals. Free and private.",
     intent: ["split pdf by size", "split large pdf", "split pdf into 5mb parts", "pdf too large to upload", "split pdf for email"],
     anchor: "Split a large PDF by file size",

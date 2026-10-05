@@ -10,6 +10,7 @@ import { contentFor } from "@/lib/seo/toolContent";
 import { clusterOf } from "@/lib/seo/clusters";
 import { guidesForTool } from "@/lib/seo/guides";
 import { breadcrumbs, faqPage, toolApplication } from "@/lib/seo/jsonld";
+import { brandFaq, searchName } from "@/lib/seo/brand";
 import { cn } from "@/lib/cn";
 
 const RUNS_BADGE = {
@@ -50,10 +51,12 @@ export function ToolLayout({ tool, children }: { tool: ToolDef; children: ReactN
   const guides = guidesForTool(tool.slug);
   const goodToKnow = [...(c.limits ?? []), ...(tool.status === "ready" ? [PRIVACY[tool.runs], "Free to use with no sign-up, no limit on tasks and no watermark on your files."] : [])];
   const ready = tool.status === "ready";
+  // Every live tool answers "What is Fusion Office <tool>?" first, for branded searches.
+  const faq = [...(ready ? [brandFaq(tool, c)] : []), ...(c.faq ?? [])];
 
   return (
     <SiteShell active={tool.category}>
-      <JsonLd data={[...(ready ? [toolApplication(tool, c, path)] : []), breadcrumbs(trail), ...(c.faq?.length ? [faqPage(c.faq)] : [])]} />
+      <JsonLd data={[...(ready ? [toolApplication(tool, c, path)] : []), breadcrumbs(trail), ...(faq.length ? [faqPage(faq)] : [])]} />
       <main id="main" className="px-4 pb-20 pt-6 sm:px-6 lg:px-8">
         <Breadcrumbs items={trail} />
 
@@ -61,7 +64,10 @@ export function ToolLayout({ tool, children }: { tool: ToolDef; children: ReactN
           <div className="flex min-w-0 items-start gap-4 sm:items-center">
             <ToolTile tool={tool} size="xl" />
             <div className="min-w-0">
-              <h1 className="font-display text-[clamp(1.6rem,3.2vw,2.25rem)] font-bold leading-[1.1] tracking-[-0.03em] text-fg">{tool.name}</h1>
+              <h1 className="font-display text-[clamp(1.6rem,3.2vw,2.25rem)] font-bold leading-[1.1] tracking-[-0.03em] text-fg">
+                <span className="mb-1 block text-[12px] font-semibold uppercase tracking-[0.14em] text-fg-subtle">Fusion Office</span>{" "}
+                {searchName(tool)}
+              </h1>
               <p className="mt-1.5 max-w-[68ch] text-[15px] leading-relaxed text-fg-muted">{c.intro}</p>
             </div>
           </div>
@@ -143,13 +149,13 @@ export function ToolLayout({ tool, children }: { tool: ToolDef; children: ReactN
               </section>
             )}
 
-            {c.faq && c.faq.length > 0 && (
+            {faq.length > 0 && (
               <section aria-labelledby="faq">
                 <h2 id="faq" className="font-display text-[22px] font-bold tracking-[-0.02em] text-fg">
                   Frequently asked questions
                 </h2>
                 <div className="card mt-5 divide-y divide-line">
-                  {c.faq.map(([q, a]) => (
+                  {faq.map(([q, a]) => (
                     <div key={q} className="px-5 py-4">
                       <h3 className="text-[15px] font-semibold text-fg">{q}</h3>
                       <p className="mt-1.5 text-[14.5px] leading-relaxed text-fg-muted">{a}</p>

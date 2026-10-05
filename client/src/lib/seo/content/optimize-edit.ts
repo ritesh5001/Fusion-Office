@@ -72,7 +72,7 @@ export const OPTIMIZE: Record<string, ToolSeo> = {
     related: ["pdf-to-word", "extract-text", "scan-to-pdf", "compress-pdf", "chat-with-pdf"],
   },
   "gst-filing-prep": {
-    title: "GST Portal PDF Size Limit – Compress & Split PDFs for GST Upload",
+    title: "GST Filing Prep – Fix PDF Size Limit for the GST Portal Upload",
     description: "Prepare PDFs for the GST portal: compress and split replies, SCN responses and appeal documents so each file fits the 2 MB, 5 MB or 10 MB upload limit.",
     intent: ["gst portal pdf size limit", "compress pdf for gst portal", "reduce pdf size to 2mb", "gst reply upload size", "split pdf for gst appeal"],
     anchor: "Prepare a PDF for the GST portal",
@@ -87,7 +87,7 @@ export const OPTIMIZE: Record<string, ToolSeo> = {
 
 export const EDIT: Record<string, ToolSeo> = {
   "edit-pdf": {
-    title: "Edit PDF Online Free – Change Text, Add Images & Annotate",
+    title: "PDF Editor Online Free – Edit Text, Add Images & Annotate",
     description: "A free online PDF editor: change existing text in its original font, add text, images, shapes and drawings, highlight, comment, redact and sign. No sign-up.",
     intent: ["pdf editor online", "edit pdf", "edit pdf online free", "edit text in pdf", "free pdf editor"],
     anchor: "Edit a PDF online",
