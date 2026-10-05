@@ -411,6 +411,15 @@ input[type="color"]::-moz-color-swatch {
 .fo-nudge-out { animation: fo-nudge-out 200ms cubic-bezier(.4,0,1,1) forwards; }
 .fo-star-in { animation: fo-star-in 520ms cubic-bezier(.34,1.56,.64,1) backwards; }
 
+/* Pay it forward (app/pay-it-forward): kindness waves, a slow orbit of small acts, floating idea chips. */
+@keyframes fo-kind-wave { from { scale: 1; opacity: 0.7; } to { scale: 3.2; opacity: 0; } }
+@keyframes fo-kind-orbit { to { rotate: 360deg; } }
+@keyframes fo-kind-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -5px; } }
+.fo-kind-wave { opacity: 0; animation: fo-kind-wave 3.3s cubic-bezier(.2,.6,.4,1) infinite; }
+.fo-kind-orbit { animation: fo-kind-orbit 48s linear infinite; }
+.fo-kind-counter { animation: fo-kind-orbit 48s linear infinite reverse; }
+.fo-kind-float { animation: fo-kind-float 4.5s ease-in-out infinite; }
+
 /* Inside the mobile app (?app=1): the app supplies navigation, so the site's own chrome is hidden. */
 :root[data-embed="app"] .site-chrome { display: none !important; }
 
@@ -421,7 +430,8 @@ input[type="color"]::-moz-color-swatch {
   .fo-intro-fade, .fo-intro-rise, .fo-intro-wipe, .fo-intro-tile, .fo-intro-scale, .fo-intro-pop, .fo-breathe, .fo-slide-out,
   .fo-grow-x, .fo-pulse-once, .fo-palette-in, .fo-zoom-forward, .fo-preview, .fo-r-head, .fo-r-item,
   .fo-pd-packet, .fo-pd-chip, .fo-pd-result, .fo-pd-out, .fo-pd-back, .fo-pd-strip, .fo-pd-deleted, .fo-pd-line, .fo-pd-node,
-  .fo-ping, .fo-heartbeat, .fo-nudge-in, .fo-star-in
+  .fo-ping, .fo-heartbeat, .fo-nudge-in, .fo-star-in,
+  .fo-kind-wave, .fo-kind-orbit, .fo-kind-counter, .fo-kind-float
 ) { animation: none !important; }
 :root[data-motion="reduced"] .fo-press:active { scale: 1; }
 :root[data-motion="reduced"] .fo-faq::details-content { transition: none; }

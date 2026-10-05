@@ -6,6 +6,7 @@ import { files } from "./routes/files.js";
 import { convert } from "./routes/convert.js";
 import { ai, speech } from "./routes/ai.js";
 import { feedback } from "./routes/feedback.js";
+import { contact, stories } from "./routes/messages.js";
 import { admin } from "./routes/admin.js";
 import { errorHandler, signedInWhenAvailable } from "./lib/http.js";
 import { rateLimit } from "./lib/rateLimit.js";
@@ -99,6 +100,9 @@ export function createApp() {
 
   // Feedback form: origin-checked, at most 6 submissions an hour per IP.
   app.use("/api/feedback", originGuard(), rateLimit({ name: "feedback", windowMs: 60 * 60_000, max: Number(process.env.FEEDBACK_RATE_LIMIT) || 6 }), turnstileGuard(), feedback);
+  // Contact form and pay-it-forward stories: same protections, a thank-you email when an address is given.
+  app.use("/api/contact", originGuard(), rateLimit({ name: "contact", windowMs: 60 * 60_000, max: Number(process.env.CONTACT_RATE_LIMIT) || 6 }), turnstileGuard(), contact);
+  app.use("/api/stories", originGuard(), rateLimit({ name: "stories", windowMs: 60 * 60_000, max: Number(process.env.STORY_RATE_LIMIT) || 6 }), turnstileGuard(), stories);
   // Password guessing on the admin login needs a solved human check too.
   app.use("/api/admin/login", turnstileGuard());
   // Admin panel (feedback inbox). Responses are private and never cached.

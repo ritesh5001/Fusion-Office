@@ -26,6 +26,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     entry("/tools/workflows", 0.6),
     entry("/guides", 0.6),
     entry("/how-we-built-it", 0.6),
+    entry("/about", 0.5),
+    entry("/contact", 0.5),
+    entry("/pay-it-forward", 0.5),
     ...GUIDES.map((g) => entry(`/guides/${g.slug}`, 0.6, new Date(`${g.updated}T00:00:00Z`))),
   ];
 }

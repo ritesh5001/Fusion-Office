@@ -7,8 +7,9 @@ import net, { type AddressInfo } from "node:net";
 import { spawnSync } from "node:child_process";
 import express from "express";
 
-// AI must look unconfigured here, whatever the developer's shell has.
-delete process.env.GROQ_API_KEY;
+// AI must look unconfigured here, whatever the developer's shell has. Empty, not
+// deleted: Prisma loads server/.env on import and would fill a missing key back in.
+process.env.GROQ_API_KEY = "";
 const { createApp } = await import("../src/app.js");
 const { isPublicAddress, checkPublicUrl, startEgressProxy, BLOCKED_HEADER } = await import("../src/lib/netGuard.js");
 const { officeFormat } = await import("../src/lib/office.js");

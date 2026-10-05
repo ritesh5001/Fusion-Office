@@ -1,14 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Download, Inbox, Loader2, LockKeyhole, LogOut, MailOpen, RefreshCw, Search, Star, Trash2 } from "lucide-react";
+import { Download, Heart, Inbox, Loader2, LockKeyhole, LogOut, Mail, MailOpen, MessageSquareHeart, RefreshCw, Search, Star, Trash2 } from "lucide-react";
 import { Logo } from "../Logo";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/cn";
 
 interface Item {
   id: string;
+  kind: string;
   name: string;
+  email: string | null;
+  subject: string | null;
   message: string;
   rating: number | null;
   page: string | null;
@@ -18,6 +21,12 @@ interface Item {
   createdAt: string;
 }
 type Filter = "all" | "unread" | "starred";
+type Kind = "feedback" | "contact" | "story";
+const KINDS: { id: Kind; label: string; noun: string; icon: typeof Inbox }[] = [
+  { id: "feedback", label: "Feedback", noun: "feedback", icon: MessageSquareHeart },
+  { id: "contact", label: "Contact", noun: "messages", icon: Mail },
+  { id: "story", label: "Stories", noun: "stories", icon: Heart },
+];
 type Session = { enabled: boolean; signedIn: boolean } | null;
 
 const json = async <T,>(res: Response): Promise<T> => {
@@ -84,7 +93,7 @@ function Login({ enabled, onSignedIn }: { enabled: boolean; onSignedIn: () => vo
           <LockKeyhole className="h-5 w-5" aria-hidden="true" />
         </span>
         <h1 className="mt-4 font-display text-[24px] font-bold tracking-[-0.02em]">Admin sign in</h1>
-        <p className="mt-1 text-[14px] text-fg-muted">Feedback inbox for the Fusion Office team.</p>
+        <p className="mt-1 text-[14px] text-fg-muted">Feedback, messages and stories for the Fusion Office team.</p>
         {!enabled ? (
           <p className="mt-5 rounded-xl bg-amber-500/10 px-3.5 py-3 text-[13.5px] text-amber-200 ring-1 ring-inset ring-amber-500/25">
             The admin panel isn&apos;t set up yet. Add <code className="font-mono">ADMIN_PASSWORD</code> to the server&apos;s environment.
@@ -134,6 +143,9 @@ function Inbox_({ onSignOut }: { onSignOut: () => void }) {
   const [items, setItems] = useState<Item[]>([]);
   const [counts, setCounts] = useState({ total: 0, unread: 0, starred: 0 });
   const [filter, setFilter] = useState<Filter>("all");
+  const [kind, setKind] = useState<Kind>("feedback");
+  const [unreadByKind, setUnreadByKind] = useState<Record<string, number>>({});
+  const noun = KINDS.find((k) => k.id === kind)!.noun;
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -142,18 +154,19 @@ function Inbox_({ onSignOut }: { onSignOut: () => void }) {
     setLoading(true);
     setError(null);
     try {
-      const qs = new URLSearchParams({ filter, ...(query.trim() ? { q: query.trim() } : {}) });
+      const qs = new URLSearchParams({ kind, filter, ...(query.trim() ? { q: query.trim() } : {}) });
       const res = await apiFetch(`/api/admin/feedback?${qs}`);
       if (res.status === 401) return onSignOut();
-      const data = await json<{ items: Item[]; counts: typeof counts }>(res);
+      const data = await json<{ items: Item[]; counts: typeof counts; unreadByKind?: Record<string, number> }>(res);
       setItems(data.items);
       setCounts(data.counts);
+      setUnreadByKind(data.unreadByKind ?? {});
     } catch (err) {
       setError((err as Error).message);
     } finally {
       setLoading(false);
     }
-  }, [filter, query, onSignOut]);
+  }, [kind, filter, query, onSignOut]);
 
   // Search waits for a pause in typing.
   useEffect(() => {
@@ -173,11 +186,11 @@ function Inbox_({ onSignOut }: { onSignOut: () => void }) {
   };
 
   const remove = async (item: Item) => {
-    if (!window.confirm(`Delete feedback from ${item.name}? This can't be undone.`)) return;
+    if (!window.confirm(`Delete this from ${item.name}? This can't be undone.`)) return;
     setItems((cur) => cur.filter((x) => x.id !== item.id));
     const res = await apiFetch(`/api/admin/feedback/${item.id}`, { method: "DELETE" });
     load();
-    if (!res.ok) setError("Couldn't delete that feedback.");
+    if (!res.ok) setError("Couldn't delete that item.");
   };
 
   const signOut = async () => {
@@ -186,11 +199,11 @@ function Inbox_({ onSignOut }: { onSignOut: () => void }) {
   };
 
   const exportCsv = () => {
-    const rows = [["Date", "Name", "Rating", "Message", "Page", "Read", "Starred"], ...items.map((i) => [new Date(i.createdAt).toISOString(), i.name, i.rating ?? "", i.message, i.page ?? "", i.read, i.starred])];
+    const rows = [["Date", "Name", "Email", "Subject", "Rating", "Message", "Page", "Read", "Starred"], ...items.map((i) => [new Date(i.createdAt).toISOString(), i.name, i.email ?? "", i.subject ?? "", i.rating ?? "", i.message, i.page ?? "", i.read, i.starred])];
     const blob = new Blob([rows.map((r) => r.map(csvCell).join(",")).join("\n")], { type: "text/csv" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `fusion-office-feedback-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `fusion-office-${kind}-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
   };
@@ -211,7 +224,7 @@ function Inbox_({ onSignOut }: { onSignOut: () => void }) {
       <header className="flex items-center gap-3 py-5">
         <Logo className="h-7 w-7" />
         <div className="flex-1">
-          <p className="font-display text-[17px] font-bold tracking-[-0.02em]">Feedback inbox</p>
+          <p className="font-display text-[17px] font-bold tracking-[-0.02em]">Inbox</p>
           <p className="text-[12.5px] text-fg-subtle">Fusion Office admin</p>
         </div>
         <button type="button" onClick={load} className="btn btn-ghost btn-sm" aria-label="Refresh">
@@ -225,12 +238,31 @@ function Inbox_({ onSignOut }: { onSignOut: () => void }) {
         </button>
       </header>
 
+      <div role="tablist" aria-label="Inbox" className="mb-4 flex gap-1 rounded-2xl border border-line bg-surface p-1">
+        {KINDS.map((k) => (
+          <button
+            key={k.id}
+            type="button"
+            role="tab"
+            aria-selected={kind === k.id}
+            onClick={() => {
+              setKind(k.id);
+              setFilter("all");
+            }}
+            className={cn("fo-press inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl text-[14px] font-semibold transition-colors", kind === k.id ? "bg-raised text-fg ring-1 ring-inset ring-line-strong" : "text-fg-muted hover:text-fg")}
+          >
+            <k.icon className="h-4 w-4" aria-hidden="true" /> {k.label}
+            {!!unreadByKind[k.id] && <span className="rounded-full bg-accent px-1.5 text-[11px] font-bold tabular-nums text-on-accent">{unreadByKind[k.id]}</span>}
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           { label: "Total", value: counts.total },
           { label: "Unread", value: counts.unread, accent: counts.unread > 0 },
           { label: "Starred", value: counts.starred },
-          { label: "Avg. rating", value: average ?? "–" },
+          kind === "feedback" ? { label: "Avg. rating", value: average ?? "–" } : { label: "With email", value: items.filter((i) => i.email).length },
         ].map((s) => (
           <div key={s.label} className="rounded-2xl border border-line bg-surface p-4">
             <p className="text-[12px] font-semibold uppercase tracking-[0.1em] text-fg-subtle">{s.label}</p>
@@ -256,7 +288,7 @@ function Inbox_({ onSignOut }: { onSignOut: () => void }) {
         </div>
         <label className="relative flex h-10 w-full items-center rounded-xl border border-line-strong bg-surface focus-within:border-brand-500 sm:flex-1">
           <Search className="ml-3 h-4 w-4 text-fg-subtle" aria-hidden="true" />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name or message" aria-label="Search feedback" className="h-full min-w-0 flex-1 bg-transparent px-2.5 text-[14px] text-fg outline-none placeholder:text-fg-subtle" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name, email or message" aria-label="Search" className="h-full min-w-0 flex-1 bg-transparent px-2.5 text-[14px] text-fg outline-none placeholder:text-fg-subtle" />
         </label>
       </div>
 
@@ -289,6 +321,11 @@ function Inbox_({ onSignOut }: { onSignOut: () => void }) {
                   {relative(i.createdAt)}
                   {i.page && <> · from <span className="font-mono">{i.page}</span></>}
                 </p>
+                {i.email && (
+                  <a href={`mailto:${i.email}${i.subject ? `?subject=${encodeURIComponent(`Re: ${i.subject}`)}` : ""}`} className="mt-0.5 inline-flex items-center gap-1 text-[13px] font-medium text-brand-300 hover:text-brand-200">
+                    <Mail className="h-3.5 w-3.5" aria-hidden="true" /> {i.email}
+                  </a>
+                )}
               </div>
               <div className="flex shrink-0 gap-0.5">
                 <IconButton label={i.starred ? "Unstar" : "Star"} onClick={() => update(i, { starred: !i.starred })}>
@@ -302,7 +339,8 @@ function Inbox_({ onSignOut }: { onSignOut: () => void }) {
                 </IconButton>
               </div>
             </div>
-            <p className="mt-3 whitespace-pre-wrap break-words text-[14.5px] leading-relaxed text-fg-muted">{i.message}</p>
+            {i.subject && <p className="mt-3 text-[14px] font-semibold text-fg">{i.subject}</p>}
+            <p className={cn("whitespace-pre-wrap break-words text-[14.5px] leading-relaxed text-fg-muted", i.subject ? "mt-1" : "mt-3")}>{i.message}</p>
           </li>
         ))}
       </ul>
@@ -312,8 +350,8 @@ function Inbox_({ onSignOut }: { onSignOut: () => void }) {
           <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-raised ring-1 ring-inset ring-line-strong">
             <Inbox className="h-6 w-6 text-fg-muted" aria-hidden="true" />
           </span>
-          <p className="mt-4 text-[16px] font-semibold">{query ? "No feedback matches your search" : filter === "all" ? "No feedback yet" : `No ${filter} feedback`}</p>
-          <p className="mt-1 text-[14px] text-fg-muted">Feedback sent from the website appears here.</p>
+          <p className="mt-4 text-[16px] font-semibold">{query ? `No ${noun} match your search` : filter === "all" ? `No ${noun} yet` : `No ${filter} ${noun}`}</p>
+          <p className="mt-1 text-[14px] text-fg-muted">{kind === "feedback" ? "Feedback sent from the website appears here." : kind === "contact" ? "Messages from the Contact us page appear here." : "Stories shared on the Pay it forward page appear here."}</p>
         </div>
       )}
     </div>

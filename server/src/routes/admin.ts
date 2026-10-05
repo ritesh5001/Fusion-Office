@@ -4,6 +4,8 @@ import { HttpError } from "../lib/http.js";
 import { rateLimit } from "../lib/rateLimit.js";
 import { adminEnabled, checkPassword, clearAdminCookie, isAdmin, requireAdmin, setAdminCookie } from "../lib/admin.js";
 
+const KINDS = ["feedback", "contact", "story"];
+
 /** The feedback admin panel's API. Everything except login needs an admin session. */
 export const admin = Router();
 
@@ -30,17 +32,23 @@ admin.get("/feedback", async (req, res, next) => {
   try {
     const q = typeof req.query.q === "string" ? req.query.q.trim() : "";
     const filter = req.query.filter;
+    // Which inbox: feedback (default), contact messages or pay-it-forward stories.
+    const kind = KINDS.includes(req.query.kind as string) ? (req.query.kind as string) : "feedback";
+    const contains = (field: "name" | "message" | "email" | "subject") => ({ [field]: { contains: q, mode: "insensitive" as const } });
     const where = {
-      ...(q ? { OR: [{ name: { contains: q, mode: "insensitive" as const } }, { message: { contains: q, mode: "insensitive" as const } }] } : {}),
+      kind,
+      ...(q ? { OR: [contains("name"), contains("message"), contains("email"), contains("subject")] } : {}),
       ...(filter === "unread" ? { read: false } : filter === "starred" ? { starred: true } : {}),
     };
-    const [items, total, unread, starred] = await Promise.all([
+    const [items, total, unread, starred, perKind] = await Promise.all([
       prisma.feedback.findMany({ where, orderBy: { createdAt: "desc" }, take: 500 }),
-      prisma.feedback.count(),
-      prisma.feedback.count({ where: { read: false } }),
-      prisma.feedback.count({ where: { starred: true } }),
+      prisma.feedback.count({ where: { kind } }),
+      prisma.feedback.count({ where: { kind, read: false } }),
+      prisma.feedback.count({ where: { kind, starred: true } }),
+      prisma.feedback.groupBy({ by: ["kind"], where: { read: false }, _count: { _all: true } }),
     ]);
-    res.json({ items, counts: { total, unread, starred } });
+    const unreadByKind = Object.fromEntries(KINDS.map((k) => [k, perKind.find((p) => p.kind === k)?._count._all ?? 0]));
+    res.json({ items, counts: { total, unread, starred }, unreadByKind });
   } catch (err) {
     next(err);
   }

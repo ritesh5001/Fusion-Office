@@ -103,9 +103,15 @@ model DocumentVersion {
 // ─── Feedback ──────────────────────────────────────────────────────
 
 /** Feedback sent from the website's feedback form; read in the admin panel. */
+/** Everything people send from the site: feedback, contact messages and pay-it-forward stories. */
 model Feedback {
   id        String   @id @default(cuid())
+  /** "feedback", "contact" or "story". */
+  kind      String   @default("feedback")
   name      String
+  /** Contact messages require it; stories may include it. Used only to reply and say thank you. */
+  email     String?
+  subject   String?
   message   String   @db.Text
   /** Optional 1–5 rating. */
   rating    Int?
@@ -117,4 +123,5 @@ model Feedback {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+  @@index([kind, createdAt])
 }

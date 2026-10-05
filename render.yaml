@@ -71,6 +71,11 @@ services:
         sync: false
       - key: TURNSTILE_SECRET_KEY
         sync: false
+      # Thank-you emails (Resend). MAIL_FROM must use a domain verified in Resend.
+      - key: RESEND_API_KEY
+        sync: false
+      - key: MAIL_FROM
+        sync: false
       - key: CONVERT_CONCURRENCY
         value: "1"
       - key: HTML_CONCURRENCY

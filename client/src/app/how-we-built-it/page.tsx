@@ -331,6 +331,13 @@ export default function HowWeBuiltIt() {
                 </a>
                 . No account is required, nothing is added to your files, and you can use every tool as often as you need within fair-use limits.
               </p>
+              <p className="mt-4 text-[16px] leading-[1.75] text-fg-muted">
+                Want to give something back? We don't take donations.{" "}
+                <Link href="/pay-it-forward" className="font-medium text-fg underline decoration-line-strong underline-offset-4 hover:decoration-brand-400">
+                  Help someone today and tell us the story
+                </Link>
+                . That's the only contribution we ask for.
+              </p>
             </section>
 
             <section className="mt-12" aria-labelledby="credits">
