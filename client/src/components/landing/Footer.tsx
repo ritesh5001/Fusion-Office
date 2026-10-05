@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { ArrowUpRight, Instagram, Mail, MessageCircle } from "lucide-react";
 import { Logo } from "../Logo";
+import { COMPANY } from "@/lib/company";
 import { MotionToggle } from "../site/MotionToggle";
 import { AppBanner } from "../site/AppBanner";
 
@@ -35,19 +37,23 @@ const COLUMNS = [
     ],
   },
   {
-    title: "Fusion Office",
+    title: "Resources",
     links: [
       { href: "/tools", label: "All tools" },
       { href: "/guides", label: "Guides" },
-      { href: "/#privacy", label: "Privacy" },
       { href: "/#how-it-works", label: "How it works" },
       { href: "/how-we-built-it", label: "How we built it" },
+      { href: "/#faq", label: "FAQ" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
       { href: "/about", label: "About us" },
       { href: "/contact", label: "Contact us" },
       { href: "/pay-it-forward", label: "Pay it forward" },
-      { href: "/#faq", label: "FAQ" },
+      { href: "/#privacy", label: "Privacy" },
       { href: "#feedback", label: "Send feedback" },
-      { href: "/dashboard", label: "My documents" },
     ],
   },
 ];
@@ -56,7 +62,7 @@ export function Footer() {
   return (
     <footer className="site-chrome border-t border-line bg-app">
       <AppBanner />
-      <div className="mx-auto grid gap-10 px-4 py-12 sm:px-6 lg:grid-cols-12 lg:px-8">
+      <div className="mx-auto grid gap-12 px-4 py-14 sm:px-6 lg:grid-cols-12 lg:gap-10 lg:px-8">
         <div className="lg:col-span-4">
           <Link href="/" className="flex items-center gap-2.5 font-display text-[17px] font-bold tracking-[-0.02em] text-fg">
             <Logo className="h-7 w-7" /> Fusion Office
@@ -64,12 +70,46 @@ export function Footer() {
           <p className="mt-3 max-w-[36ch] text-[14px] leading-relaxed text-fg-muted">
             Free tools for PDFs, Office documents and images. Most of them run in your browser, so your files stay with you.
           </p>
+
+          {/* The team behind it. */}
+          <div className="group relative mt-6 max-w-[380px] overflow-hidden rounded-2xl border border-line bg-surface p-5 transition-colors hover:border-line-strong">
+            <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[radial-gradient(circle,rgb(139_124_246/0.28),transparent_70%)] transition-transform duration-500 group-hover:scale-125" />
+            <p className="relative text-[11.5px] font-semibold uppercase tracking-[0.12em] text-fg-subtle">A product by</p>
+            <a href={COMPANY.url} target="_blank" rel="noopener" className="relative mt-1 inline-flex items-center gap-1 font-display text-[19px] font-bold tracking-[-0.02em]">
+              <span className="bg-[linear-gradient(90deg,#b6adff,#cdf564)] bg-clip-text text-transparent">NextGen Fusion</span>
+              <ArrowUpRight className="h-4 w-4 text-fg-subtle transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-fg" aria-hidden="true" />
+            </a>
+            <p className="relative mt-1.5 text-[13.5px] leading-relaxed text-fg-muted">
+              Websites, online stores, apps and custom software, built in Lucknow and Mumbai.
+            </p>
+            <div className="relative mt-4 flex items-center gap-2">
+              <a href={COMPANY.url} target="_blank" rel="noopener" className="btn btn-secondary btn-sm">
+                Work with us
+              </a>
+              {[
+                { href: `mailto:${COMPANY.email}`, label: `Email ${COMPANY.email}`, icon: Mail },
+                { href: COMPANY.whatsapp, label: "WhatsApp NextGen Fusion", icon: MessageCircle },
+                { href: COMPANY.instagram, label: "NextGen Fusion on Instagram", icon: Instagram },
+              ].map((c) => (
+                <a
+                  key={c.label}
+                  href={c.href}
+                  {...(c.href.startsWith("http") ? { target: "_blank", rel: "noopener" } : {})}
+                  aria-label={c.label}
+                  title={c.label}
+                  className="fo-press flex h-9 w-9 items-center justify-center rounded-lg text-fg-muted ring-1 ring-inset ring-line transition-colors hover:bg-raised hover:text-fg"
+                >
+                  <c.icon className="h-4 w-4" aria-hidden="true" />
+                </a>
+              ))}
+            </div>
+          </div>
         </div>
-        <nav aria-label="Footer" className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4 lg:col-span-8">
+        <nav aria-label="Footer" className="grid grid-cols-2 gap-x-6 gap-y-9 sm:grid-cols-3 lg:col-span-8 lg:grid-cols-5">
           {COLUMNS.map((c) => (
             <div key={c.title}>
               <p className="eyebrow">{c.title}</p>
-              <ul className="mt-3 space-y-2.5">
+              <ul className="mt-4 space-y-3">
                 {c.links.map((l) => (
                   <li key={l.label}>
                     {l.href.startsWith("#") ? (
