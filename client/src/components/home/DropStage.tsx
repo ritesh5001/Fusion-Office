@@ -234,6 +234,8 @@ export function DropStage({
   const idle = phase === "idle";
   const glow = over ? "opacity-90" : hot && idle ? "opacity-75" : "opacity-55";
 
+  // No files (e.g. just cleared with ✕): always the empty card, even before the effect above resets the phase.
+  const view: Phase = staged?.length ? phase : "idle";
   return (
     <div
       ref={root}
@@ -269,19 +271,19 @@ export function DropStage({
         </div>
 
         <div className="relative overflow-hidden rounded-[28px] bg-[#f5f4f0] p-3 text-[#14152b]">
-          {phase === "idle" ? (
+          {view === "idle" ? (
             <Idle kind={kind} setKind={setKind} hot={hot} over={over} onBrowse={browse} />
-          ) : phase === "landing" ? (
+          ) : view === "landing" ? (
             <Landing file={staged![0]} count={staged!.length} />
           ) : (
             <div className="px-2 py-2 sm:px-3">
-              <FileRow files={staged!} info={info} onClear={onClear} done={phase === "done"} />
-              <Flow state={phase === "running" ? "running" : phase === "done" ? "done" : "ready"} step={job?.step ?? 0} />
+              <FileRow files={staged!} info={info} onClear={onClear} done={view === "done"} />
+              <Flow state={view === "running" ? "running" : view === "done" ? "done" : "ready"} step={job?.step ?? 0} />
               <div className="mt-4">
-                {phase === "ready" && <Ready inline={inline} matches={matches} staged={staged!} onRun={run} />}
-                {phase === "running" && job && <Running job={job} />}
-                {phase === "done" && output && <Done output={output} onAgain={() => setPhase("ready")} />}
-                {phase === "error" && (
+                {view === "ready" && <Ready inline={inline} matches={matches} staged={staged!} onRun={run} />}
+                {view === "running" && job && <Running job={job} />}
+                {view === "done" && output && <Done output={output} onAgain={() => setPhase("ready")} />}
+                {view === "error" && (
                   <div role="alert" className="fo-rise rounded-2xl bg-[#fdecec] p-4 text-[14px] text-[#8a1f1f]">
                     <p className="font-semibold">That didn&apos;t work</p>
                     <p className="mt-1 text-[13.5px]">{error}</p>
@@ -314,7 +316,7 @@ export function DropStage({
         </div>
       </div>
       <p className="sr-only" aria-live="polite">
-        {phase === "landing" ? "Reading your file on this device." : phase === "running" ? `${job?.verb ?? "Working"} on this device.` : phase === "done" ? "Your file is ready to download." : ""}
+        {view === "landing" ? "Reading your file on this device." : view === "running" ? `${job?.verb ?? "Working"} on this device.` : view === "done" ? "Your file is ready to download." : ""}
       </p>
     </div>
   );
