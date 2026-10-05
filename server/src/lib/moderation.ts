@@ -23,7 +23,7 @@ export const ROASTS = [
   "Harami paragraph hata. Seedha masla likh.",
   "Randi rona nahi chahiye. Review chahiye.",
   "Bhosdike, keyboard thanda kar, phir type kar.",
-  "Penchod, yeh form hai, gali ka stage nahi.",
+  "Benchod, yeh form hai, gali ka stage nahi.",
   "Teri gaali save nahi hogi. Sirf tu embarrass hoga.",
   "Chutiyapa detected. Hata ke bhej, warna cancel.",
   "Kutta banne ki zarurat nahi. Insaan banke likh.",
