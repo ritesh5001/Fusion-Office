@@ -110,7 +110,6 @@ export function WebTool({ tool }: { tool: ToolDef }) {
           allowFileAccess
           mediaPlaybackRequiresUserAction
           setSupportMultipleWindows={false}
-          decelerationRate="normal"
           forceDarkOn={false}
           originWhitelist={["https://*"]}
         />

@@ -24,7 +24,12 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "versionCode": 2,
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -37,7 +42,8 @@
         "expo-image-picker",
         {
           "cameraPermission": "Fusion Office uses the camera to scan documents into PDFs. Photos stay on your device.",
-          "photosPermission": "Fusion Office opens photos you choose so you can turn them into PDFs or compress them. They stay on your device."
+          "photosPermission": "Fusion Office opens photos you choose so you can turn them into PDFs or compress them. They stay on your device.",
+          "microphonePermission": false
         }
       ],
       [

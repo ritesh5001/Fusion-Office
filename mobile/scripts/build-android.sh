@@ -25,7 +25,8 @@ fi
 # Regenerate android/ from app.json and the config plugins (never edited by hand).
 CI=1 npx expo prebuild --platform android --no-install
 
-(cd android && ./gradlew "$TASK" --no-daemon)
+# Real phones are ARM; x86 builds only matter for emulators and add ~30 MB.
+(cd android && ./gradlew "$TASK" --no-daemon -PreactNativeArchitectures="${ARCHS:-armeabi-v7a,arm64-v8a}")
 
 VERSION="$(node -p "require('./app.json').expo.version")"
 mkdir -p dist
