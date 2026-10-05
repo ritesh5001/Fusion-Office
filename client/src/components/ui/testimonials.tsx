@@ -20,21 +20,25 @@ export interface Testimonial {
 export const TESTIMONIALS: Testimonial[] = [
   {
     name: "Sahil Barnwal",
+    image: "/testimonials/sahil-barnwal.webp",
     role: "Software Engineer",
     text: "I needed to fix one line in a signed vendor PDF. Fusion Office let me click the text and change it, and it kept the original font. No re-typing the whole document.",
   },
   {
     name: "Vinay Kumar",
+    image: "/testimonials/vinay-kumar.webp",
     role: "Software Engineer",
     text: "What sold me is that most tools run in the browser. I opened the network tab while compressing a payslip and nothing was uploaded. That's how a PDF tool should work.",
   },
   {
     name: "Nitish Gupta",
+    image: "/testimonials/nitish-gupta.webp",
     role: "Software Engineer",
     text: "Merging release notes, test reports and sign-off sheets into one PDF used to mean installing something sketchy. Now it's drag, reorder, done.",
   },
   {
     name: "Nikhilesh Gupta",
+    image: "/testimonials/nikhilesh-gupta.webp",
     role: "Software Engineer",
     text: "The / shortcut for search is a small thing, but it's exactly what I want. I type 'compress' or 'word', hit enter and I'm in the tool.",
   },
@@ -45,46 +49,55 @@ export const TESTIMONIALS: Testimonial[] = [
   },
   {
     name: "Rounak Gupta",
+    image: "/testimonials/rounak-gupta.webp",
     role: "Software Engineer",
     text: "Word to PDF kept my tables and headings intact, which is more than I can say for half the converters I've tried. Clean output, every time.",
   },
   {
     name: "Shiva Sharma",
+    image: "/testimonials/shiva-sharma.webp",
     role: "Software Engineer",
     text: "I sign NDAs and offer letters on my phone with it. Draw the signature once, place it, download. It just works, even on a slow connection.",
   },
   {
     name: "Aman Gupta",
+    image: "/testimonials/aman-gupta.webp",
     role: "Professor",
     text: "I collect assignments as separate PDFs. Merging them into one file per batch, adding page numbers and compressing for the LMS takes me a couple of minutes now.",
   },
   {
     name: "Ajay Yadav",
+    image: "/testimonials/ajay-yadav.webp",
     role: "Software Engineer",
     text: "OCR on scanned contracts turned them into searchable text I could actually copy from. It's on-device, so I'm not sending client paperwork anywhere.",
   },
   {
     name: "Sailesh Kumar",
+    image: "/testimonials/sailesh-kumar.webp",
     role: "Software Engineer",
     text: "Splitting a 300-page spec by bookmarks gave me one file per chapter, named properly. That alone saved me an afternoon.",
   },
   {
     name: "Saket Srivastava",
+    image: "/testimonials/saket-srivastava.webp",
     role: "Software Engineer",
     text: "Fast, no sign-up, no upsell popups. I keep it pinned for the boring document work so I can get back to actual engineering.",
   },
   {
     name: "Rachit Srivastava",
+    image: "/testimonials/rachit-srivastava.webp",
     role: "Software Engineer",
     text: "PDF to Excel pulled the tables out of our vendor invoices cleanly enough to reconcile in a sheet. Way less copy-paste than I expected.",
   },
   {
     name: "Kabeer Singh",
+    image: "/testimonials/kabeer-singh.webp",
     role: "Software Engineer",
     text: "The redaction tool actually removes the text instead of drawing a black box over it. I checked by copying from the output. Nothing there.",
   },
   {
     name: "Priyan Singh",
+    image: "/testimonials/priyan-singh.webp",
     role: "Software Engineer",
     text: "I convert screenshots and photos to a single PDF for bug reports all the time. Pick images, reorder, export. Simple and quick.",
   },

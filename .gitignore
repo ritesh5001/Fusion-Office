@@ -13,3 +13,6 @@ client/public/pdf.worker.min.mjs
 server/.data
 client/public/tesseract
 server/.tools
+
+# Original testimonial photos (the site uses compressed copies in client/public/testimonials)
+/Testimonials/
