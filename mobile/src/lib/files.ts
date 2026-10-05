@@ -1,6 +1,11 @@
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import * as Sharing from "expo-sharing";
+import * as IntentLauncher from "expo-intent-launcher";
+import { Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getContentUriAsync } from "expo-file-system/legacy";
+import { canSaveToDownloads, saveToDownloads } from "../../modules/fo-downloads";
 import { Directory, File, Paths } from "expo-file-system";
 import { kindOf, type FileKind } from "./tools";
 
@@ -121,3 +126,69 @@ export function formatBytes(n: number) {
 }
 
 export const stem = (name: string) => name.replace(/\.[^.]+$/, "");
+
+/** Can the in-app viewer show this file? Images everywhere; PDFs and text on iOS, whose web view renders them. */
+export function viewableInApp(f: Pick<SavedFile, "mimeType">) {
+  if (f.mimeType.startsWith("image/")) return true;
+  return Platform.OS === "ios" && (f.mimeType === "application/pdf" || f.mimeType.startsWith("text/"));
+}
+
+/**
+ * Opens a file in another app (Android): the phone's PDF viewer, Docs, Sheets…
+ * Throws a friendly error when nothing on the phone can open it.
+ */
+export async function openWithApp(f: Pick<SavedFile, "uri" | "mimeType" | "name">) {
+  if (Platform.OS !== "android") return shareFile(f);
+  const data = await getContentUriAsync(f.uri);
+  try {
+    await IntentLauncher.startActivityAsync("android.intent.action.VIEW", { data, type: f.mimeType, flags: 1 /* FLAG_GRANT_READ_URI_PERMISSION */ });
+  } catch {
+    throw new Error(`No app on this phone can open ${(f.name.split(".").pop() ?? "this").toUpperCase()} files. Use Download or Share instead.`);
+  }
+}
+
+const SAVE_DIR = "fo-save-dir";
+
+/**
+ * Download: saves a copy where the person can find it.
+ * Android 10+: straight into the public Downloads folder, one tap, no picker.
+ * Older Android: into a folder they pick once, remembered after that.
+ * iOS has no Downloads folder, so the share sheet opens on "Save to Files".
+ * Resolves with where it went, or null if they cancelled.
+ */
+export async function saveToDevice(f: Pick<SavedFile, "uri" | "mimeType" | "name">): Promise<string | null> {
+  if (Platform.OS !== "android") {
+    await shareFile(f);
+    return null;
+  }
+  if (canSaveToDownloads()) {
+    try {
+      const kept = await saveToDownloads(f.uri, f.name, f.mimeType);
+      return `Downloads as ${kept}`;
+    } catch (e) {
+      throw new Error((e as Error).message || "Couldn't save to Downloads.");
+    }
+  }
+  const bytes = await new File(f.uri).bytes();
+  let remembered = await AsyncStorage.getItem(SAVE_DIR).catch(() => null);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    let dir: Directory;
+    try {
+      dir = remembered ? new Directory(remembered) : await Directory.pickDirectoryAsync();
+    } catch {
+      return null; // Picker cancelled.
+    }
+    try {
+      const out = dir.createFile(f.name, f.mimeType);
+      out.write(bytes);
+      await AsyncStorage.setItem(SAVE_DIR, dir.uri).catch(() => {});
+      return decodeURIComponent(dir.uri).split(/[/:]/).filter(Boolean).pop() ?? "your folder";
+    } catch {
+      // The remembered folder is gone or no longer allowed: ask again once.
+      if (!remembered) throw new Error("Couldn't save the file there. Try another folder.");
+      remembered = null;
+      await AsyncStorage.removeItem(SAVE_DIR).catch(() => {});
+    }
+  }
+  return null;
+}

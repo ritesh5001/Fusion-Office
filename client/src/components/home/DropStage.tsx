@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
-import { ArrowRight, Check, ChevronRight, Cpu, Download, RotateCcw, X, Zap } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ChevronRight, Download, RotateCcw, X, Zap } from "lucide-react";
 import { TOOLS, toolBySlug, type ToolDef } from "@/lib/tools/registry";
 import { appPath, handFiles, KIND_ACCEPT, kindOf, toolPath, type FileKind } from "@/lib/tools/handoff";
-import { downloadFile, formatBytes, stem, toToolFile, zipFiles, type ToolFile } from "@/lib/tools/files";
+import { canPreview, downloadFile, formatBytes, openFile, stem, toToolFile, zipFiles, type ToolFile } from "@/lib/tools/files";
 import type { LoadedFile, ToolSpec } from "../tools/ToolRunner";
 import { ToolTile } from "../tools/icons";
+import { Flow } from "../tools/ProcessStage";
 import { KindGlyph } from "./FlowArt";
 import { cn } from "@/lib/cn";
 import { pickerAccept } from "@/lib/tools/pickerAccept";
@@ -275,7 +276,7 @@ export function DropStage({
           ) : (
             <div className="px-2 py-2 sm:px-3">
               <FileRow files={staged!} info={info} onClear={onClear} done={phase === "done"} />
-              <PrivacyFlow state={phase === "running" ? "running" : phase === "done" ? "done" : "ready"} step={job?.step ?? 0} />
+              <Flow state={phase === "running" ? "running" : phase === "done" ? "done" : "ready"} step={job?.step ?? 0} />
               <div className="mt-4">
                 {phase === "ready" && <Ready inline={inline} matches={matches} staged={staged!} onRun={run} />}
                 {phase === "running" && job && <Running job={job} />}
@@ -471,64 +472,6 @@ function FileRow({ files, info, onClear, done }: { files: File[]; info: Info; on
   );
 }
 
-/**
- * The privacy proof: file → on-device engine → shield → result. While a tool
- * runs, light travels the line; when it's done the shield locks and the
- * result lights up. Nothing is uploaded, and the strip says so.
- */
-function PrivacyFlow({ state, step }: { state: "ready" | "running" | "done"; step: number }) {
-  const locked = state === "done" || (state === "running" && step >= 2);
-  return (
-    <div className="mt-4 rounded-2xl bg-[#14152b] px-3 py-2.5 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.06)]">
-      <div className="fo-flow-strip relative flex items-center gap-1.5">
-        <Node lit>
-          <svg viewBox="0 0 16 18" className="h-4 w-[14px]" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true">
-            <path d="M3 1h7l4 4v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2z" />
-          </svg>
-        </Node>
-        <Wire lit={state !== "ready"} />
-        <span className={cn("relative z-10 flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-[11.5px] font-semibold ring-1 transition-colors duration-[400ms]", state === "running" ? "fo-chip-pulse bg-[#2d2868] text-brand-100 ring-brand-400/70" : "bg-[#1f2142] text-white/80 ring-white/15")}>
-          <Cpu className="h-3.5 w-3.5" aria-hidden="true" />
-          On-device engine
-        </span>
-        <Wire lit={state !== "ready" && step >= 1} />
-        <span className={cn("relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-[box-shadow,background-color] duration-[400ms]", locked ? "bg-[#29331d] shadow-[0_0_16px_rgb(205_245_100/0.55)]" : "bg-[#1f2142]")}>
-          <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" aria-hidden="true">
-            <path d="M12 2 4 5v6c0 5.1 3.4 9.4 8 11 4.6-1.6 8-5.9 8-11V5z" fill={locked ? "#cdf564" : "none"} stroke="#cdf564" strokeWidth="1.8" strokeLinejoin="round" className="transition-[fill] duration-[400ms]" />
-            {locked && <path d="m8.4 12.2 2.5 2.5 4.7-5" stroke="#14152b" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" fill="none" pathLength="1" className="fo-draw" />}
-          </svg>
-        </span>
-        <Wire lit={state === "done"} />
-        <Node lit={state === "done"} accent>
-          <Check className="h-3.5 w-3.5" strokeWidth={2.6} aria-hidden="true" />
-        </Node>
-        {state === "running" && <span aria-hidden="true" className="fo-packet pointer-events-none absolute z-0 left-0 top-1/2 -mt-[5px] h-2.5 w-2.5 rounded-full bg-accent shadow-[0_0_12px_#cdf564]" />}
-      </div>
-      <p className="mt-2 flex items-center justify-between gap-3 text-[11.5px] text-white/60">
-        <span>{state === "running" ? "Running locally" : state === "done" ? "Processed on this device" : "Ready on this device"}</span>
-        <span className="font-semibold tabular-nums text-accent">0 files uploaded</span>
-      </p>
-    </div>
-  );
-}
-
-function Node({ lit, accent, children }: { lit: boolean; accent?: boolean; children: React.ReactNode }) {
-  return (
-    <span
-      className={cn(
-        "relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 transition-colors duration-[400ms]",
-        lit ? (accent ? "bg-accent text-[#14152b] ring-accent" : "bg-[#2a2c4d] text-white ring-white/20") : "bg-[#1a1c36] text-white/30 ring-white/10",
-      )}
-    >
-      {children}
-    </span>
-  );
-}
-
-function Wire({ lit }: { lit: boolean }) {
-  return <span aria-hidden="true" className={cn("h-[2px] min-w-2 flex-1 rounded-full transition-colors duration-[400ms]", lit ? "bg-accent/80 shadow-[0_0_6px_#cdf564]" : "bg-white/15")} />;
-}
-
 function Ready({ inline, matches, staged, onRun }: { inline: { slug: string; verb: string; tool: ToolDef }[]; matches: ToolDef[]; staged: File[]; onRun: (t: ToolDef, verb: string) => void }) {
   const rest = matches.filter((t) => !inline.some((i) => i.tool === t)).slice(0, inline.length ? 4 : 6);
   return (
@@ -667,7 +610,12 @@ function Done({ output, onAgain }: { output: Output; onAgain: () => void }) {
       </div>
       <p className="fo-fade mt-3 font-display text-[22px] font-bold tracking-[-0.02em] [animation-delay:150ms]">Your file is ready</p>
 
-      <div className="fo-rise mt-3 flex items-center gap-3 rounded-2xl bg-white p-3 text-left ring-1 ring-[#e3e1ec] [animation-delay:250ms]">
+      <button
+        type="button"
+        onClick={() => openFile(file)}
+        title={canPreview(file) ? `Open ${file.name} in a new tab` : `Download ${file.name}`}
+        className="fo-rise group mt-3 flex w-full items-center gap-3 rounded-2xl bg-white p-3 text-left ring-1 ring-[#e3e1ec] transition-shadow [animation-delay:250ms] hover:ring-[#b6adff]"
+      >
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#14152b] font-mono text-[10.5px] font-bold text-accent">{ext}</span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[14px] font-semibold">{file.name}</span>
@@ -677,7 +625,10 @@ function Done({ output, onAgain }: { output: Output; onAgain: () => void }) {
             {!saved && (output.compress ? " · Already well optimized, so it kept its size" : output.summary && ` · ${output.summary}`)}
           </span>
         </span>
-      </div>
+        <span className="flex shrink-0 items-center gap-1 text-[12.5px] font-semibold text-[#5b4fd6] group-hover:text-[#3d32b0]">
+          {canPreview(file) ? "Open" : "Save"} <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+        </span>
+      </button>
 
       <div className="mt-4 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
         <button

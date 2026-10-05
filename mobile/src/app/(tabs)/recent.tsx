@@ -1,13 +1,14 @@
 import { Alert, View } from "react-native";
 import Animated, { FadeInDown, LinearTransition } from "react-native-reanimated";
-import { Clock, Share2, Trash2 } from "lucide-react-native";
+import { Clock, Download, Share2, Trash2 } from "lucide-react-native";
 import { C } from "@/theme";
 import { useReduced } from "@/lib/motion";
 import { useSession } from "@/lib/session";
-import { formatBytes, shareFile } from "@/lib/files";
+import { formatBytes } from "@/lib/files";
 import { clearRecents, removeRecent, useRecents } from "@/lib/recents";
 import { Screen } from "@/components/Screen";
 import { PressScale, T } from "@/components/ui";
+import { useFileActions } from "@/components/FileViewer";
 
 const ago = (t: number) => {
   const s = (Date.now() - t) / 1000;
@@ -21,6 +22,7 @@ const ago = (t: number) => {
 export default function Recent() {
   const items = useRecents();
   const reduced = useReduced();
+  const files = useFileActions();
   const { openSheet } = useSession();
 
   const confirmClear = () =>
@@ -50,7 +52,7 @@ export default function Recent() {
       <View style={{ marginTop: 18, gap: 8 }}>
         {(items ?? []).map((r, i) => (
           <Animated.View key={r.id} layout={reduced ? undefined : LinearTransition.springify().damping(16)} entering={reduced ? undefined : FadeInDown.delay(Math.min(i, 5) * 50).duration(380)}>
-            <PressScale onPress={() => shareFile(r).catch((e) => Alert.alert("Couldn't share", e.message))} accessibilityLabel={`Share ${r.name}, ${formatBytes(r.size)}, made with ${r.toolName}`} style={{ flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.line, padding: 12 }}>
+            <PressScale onPress={() => files.open(r)} accessibilityLabel={`Open ${r.name}, ${formatBytes(r.size)}, made with ${r.toolName}`} style={{ flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.line, padding: 12 }}>
               <View style={{ width: 44, height: 44, borderRadius: 13, backgroundColor: C.ink, alignItems: "center", justifyContent: "center" }}>
                 <T weight="bold" style={{ fontSize: 10.5, color: C.accent }}>{(r.name.split(".").pop() ?? "").toUpperCase()}</T>
               </View>
@@ -58,7 +60,12 @@ export default function Recent() {
                 <T weight="semibold" numberOfLines={1} style={{ fontSize: 14.5 }}>{r.name}</T>
                 <T numberOfLines={1} style={{ fontSize: 12, color: C.fgMuted }}>{formatBytes(r.size)} · {r.toolName} · {ago(r.at)}</T>
               </View>
-              <Share2 size={18} color={C.fgMuted} />
+              <PressScale onPress={() => files.download(r)} accessibilityLabel={`Download ${r.name}`} hitSlop={8} style={{ padding: 6 }}>
+                <Download size={18} color={C.fgMuted} />
+              </PressScale>
+              <PressScale onPress={() => files.share(r)} accessibilityLabel={`Share ${r.name}`} hitSlop={8} style={{ padding: 6 }}>
+                <Share2 size={18} color={C.fgMuted} />
+              </PressScale>
               <PressScale onPress={() => removeRecent(r.id)} accessibilityLabel={`Delete ${r.name}`} hitSlop={12} style={{ padding: 6 }}>
                 <Trash2 size={18} color={C.fgSubtle} />
               </PressScale>
@@ -73,6 +80,7 @@ export default function Recent() {
           <T weight="semibold" style={{ color: C.danger, fontSize: 14.5 }}>Delete all local files</T>
         </PressScale>
       )}
+      {files.viewer}
     </Screen>
   );
 }

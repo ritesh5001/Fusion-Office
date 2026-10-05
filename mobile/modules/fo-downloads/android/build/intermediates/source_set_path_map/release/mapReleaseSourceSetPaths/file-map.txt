@@ -1,0 +1,7 @@
+expo.modules.fodownloads.fo-downloads-pngs-0 /Users/ritesh5001/PlayGround/Projects/Fusion Office/mobile/modules/fo-downloads/android/build/generated/res/pngs/release
+expo.modules.fodownloads.fo-downloads-resValues-1 /Users/ritesh5001/PlayGround/Projects/Fusion Office/mobile/modules/fo-downloads/android/build/generated/res/resValues/release
+expo.modules.fodownloads.fo-downloads-mergeReleaseResources-2 /Users/ritesh5001/PlayGround/Projects/Fusion Office/mobile/modules/fo-downloads/android/build/intermediates/incremental/release/mergeReleaseResources/merged.dir
+expo.modules.fodownloads.fo-downloads-mergeReleaseResources-3 /Users/ritesh5001/PlayGround/Projects/Fusion Office/mobile/modules/fo-downloads/android/build/intermediates/incremental/release/mergeReleaseResources/stripped.dir
+expo.modules.fodownloads.fo-downloads-release-4 /Users/ritesh5001/PlayGround/Projects/Fusion Office/mobile/modules/fo-downloads/android/build/intermediates/merged_res/release/mergeReleaseResources
+expo.modules.fodownloads.fo-downloads-main-5 /Users/ritesh5001/PlayGround/Projects/Fusion Office/mobile/modules/fo-downloads/android/src/main/res
+expo.modules.fodownloads.fo-downloads-release-6 /Users/ritesh5001/PlayGround/Projects/Fusion Office/mobile/modules/fo-downloads/android/src/release/res

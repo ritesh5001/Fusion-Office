@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { ArrowDown, ArrowUp, Check, Copy, Download, FileText, Loader2, RotateCcw, X } from "lucide-react";
-import { downloadFile, formatBytes, toToolFile, zipFiles, type ToolFile } from "@/lib/tools/files";
+import { ArrowDown, ArrowUp, Check, Copy, Download, ExternalLink, FileText, Loader2, RotateCcw, X } from "lucide-react";
+import { canPreview, downloadFile, formatBytes, openFile, toToolFile, zipFiles, type ToolFile } from "@/lib/tools/files";
 import { openPdf, renderToCanvas } from "@/lib/tools/pdfjs";
 import type { ToolDef } from "@/lib/tools/registry";
 import { Dropzone } from "./Dropzone";
@@ -11,6 +11,7 @@ import { cn } from "../ui/primitives";
 import { isReducedMotion } from "@/lib/motion";
 import { renderSafeMarkdown } from "@/lib/tools/safeMarkdown";
 import { taskDone } from "@/lib/taskDone";
+import { ProcessStage } from "./ProcessStage";
 
 export interface LoadedFile extends ToolFile {
   id: string;
@@ -125,8 +126,11 @@ export function ToolRunner<O>({ tool, spec }: { tool: ToolDef; spec: ToolSpec<O>
     if (problem) return setError(problem);
     setError(null);
     setRunning({ message: "Working…" });
+    const started = performance.now();
     try {
       const res = await spec.run(files, options, (message, fraction) => setRunning({ message, fraction }));
+      // Fast tools still show the stage long enough to follow (not when files are skipped or motion is reduced).
+      if (!spec.noFiles && !isReducedMotion()) await new Promise((r) => setTimeout(r, Math.max(0, 1600 - (performance.now() - started))));
       setResult(res);
       taskDone();
     } catch (e) {
@@ -160,6 +164,17 @@ export function ToolRunner<O>({ tool, spec }: { tool: ToolDef; spec: ToolSpec<O>
 
   const needsFiles = !spec.noFiles && files.length === 0;
   const Options = spec.Options;
+
+  // While it runs: the before → after stage, like the homepage card.
+  if (running && !spec.noFiles)
+    return (
+      <div>
+        {tracker}
+        <div className="mx-auto max-w-[880px] py-4">
+          <ProcessStage tool={tool} files={files} message={running.message} fraction={running.fraction} />
+        </div>
+      </div>
+    );
 
   return (
     <div>
@@ -345,13 +360,24 @@ function Results({ result, onReset, anchor }: { result: ToolResult; onReset: () 
               <Download className="h-4 w-4" aria-hidden="true" />
               <span className="truncate">{many ? `Download all (${result.files.length} files, ZIP)` : `Download ${result.files[0].name}`}</span>
             </button>
+            {!many && canPreview(result.files[0]) && (
+              <button type="button" onClick={() => openFile(result.files[0])} className="btn btn-secondary btn-lg px-6">
+                <ExternalLink className="h-4 w-4" aria-hidden="true" /> Open
+              </button>
+            )}
           </div>
         )}
         {many && (
           <ul className="mx-auto mt-6 max-w-[560px] divide-y divide-line overflow-hidden rounded-xl bg-sunken text-left ring-1 ring-line">
             {result.files.map((f, i) => (
               <li key={i} className="flex items-center gap-3 px-4 py-2.5">
-                <span className="min-w-0 flex-1 truncate text-[13px] text-fg">{f.name}</span>
+                {canPreview(f) ? (
+                  <button type="button" onClick={() => openFile(f)} title={`Open ${f.name} in a new tab`} className="min-w-0 flex-1 truncate text-left text-[13px] text-fg underline decoration-line-strong underline-offset-4 hover:decoration-brand-400">
+                    {f.name}
+                  </button>
+                ) : (
+                  <span className="min-w-0 flex-1 truncate text-[13px] text-fg">{f.name}</span>
+                )}
                 <span className="text-[12px] tabular-nums text-fg-muted">{formatBytes(f.bytes.length)}</span>
                 <button type="button" onClick={() => celebrate(f)} className="text-[13px] font-semibold text-brand-300 hover:text-brand-200">
                   Download

@@ -68,6 +68,27 @@ export function downloadFile(file: ToolFile) {
   taskDone();
 }
 
+/**
+ * Types a browser shows itself in a new tab. HTML and SVG are left out on
+ * purpose: opened from a blob: URL they would run with this site's origin.
+ */
+const PREVIEWABLE = /^(application\/pdf|image\/(png|jpe?g|webp|gif|avif|bmp)|text\/(plain|markdown|csv))$/i;
+export const canPreview = (file: Pick<ToolFile, "type">) => PREVIEWABLE.test(file.type);
+
+/** Opens a result in a new tab (PDF viewer, image, text); falls back to downloading it. */
+export function openFile(file: ToolFile) {
+  const embedded = document.documentElement.dataset.embed === "app";
+  if (!canPreview(file) || embedded) return downloadFile(file);
+  // Text types open as plain text so nothing in them is interpreted.
+  const type = file.type.startsWith("text/") ? "text/plain;charset=utf-8" : file.type;
+  const url = URL.createObjectURL(new Blob([file.bytes as BlobPart], { type }));
+  const tab = window.open(url, "_blank");
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  // Pop-up blocked: download instead. Otherwise cut the new tab's link back to this page.
+  if (!tab) downloadFile(file);
+  else tab.opener = null;
+}
+
 export const formatBytes = (n: number) =>
   n < 1024 ? `${n} B` : n < 1024 * 1024 ? `${(n / 1024).toFixed(1)} KB` : `${(n / 1024 / 1024).toFixed(2)} MB`;
 

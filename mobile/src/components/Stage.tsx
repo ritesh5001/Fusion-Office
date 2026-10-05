@@ -4,12 +4,13 @@ import Animated, {
   Easing, FadeIn, FadeInDown, ZoomIn, useAnimatedProps, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming,
 } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
-import { Check, Cpu, Share2, X } from "lucide-react-native";
+import { Check, ChevronRight, Cpu, Download, Share2, X } from "lucide-react-native";
 import { C } from "@/theme";
 import { useReduced } from "@/lib/motion";
 import { formatBytes, shareFile, type PickedFile } from "@/lib/files";
 import { STEPS, progressOf, type RunState } from "@/lib/runner";
 import { KindGlyph, PressScale, T } from "./ui";
+import { useFileActions } from "./FileViewer";
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
@@ -203,6 +204,7 @@ export function DoneCard({ state, onAgain }: { state: Extract<RunState, { phase:
   const ring = useAnimatedStyle(() => ({ opacity: (1 - burst.value) * 0.8, transform: [{ scale: 0.5 + burst.value * 1.9 }] }));
   const first = state.outputs[0];
   const many = state.outputs.length > 1;
+  const files = useFileActions();
   const total = state.outputs.reduce((n, f) => n + f.size, 0);
   // "Smaller" only means something for compress tools; a conversion's size change isn't a saving.
   const saved = state.compress && total < state.inputBytes ? Math.round((1 - total / state.inputBytes) * 100) : 0;
@@ -223,7 +225,13 @@ export function DoneCard({ state, onAgain }: { state: Extract<RunState, { phase:
 
       <Animated.View entering={reduced ? undefined : FadeInDown.delay(250).duration(400)} style={{ alignSelf: "stretch", marginTop: 12, gap: 8 }}>
         {state.outputs.slice(0, 4).map((o) => (
-          <View key={o.uri} style={{ flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 16, backgroundColor: "#fff", borderWidth: 1, borderColor: C.paperLine, padding: 12 }}>
+          <PressScale
+            key={o.uri}
+            onPress={() => files.open(o)}
+            accessibilityLabel={`Open ${o.name}, ${formatBytes(o.size)}`}
+            accessibilityHint="Opens the file"
+            style={{ flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 16, backgroundColor: "#fff", borderWidth: 1, borderColor: C.paperLine, padding: 12 }}
+          >
             <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: C.ink, alignItems: "center", justifyContent: "center" }}>
               <T weight="bold" style={{ fontSize: 10, color: C.accent }}>{(o.name.split(".").pop() ?? "").toUpperCase()}</T>
             </View>
@@ -235,26 +243,42 @@ export function DoneCard({ state, onAgain }: { state: Extract<RunState, { phase:
                 {!saved && state.compress && !many ? " · Already well optimized, so it kept its size" : ""}
               </T>
             </View>
-            {many && (
-              <PressScale onPress={() => share(o)} accessibilityLabel={`Share ${o.name}`} hitSlop={8} style={{ padding: 8 }}>
-                <Share2 size={18} color={C.ink} />
+            {many ? (
+              <PressScale onPress={() => files.download(o)} accessibilityLabel={`Download ${o.name}`} hitSlop={8} style={{ padding: 8 }}>
+                <Download size={18} color={C.ink} />
               </PressScale>
+            ) : (
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+                <T weight="semibold" style={{ fontSize: 12.5, color: C.paperText }}>Open</T>
+                <ChevronRight size={16} color={C.paperText} />
+              </View>
             )}
-          </View>
+          </PressScale>
         ))}
         {state.outputs.length > 4 && <T style={{ fontSize: 12.5, color: C.paperMuted, textAlign: "center" }}>+{state.outputs.length - 4} more in Recent</T>}
       </Animated.View>
 
       <Animated.View entering={reduced ? undefined : ZoomIn.delay(450).springify().damping(12)} style={{ marginTop: 16, alignSelf: "stretch" }}>
-        <PressScale onPress={() => share(first)} style={{ height: 52, borderRadius: 26, backgroundColor: C.inkDeep, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}>
-          <Share2 size={18} color="#fff" />
-          <T weight="semibold" style={{ fontSize: 15.5, color: "#fff" }}>{many ? "Share the first file" : `Save or share ${(first.name.split(".").pop() ?? "").toUpperCase()}`}</T>
-        </PressScale>
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          <View style={{ flex: 1 }}>
+          <PressScale onPress={() => files.download(first)} accessibilityLabel={many ? `Download ${first.name}` : undefined} style={{ height: 52, borderRadius: 26, backgroundColor: C.inkDeep, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            <Download size={18} color="#fff" />
+            <T weight="semibold" style={{ fontSize: 15.5, color: "#fff" }}>{many ? "Download first" : "Download"}</T>
+          </PressScale>
+          </View>
+          <View style={{ flex: 1 }}>
+          <PressScale onPress={() => share(first)} accessibilityLabel={`Share ${first.name}`} style={{ height: 52, borderRadius: 26, backgroundColor: "#fff", borderWidth: 1.5, borderColor: C.inkDeep, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            <Share2 size={18} color={C.inkDeep} />
+            <T weight="semibold" style={{ fontSize: 15.5, color: C.inkDeep }}>Share</T>
+          </PressScale>
+          </View>
+        </View>
       </Animated.View>
       <PressScale onPress={onAgain} style={{ marginTop: 6, height: 44, paddingHorizontal: 16, alignItems: "center", justifyContent: "center" }}>
         <T weight="semibold" style={{ fontSize: 14, color: C.paperText }}>Use another tool →</T>
       </PressScale>
       <T style={{ fontSize: 11.5, color: C.paperMuted, textAlign: "center" }}>Saved in Recent on this device · {formatBytes(total)}</T>
+      {files.viewer}
     </View>
   );
 }
