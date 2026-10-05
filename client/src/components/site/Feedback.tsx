@@ -13,7 +13,7 @@ export const openFeedback = (rating?: number) => window.dispatchEvent(new Custom
 
 const MAX = 2000;
 /** Example names the name field's placeholder cycles through, one every second. */
-const NAMES = ["Iqra", "Archana", "Priya", "Shreya", "Tamanna", "Ghurliya", "Gunja", "Naincy", "Kirti", "Rabina"];
+const NAMES = ["Iqra", "Archana", "Priya", "Shreya", "Tamanna", "Ghurliya", "Gunja", "Naincy", "Kirti", "Rabina", "Arpita"];
 type State = { kind: "idle" } | { kind: "sending" } | { kind: "sent" } | { kind: "error"; message: string };
 
 /**
