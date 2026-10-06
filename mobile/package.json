@@ -54,7 +54,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "expo lint",
     "build:apk": "bash scripts/build-android.sh apk",
-    "build:aab": "bash scripts/build-android.sh aab"
+    "build:aab": "bash scripts/build-android.sh aab",
+    "eas:build": "eas build --platform android --profile production",
+    "eas:submit": "eas submit --platform android --profile production"
   },
   "private": true
 }

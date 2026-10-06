@@ -59,6 +59,13 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "owner": "nextgen-fusion",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "39cec647-e0e3-493b-8dcb-9bf9c1d76963"
+      }
     }
   }
 }
