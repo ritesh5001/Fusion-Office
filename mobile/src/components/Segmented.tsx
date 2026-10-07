@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Pressable, View, type StyleProp, type ViewStyle } from "react-native";
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
+import * as haptics from "@/lib/haptics";
 import { C } from "@/theme";
 import { T, TEXT_SCALE } from "./ui";
 
@@ -60,7 +60,7 @@ export function Segmented<V extends string | number>({
             accessibilityRole="radio"
             accessibilityState={{ checked: on }}
             onPress={() => {
-              Haptics.selectionAsync().catch(() => {});
+              haptics.tick();
               onChange(o.value);
             }}
             style={{ flex: 1, minHeight: 40, alignItems: "center", justifyContent: "center" }}

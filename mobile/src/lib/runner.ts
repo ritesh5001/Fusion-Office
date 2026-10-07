@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import * as Haptics from "expo-haptics";
+import * as haptics from "./haptics";
 import { saveOutput, type PickedFile, type SavedFile } from "./files";
 import { addRecent } from "./recents";
 import type { NativeTool } from "./native";
@@ -41,10 +41,10 @@ export function useRunner() {
         await addRecent(file, def.slug, def.name);
       }
       await wait(Math.max(300, MIN_MS - (Date.now() - started)));
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      haptics.success();
       set({ phase: "done", outputs: saved, inputBytes: files.reduce((n, f) => n + f.size, 0), compress: def.slug.startsWith("compress") });
     } catch (e) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+      haptics.failure();
       set({ phase: "error", message: (e as Error).message || "Something went wrong." });
     }
   }, []);

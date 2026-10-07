@@ -3,7 +3,7 @@ import { Platform, Pressable, StyleSheet, Text, View, type PressableProps, type 
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import MaskedView from "@react-native-masked-view/masked-view";
 import { LinearGradient } from "expo-linear-gradient";
-import * as Haptics from "expo-haptics";
+import * as haptics from "@/lib/haptics";
 import Svg, { Circle, Defs, Path, Pattern, Rect, Text as SvgText } from "react-native-svg";
 import { C, F } from "@/theme";
 import { tileFor, type FileKind, type ToolDef } from "@/lib/tools";
@@ -83,7 +83,7 @@ export function PressScale({ children, style, haptic = true, onPress, accessibil
       onPressIn={() => !reduced && s.set(withTiming(0.97, { duration: DUR.press, easing: IOS }))}
       onPressOut={() => s.set(withTiming(1, { duration: DUR.release, easing: IOS }))}
       onPress={(e) => {
-        if (haptic) Haptics.selectionAsync().catch(() => {});
+        if (haptic) haptics.tick();
         onPress?.(e);
       }}
     >

@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Image, Pressable, Switch, TextInput, View } from "react-native";
 import Animated from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
+import * as haptics from "@/lib/haptics";
 import { ImageManipulator } from "expo-image-manipulator";
 import { C } from "@/theme";
 import { enterFade } from "@/lib/ease";
@@ -240,7 +240,7 @@ function Chips({ items, onPick }: { items: { key: string; label: string; on: boo
         <Pressable
           key={c.key}
           onPress={() => {
-            Haptics.selectionAsync().catch(() => {});
+            haptics.tick();
             onPick(c.key);
           }}
           accessibilityRole="button"

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Linking, Pressable, TextInput, View } from "react-native";
 import Animated from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
+import * as haptics from "@/lib/haptics";
 import { ChevronRight, Coffee as CoffeeIcon, HandHeart } from "lucide-react-native";
 import { C } from "@/theme";
 import { enterFade, enterRise } from "@/lib/ease";
@@ -63,7 +63,7 @@ function CoffeeSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
 
   const pay = () => {
     if (!ok) return;
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    haptics.success();
     setThanked(amount);
   };
 
@@ -117,7 +117,7 @@ function CoffeeSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
                   accessibilityRole="radio"
                   accessibilityState={{ checked: on }}
                   onPress={() => {
-                    Haptics.selectionAsync().catch(() => {});
+                    haptics.tick();
                     setPreset(p);
                   }}
                   style={({ pressed }) => ({ flex: 1, height: 54, borderRadius: 14, borderWidth: 1, borderColor: on ? COFFEE : C.lineStrong, backgroundColor: on ? COFFEE : C.sunken, alignItems: "center", justifyContent: "center", opacity: pressed && !on ? 0.75 : 1 })}

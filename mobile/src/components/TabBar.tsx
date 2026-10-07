@@ -3,7 +3,7 @@ import { Keyboard, Platform, Pressable, StyleSheet, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { DUR, IOS } from "@/lib/ease";
 import { BlurView } from "expo-blur";
-import * as Haptics from "expo-haptics";
+import * as haptics from "@/lib/haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Clock, House, LayoutGrid, Plus, Settings, type LucideIcon } from "lucide-react-native";
 import { C } from "@/theme";
@@ -62,7 +62,7 @@ export function TabBar({ state, navigation }: TabBarProps) {
       </View>
       <Pressable
         onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+          haptics.press();
           Keyboard.dismiss();
           openSheet();
         }}
@@ -88,7 +88,7 @@ function TabButton({ focused, label, icon: Icon, onPress }: { focused: boolean; 
   return (
     <Pressable
       onPress={() => {
-        Haptics.selectionAsync().catch(() => {});
+        haptics.tick();
         onPress();
       }}
       accessibilityRole="tab"
