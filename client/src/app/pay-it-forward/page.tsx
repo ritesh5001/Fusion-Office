@@ -32,7 +32,7 @@ const IDEAS = [
 const FAQ: [string, string][] = [
   [
     "Can I donate money to Fusion Office?",
-    "Yes, you can buy us a coffee: ₹49, or any amount you like, paid securely with Razorpay. Our favourite contribution is still helping another person, and we'd love to hear that story too.",
+    "We don't take donations. If you'd like to buy us a coffee, choose an amount and we'll ask you to spend it helping someone else instead. Then tell us the story: we'd love to hear it.",
   ],
   [
     "Does it have to be something big?",

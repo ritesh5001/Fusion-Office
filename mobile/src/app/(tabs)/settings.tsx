@@ -5,6 +5,7 @@ import { C } from "@/theme";
 import { useMotion } from "@/lib/motion";
 import { WEB_URL } from "@/lib/tools";
 import { Screen } from "@/components/Screen";
+import { CoffeeCard } from "@/components/Coffee";
 import { Eyebrow, PressScale, T } from "@/components/ui";
 
 const PRIVACY: { icon: LucideIcon; tint: string; title: string; text: string }[] = [
@@ -60,6 +61,9 @@ export default function Settings() {
           </View>
         </Row>
       </PressScale>
+
+      <Eyebrow style={{ marginTop: 24, marginBottom: 8 }}>Support</Eyebrow>
+      <CoffeeCard />
 
       <View style={{ marginTop: 28, alignItems: "center", gap: 10 }}>
         <PressScale accessibilityRole="link" accessibilityLabel="Made with love by NextGen Fusion" onPress={() => Linking.openURL("https://nextgenfusion.in")} style={{ flexDirection: "row", alignItems: "center", gap: 6, borderRadius: 99, borderWidth: 1, borderColor: "rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 16, paddingVertical: 9, shadowColor: C.brand500, shadowOpacity: 0.4, shadowRadius: 14 }}>

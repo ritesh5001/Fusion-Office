@@ -1,18 +1,16 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { Coffee as CoffeeIcon, Heart, ShieldCheck, X } from "lucide-react";
-import { apiFetch } from "@/lib/api";
-import { useCloudConfig } from "@/lib/cloudConfig";
+import Link from "next/link";
+import { Coffee as CoffeeIcon, HandHeart, X } from "lucide-react";
 import { useScrollLock } from "@/lib/motion";
 import { cn } from "@/lib/cn";
-import { inApp } from "@/lib/embed";
 import { liftStyle, useFooterLift } from "@/lib/footerLift";
 
 /**
- * "Buy us a coffee": pick ₹49 (or any amount), pay with Razorpay's checkout,
- * and the server confirms the payment before we say thank you. Hidden until
- * the server has Razorpay keys.
+ * "Buy us a coffee", with a twist: no money changes hands. People choose what
+ * a coffee is worth to them, and when they press Pay we thank them and ask
+ * them to spend that amount helping someone else instead.
  */
 
 const PRESETS = [49, 99, 199];
@@ -22,48 +20,10 @@ const MAX = 100_000;
 /** Opens the coffee dialog from anywhere (links to #coffee work too). */
 export const openCoffee = () => window.dispatchEvent(new Event("fo-open-coffee"));
 
-interface RazorpayResponse {
-  razorpay_payment_id: string;
-  razorpay_order_id: string;
-  razorpay_signature: string;
-}
-interface RazorpayCheckout {
-  open(): void;
-  on(event: "payment.failed", fn: (e: { error?: { description?: string } }) => void): void;
-}
-declare global {
-  interface Window {
-    Razorpay?: new (options: Record<string, unknown>) => RazorpayCheckout;
-  }
-}
-
-let script: Promise<void> | null = null;
-function loadCheckout() {
-  if (window.Razorpay) return Promise.resolve();
-  script ??= new Promise<void>((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = "https://checkout.razorpay.com/v1/checkout.js";
-    s.async = true;
-    s.onload = () => resolve();
-    s.onerror = () => {
-      script = null;
-      s.remove();
-      reject(new Error("Couldn't load Razorpay. Check your connection, or turn off blockers for this site."));
-    };
-    document.head.appendChild(s);
-  });
-  return script;
-}
-
-type Phase = { kind: "form" } | { kind: "starting" } | { kind: "paying" } | { kind: "confirming" } | { kind: "thanks"; rupees: number; name: string | null } | { kind: "error"; message: string };
-
 const rupees = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
-/** A pill that opens the dialog. Renders nothing until payments are set up. */
+/** A pill that opens the dialog. */
 export function CoffeeButton({ className, label = "Buy us a coffee" }: { className?: string; label?: string }) {
-  const { razorpayKeyId } = useCloudConfig();
-  // No payments inside the mobile app (Google Play rules).
-  if (!razorpayKeyId || inApp()) return null;
   return (
     <button type="button" onClick={openCoffee} className={cn("fo-press group inline-flex items-center gap-2 rounded-full bg-[#ffdd6b] px-4 py-2.5 text-[14px] font-semibold text-[#3b2400] shadow-[0_8px_22px_-10px_rgb(255_200_80/0.8)] transition-shadow hover:shadow-[0_10px_26px_-8px_rgb(255_200_80/0.9)]", className)}>
       <CoffeeIcon className="h-4 w-4 transition-transform group-hover:-rotate-12" aria-hidden="true" /> {label}
@@ -72,21 +32,14 @@ export function CoffeeButton({ className, label = "Buy us a coffee" }: { classNa
 }
 
 export function Coffee() {
-  const { razorpayKeyId } = useCloudConfig();
   const id = useId();
   const [open, setOpen] = useState(false);
   const [preset, setPreset] = useState<number | "custom">(49);
   const [custom, setCustom] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [phase, setPhase] = useState<Phase>({ kind: "form" });
+  const [thanked, setThanked] = useState<number | null>(null);
   const opener = useRef<HTMLElement | null>(null);
   const lift = useFooterLift();
-
-  // Razorpay's checkout takes the screen while paying, so our dialog steps aside.
-  const visible = open && phase.kind !== "paying";
-  useScrollLock(visible);
+  useScrollLock(open);
 
   useEffect(() => {
     const show = () => {
@@ -108,71 +61,20 @@ export function Coffee() {
   }, []);
 
   const close = () => {
-    if (phase.kind === "starting" || phase.kind === "confirming") return;
     setOpen(false);
-    if (phase.kind === "thanks" || phase.kind === "error") setPhase({ kind: "form" });
+    setThanked(null);
     opener.current?.focus?.();
   };
 
   useEffect(() => {
-    if (!visible) return;
+    if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [visible, phase]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // No payments inside the mobile app (Google Play rules), not even via a #coffee link.
-  if (!razorpayKeyId || inApp()) return null;
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const amount = preset === "custom" ? Number(custom) : preset;
   const amountOk = Number.isInteger(amount) && amount >= MIN && amount <= MAX;
-  const emailOk = !email.trim() || /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email.trim());
-
-  const pay = async () => {
-    setPhase({ kind: "starting" });
-    try {
-      const [res] = await Promise.all([
-        apiFetch("/api/coffee/order", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ amount, name, email, message }) }),
-        loadCheckout(),
-      ]);
-      const order = (await res.json().catch(() => ({}))) as { orderId?: string; amount?: number; currency?: string; keyId?: string; error?: string };
-      if (!res.ok || !order.orderId) throw new Error(order.error ?? "Couldn't start the payment. Please try again.");
-
-      setPhase({ kind: "paying" });
-      const checkout = new window.Razorpay!({
-        key: order.keyId ?? razorpayKeyId,
-        order_id: order.orderId,
-        amount: order.amount,
-        currency: order.currency,
-        name: "Fusion Office",
-        description: "Buy us a coffee",
-        image: `${window.location.origin}/icon.svg`,
-        prefill: { name: name.trim() || undefined, email: email.trim() || undefined },
-        notes: { purpose: "Buy us a coffee" },
-        theme: { color: "#8b7cf6" },
-        modal: { ondismiss: () => setPhase((p) => (p.kind === "paying" ? { kind: "form" } : p)) },
-        handler: async (r: RazorpayResponse) => {
-          setPhase({ kind: "confirming" });
-          try {
-            const v = await apiFetch("/api/coffee/verify", {
-              method: "POST",
-              headers: { "content-type": "application/json" },
-              body: JSON.stringify({ orderId: r.razorpay_order_id, paymentId: r.razorpay_payment_id, signature: r.razorpay_signature }),
-            });
-            const body = (await v.json().catch(() => ({}))) as { amount?: number; name?: string | null; error?: string };
-            if (!v.ok) throw new Error(body.error ?? "We couldn't confirm the payment.");
-            setPhase({ kind: "thanks", rupees: (body.amount ?? amount * 100) / 100, name: body.name ?? null });
-          } catch (e) {
-            setPhase({ kind: "error", message: `${(e as Error).message} Your payment reference is ${r.razorpay_payment_id}.` });
-          }
-        },
-      });
-      checkout.on("payment.failed", (e) => setPhase({ kind: "error", message: e.error?.description ?? "The payment didn't go through. No money was taken." }));
-      checkout.open();
-    } catch (e) {
-      setPhase({ kind: "error", message: (e as Error).message });
-    }
-  };
 
   // Floating button, bottom-left (Feedback sits bottom-right). site-chrome hides it inside the mobile app.
   const floating = (
@@ -192,8 +94,7 @@ export function Coffee() {
     </button>
   );
 
-  if (!visible) return floating;
-  const busy = phase.kind === "starting" || phase.kind === "confirming";
+  if (!open) return floating;
 
   return (
     <>
@@ -201,29 +102,35 @@ export function Coffee() {
     <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-labelledby={`${id}-title`}>
       <div aria-hidden="true" onClick={close} className="fo-intro-fade absolute inset-0 bg-[#05060a]/65 backdrop-blur-sm [animation-duration:200ms]" />
       <div className="fo-palette-in relative w-full max-w-[440px] overflow-y-auto overscroll-contain rounded-t-[26px] border border-line-strong bg-overlay p-6 shadow-[0_30px_80px_-20px_rgb(0_0_0/0.8)] [max-height:calc(100dvh-24px)] sm:rounded-[26px] sm:p-7">
-        <button type="button" onClick={close} disabled={busy} aria-label="Close" className="fo-press absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-lg text-fg-muted hover:bg-raised hover:text-fg disabled:opacity-40">
+        <button type="button" onClick={close} aria-label="Close" className="fo-press absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-lg text-fg-muted hover:bg-raised hover:text-fg">
           <X className="h-4 w-4" aria-hidden="true" />
         </button>
 
-        {phase.kind === "thanks" ? (
-          <div className="flex flex-col items-center py-4 text-center" role="status">
+        {thanked !== null ? (
+          <div className="flex flex-col items-center pb-1 pt-3 text-center" role="status">
             <Cup full />
-            <h2 id={`${id}-title`} className="fo-rise mt-4 font-display text-[24px] font-bold tracking-[-0.02em] text-fg [animation-delay:500ms]">
-              Thank you{phase.name ? `, ${phase.name.split(" ")[0]}` : ""}!
+            <h2 id={`${id}-title`} className="fo-rise mt-4 font-display text-[24px] font-bold tracking-[-0.02em] text-fg [animation-delay:450ms]">
+              Thank you. That means a lot.
             </h2>
-            <p className="fo-rise mt-2 max-w-[34ch] text-[14.5px] leading-relaxed text-fg-muted [animation-delay:600ms]">
-              Your {rupees(phase.rupees)} coffee keeps Fusion Office free and private for everyone. {email.trim() ? "We've emailed you a thank-you note." : ""}
+            <p className="fo-rise mt-3 max-w-[36ch] text-[15px] leading-relaxed text-fg-muted [animation-delay:550ms]">
+              Please keep your <span className="font-semibold text-fg">{rupees(thanked)}</span>. Fusion Office is free, and it will stay that way.
             </p>
-            <button type="button" onClick={close} className="btn btn-primary btn-lg fo-rise mt-6 [animation-delay:700ms]">
-              <Heart className="h-4 w-4" aria-hidden="true" /> You're the best
+            <p className="fo-rise mt-3 max-w-[36ch] text-[15px] leading-relaxed text-fg-muted [animation-delay:650ms]">
+              Instead, we'd ask you to spend it on someone who could use a little help today: a meal, a cup of tea, or a book for a student. That is the best coffee you could buy us.
+            </p>
+            <button type="button" onClick={close} className="fo-press fo-rise mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#ffdd6b] text-[15.5px] font-bold text-[#3b2400] [animation-delay:750ms]">
+              <HandHeart className="h-5 w-5" aria-hidden="true" /> I'll pay it forward
             </button>
+            <Link href="/pay-it-forward#share" onClick={close} className="fo-rise mt-3 text-[13.5px] font-medium text-brand-300 hover:text-brand-200 [animation-delay:800ms]">
+              Tell us who you helped →
+            </Link>
           </div>
         ) : (
           <form
             noValidate
             onSubmit={(e) => {
               e.preventDefault();
-              if (amountOk && emailOk && !busy) void pay();
+              if (amountOk) setThanked(amount);
             }}
           >
             <div className="flex items-center gap-3">
@@ -232,7 +139,7 @@ export function Coffee() {
                 <h2 id={`${id}-title`} className="font-display text-[22px] font-bold tracking-[-0.02em] text-fg">
                   Buy us a coffee
                 </h2>
-                <p className="mt-0.5 text-[13.5px] leading-snug text-fg-muted">Fusion Office is free for everyone. A coffee helps keep it that way.</p>
+                <p className="mt-0.5 text-[13.5px] leading-snug text-fg-muted">Fusion Office is free for everyone. Choose what a coffee is worth to you.</p>
               </div>
             </div>
 
@@ -275,40 +182,10 @@ export function Coffee() {
               )}
             </fieldset>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <label className="block">
-                <span className="text-[13px] font-medium text-fg">
-                  Name <span className="font-normal text-fg-subtle">(optional)</span>
-                </span>
-                <input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} autoComplete="name" className="mt-1.5 h-11 w-full rounded-xl border border-line-strong bg-sunken px-3.5 text-[15px] text-fg outline-none focus:border-brand-500 focus:ring-[3px] focus:ring-brand-500/20" />
-              </label>
-              <label className="block">
-                <span className="text-[13px] font-medium text-fg">
-                  Email <span className="font-normal text-fg-subtle">(for a thank-you)</span>
-                </span>
-                <input type="email" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={254} autoComplete="email" className="mt-1.5 h-11 w-full rounded-xl border border-line-strong bg-sunken px-3.5 text-[15px] text-fg outline-none focus:border-brand-500 focus:ring-[3px] focus:ring-brand-500/20" />
-              </label>
-            </div>
-            <label className="mt-3 block">
-              <span className="text-[13px] font-medium text-fg">
-                Message <span className="font-normal text-fg-subtle">(optional)</span>
-              </span>
-              <input value={message} onChange={(e) => setMessage(e.target.value)} maxLength={500} placeholder="Say something nice" className="mt-1.5 h-11 w-full rounded-xl border border-line-strong bg-sunken px-3.5 text-[15px] text-fg outline-none placeholder:text-fg-subtle focus:border-brand-500 focus:ring-[3px] focus:ring-brand-500/20" />
-            </label>
-
-            {phase.kind === "error" && (
-              <p role="alert" className="fo-shake mt-3 rounded-lg bg-red-500/10 px-3 py-2 text-[13px] text-red-300 ring-1 ring-inset ring-red-500/25">
-                {phase.message}
-              </p>
-            )}
-
-            <button type="submit" disabled={!amountOk || !emailOk || busy} className="fo-press mt-5 flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-[#ffdd6b] py-3.5 text-[16px] font-bold text-[#3b2400] shadow-[0_12px_28px_-12px_rgb(255_200_80/0.9)] transition-opacity disabled:opacity-50">
+            <button type="submit" disabled={!amountOk} className="fo-press mt-5 flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-[#ffdd6b] py-3.5 text-[16px] font-bold text-[#3b2400] shadow-[0_12px_28px_-12px_rgb(255_200_80/0.9)] transition-opacity disabled:opacity-50">
               <CoffeeIcon className="h-5 w-5" aria-hidden="true" />
-              {phase.kind === "starting" ? "Opening Razorpay…" : phase.kind === "confirming" ? "Confirming payment…" : amountOk ? `Pay ${rupees(amount)}` : "Choose an amount"}
+              {amountOk ? `Pay ${rupees(amount)}` : "Choose an amount"}
             </button>
-            <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[12px] text-fg-subtle">
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" /> Secure payment by Razorpay · UPI, cards, netbanking, wallets
-            </p>
           </form>
         )}
       </div>

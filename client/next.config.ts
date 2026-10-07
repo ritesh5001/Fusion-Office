@@ -23,19 +23,17 @@ const csp = [
   // 'wasm-unsafe-eval' only permits WebAssembly (the in-browser OCR engine), not eval().
   // challenges.cloudflare.com: the Turnstile bot check shown before server conversions.
   // static.cloudflareinsights.com: Cloudflare Web Analytics, which the Cloudflare proxy injects into pages.
-  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://challenges.cloudflare.com https://static.cloudflareinsights.com https://checkout.razorpay.com${isDev ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://challenges.cloudflare.com https://static.cloudflareinsights.com${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   // Thumbnails, signatures and images placed on pages are data:/blob: URLs.
-  // Razorpay's checkout shows bank and wallet logos.
-  "img-src 'self' data: blob: https://*.razorpay.com",
+  "img-src 'self' data: blob:",
   "font-src 'self' data:",
   // Files are stored by our own server, so no third-party origins are needed.
-  `connect-src 'self' ${apiOrigin} https://cloudflareinsights.com https://*.razorpay.com blob: data:${isDev ? " ws: wss:" : ""}`,
+  `connect-src 'self' ${apiOrigin} https://cloudflareinsights.com blob: data:${isDev ? " ws: wss:" : ""}`,
   // PDF.js runs in a worker served from /public.
   "worker-src 'self' blob:",
   // Printing loads the exported PDF into a blob: iframe; Turnstile renders in an iframe.
-  // Razorpay's checkout runs in its own frame.
-  "frame-src 'self' blob: https://challenges.cloudflare.com https://api.razorpay.com https://checkout.razorpay.com",
+  "frame-src 'self' blob: https://challenges.cloudflare.com",
   "object-src 'none'",
   "base-uri 'self'",
   // Auth.js sign-in forms post here and then redirect to the OAuth providers.
@@ -52,8 +50,7 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   // Camera is allowed for this site only (Scan to PDF).
   { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=(), payment=(), usb=()" },
-  // Allow popups: some Razorpay payment methods (netbanking, wallets) finish in a popup window.
-  { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
   // Browsers ignore HSTS over plain http, so this is safe locally.
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
 ];

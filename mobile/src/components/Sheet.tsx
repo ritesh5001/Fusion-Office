@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useState } from "react";
-import { Modal, Pressable, StyleSheet, View } from "react-native";
+import { Keyboard, Modal, Platform, Pressable, StyleSheet, View } from "react-native";
 import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -18,6 +18,19 @@ export function Sheet({ open, onClose, children }: { open: boolean; onClose: () 
   const [mounted, setMounted] = useState(open);
   const y = useSharedValue(600);
   const fade = useSharedValue(0);
+  // iOS doesn't resize a modal for the keyboard, so lift the sheet above it
+  // with the keyboard's own timing. Android resizes the modal window itself.
+  const kb = useSharedValue(0);
+  useEffect(() => {
+    if (Platform.OS !== "ios") return;
+    const lift = (to: number, duration: number) => (kb.value = withTiming(to, { duration: duration || DUR.small, easing: IOS }));
+    const show = Keyboard.addListener("keyboardWillShow", (e) => lift(Math.max(0, e.endCoordinates.height - insets.bottom), e.duration));
+    const hide = Keyboard.addListener("keyboardWillHide", (e) => lift(0, e.duration));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, [insets.bottom, kb]);
   // Mount as soon as it opens (adjusting state during render, not in an effect).
   if (open && !mounted) setMounted(true);
 
@@ -40,7 +53,7 @@ export function Sheet({ open, onClose, children }: { open: boolean; onClose: () 
       else y.set(withTiming(0, { duration: DUR.small, easing: IOS }));
     });
 
-  const panel = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
+  const panel = useAnimatedStyle(() => ({ transform: [{ translateY: y.value - kb.value }] }));
   const dim = useAnimatedStyle(() => ({ opacity: fade.value }));
 
   if (!mounted) return null;
