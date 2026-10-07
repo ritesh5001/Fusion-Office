@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Cpu, HeartHandshake, Server, ShieldCheck, Sparkles } from "lucide-react";
 import { SiteShell } from "@/components/site/SiteShell";
+import { CoffeeButton } from "@/components/site/Coffee";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { TOOLS } from "@/lib/tools/registry";
@@ -332,12 +333,13 @@ export default function HowWeBuiltIt() {
                 . No account is required, nothing is added to your files, and you can use every tool as often as you need within fair-use limits.
               </p>
               <p className="mt-4 text-[16px] leading-[1.75] text-fg-muted">
-                Want to give something back? We don't take donations.{" "}
+                Want to give something back?{" "}
                 <Link href="/pay-it-forward" className="font-medium text-fg underline decoration-line-strong underline-offset-4 hover:decoration-brand-400">
                   Help someone today and tell us the story
                 </Link>
-                . That's the only contribution we ask for.
+                , or buy us a coffee. Either one keeps us going.
               </p>
+              <CoffeeButton className="mt-4" />
             </section>
 
             <section className="mt-12" aria-labelledby="credits">

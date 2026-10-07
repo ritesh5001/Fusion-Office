@@ -74,6 +74,11 @@ services:
       # Thank-you emails (Resend). MAIL_FROM must use a domain verified in Resend.
       - key: RESEND_API_KEY
         sync: false
+      # Buy us a coffee (Razorpay): both keys, or neither.
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
       - key: MAIL_FROM
         sync: false
       - key: CONVERT_CONCURRENCY

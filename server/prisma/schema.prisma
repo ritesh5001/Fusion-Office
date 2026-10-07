@@ -125,3 +125,26 @@ model Feedback {
   @@index([createdAt])
   @@index([kind, createdAt])
 }
+
+// ─── Buy us a coffee ───────────────────────────────────────────────
+
+/** A "Buy us a coffee" payment through Razorpay. Created with the order, marked paid once the signature checks out. */
+model Coffee {
+  id        String    @id @default(cuid())
+  /** Razorpay order (order_…), created by our server with the amount it decided. */
+  orderId   String    @unique
+  /** Razorpay payment (pay_…), set when the payment is verified. */
+  paymentId String?   @unique
+  /** In paise (₹49 = 4900). */
+  amount    Int
+  currency  String    @default("INR")
+  /** "created" until paid, then "paid". */
+  status    String    @default("created")
+  name      String?
+  email     String?
+  message   String?   @db.Text
+  createdAt DateTime  @default(now())
+  paidAt    DateTime?
+
+  @@index([status, createdAt])
+}

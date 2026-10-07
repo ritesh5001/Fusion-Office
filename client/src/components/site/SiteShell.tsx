@@ -7,6 +7,7 @@ import { ChevronRight } from "lucide-react";
 import { Nav } from "../landing/Nav";
 import { Footer } from "../landing/Footer";
 import { Feedback } from "./Feedback";
+import { Coffee } from "./Coffee";
 import { ToolIcon } from "../tools/icons";
 import { CATEGORY_META } from "./categories";
 import { CATEGORIES, type Category } from "@/lib/tools/registry";
@@ -34,6 +35,7 @@ export function SiteShell({ children, active, rail = true }: { children: ReactNo
       </div>
       <Footer />
       <Feedback />
+      <Coffee />
     </div>
   );
 }

@@ -90,3 +90,13 @@ export function storyThanks(name: string, email: string): Mail {
   const link = `${SITE}/pay-it-forward`;
   return { to: email, subject: "Thank you for sharing your story - Fusion Office", html: layout(title, paras, { label: "Read about pay it forward", href: link }), text: plain(title, paras, link) };
 }
+
+export function coffeeThanks(name: string | null, email: string, rupees: number, paymentId: string): Mail {
+  const title = `Thank you for the coffee${name ? `, ${esc(first(name))}` : ""}!`;
+  const paras = [
+    `We've received your ₹${rupees.toLocaleString("en-IN")} contribution to Fusion Office. It goes straight into keeping every tool free, private and online for everyone.`,
+    `Your payment reference is <strong>${esc(paymentId)}</strong>. Razorpay also sends its own receipt.`,
+    "If you ever need anything, just reply to this email.",
+  ];
+  return { to: email, subject: "Thank you for the coffee! - Fusion Office", html: layout(title, paras, { label: "Back to Fusion Office", href: SITE }), text: plain(title, paras, SITE) };
+}

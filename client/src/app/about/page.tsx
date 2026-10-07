@@ -16,7 +16,7 @@ export const metadata: Metadata = pageMetadata({ title: "About Us: The NextGen F
 
 const VALUES = [
   { icon: ShieldCheck, title: "Your files are yours", text: "Most tools run on your own device, so your documents never leave it. Privacy is how the product is built, not a setting." },
-  { icon: Gift, title: "Free for everyone", text: "No sign-up, no watermarks and no paywalled tools. We'd rather you help someone than pay us." },
+  { icon: Gift, title: "Free for everyone", text: "No sign-up, no watermarks and no paywalled tools. If you'd like to chip in, help someone or buy us a coffee." },
   { icon: Handshake, title: "We finish what we start", text: "We don't ship and disappear. We keep improving Fusion Office, and we read every piece of feedback ourselves." },
   { icon: Code2, title: "Honest engineering", text: "We pick the right tool for each job and tell you exactly where your file goes. No dark patterns, no surprises." },
 ];
@@ -164,7 +164,7 @@ export default function AboutPage() {
               <span className="flex items-center gap-2 font-display text-[19px] font-bold tracking-[-0.02em] text-fg">
                 Want to support us? <Sparkles className="h-4 w-4 text-accent" aria-hidden="true" />
               </span>
-              <span className="mt-1 block text-[14px] text-fg-muted">Don't pay us. Help someone today, and tell us the story.</span>
+              <span className="mt-1 block text-[14px] text-fg-muted">Help someone today, or buy us a coffee.</span>
             </span>
             <ArrowRight className="h-5 w-5 shrink-0 text-fg-subtle transition-transform group-hover:translate-x-1 group-hover:text-fg" aria-hidden="true" />
           </Link>

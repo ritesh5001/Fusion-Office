@@ -77,3 +77,17 @@ admin.delete("/feedback/:id", async (req, res, next) => {
     next(err);
   }
 });
+
+/** Buy-us-a-coffee payments: paid ones by default (?all=1 includes unfinished checkouts), with totals. */
+admin.get("/coffees", async (req, res, next) => {
+  try {
+    const all = req.query.all === "1";
+    const [items, paid] = await Promise.all([
+      prisma.coffee.findMany({ where: all ? {} : { status: "paid" }, orderBy: { createdAt: "desc" }, take: 500 }),
+      prisma.coffee.aggregate({ where: { status: "paid" }, _count: { _all: true }, _sum: { amount: true } }),
+    ]);
+    res.json({ items, totals: { count: paid._count._all, amount: paid._sum.amount ?? 0 } });
+  } catch (err) {
+    next(err);
+  }
+});

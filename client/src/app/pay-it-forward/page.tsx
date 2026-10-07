@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { BookOpen, Coffee, HandHeart, Heart, MessageCircleHeart, ShoppingBag, Smile, Sprout, Users } from "lucide-react";
 import { SiteShell } from "@/components/site/SiteShell";
+import { CoffeeButton } from "@/components/site/Coffee";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { StoryForm } from "@/components/site/MessageForms";
@@ -9,7 +10,7 @@ import { SITE_URL, absoluteUrl, pageMetadata } from "@/lib/seo/site";
 
 const PATH = "/pay-it-forward";
 const DESCRIPTION =
-  "Want to support Fusion Office? We don't take donations. Instead, help someone today, then share the story with us. Every act of kindness counts as your contribution.";
+  "Want to support Fusion Office? Help someone today and share the story with us, or buy us a coffee. Every act of kindness counts as your contribution.";
 
 export const metadata: Metadata = pageMetadata({ title: "Pay It Forward: Support Fusion Office by Helping Someone", description: DESCRIPTION, path: PATH });
 
@@ -31,7 +32,7 @@ const IDEAS = [
 const FAQ: [string, string][] = [
   [
     "Can I donate money to Fusion Office?",
-    "We don't accept donations. If Fusion Office helped you and you'd like to give something back, help another person instead. That act of kindness is your contribution, and we'd love to hear about it.",
+    "Yes, you can buy us a coffee: ₹49, or any amount you like, paid securely with Razorpay. Our favourite contribution is still helping another person, and we'd love to hear that story too.",
   ],
   [
     "Does it have to be something big?",
@@ -99,17 +100,20 @@ export default function PayItForwardPage() {
             <div>
               <p className="fo-intro-rise eyebrow">Pay it forward</p>
               <h1 className="fo-intro-rise mt-3 text-balance font-display text-[clamp(2.1rem,5vw,3.4rem)] font-extrabold leading-[1.04] tracking-[-0.035em] text-fg [animation-delay:80ms]">
-                Don't pay us. <span className="bg-[linear-gradient(90deg,#ff8fa3,#cdf564)] bg-clip-text text-transparent">Help someone.</span>
+                Want to support us? <span className="bg-[linear-gradient(90deg,#ff8fa3,#cdf564)] bg-clip-text text-transparent">Help someone.</span>
               </h1>
               <p className="fo-intro-rise mt-5 max-w-[58ch] text-[17px] leading-[1.7] text-fg-muted [animation-delay:160ms]">
-                People often ask how they can donate or contribute to Fusion Office. Here's our answer: if you want to help us, help a random person today. To us, that is worth exactly the same as any money you could send.
+                People often ask how they can contribute to Fusion Office. Our favourite answer: help a random person today. To us, that is worth exactly the same as any money you could send.
               </p>
               <p className="fo-intro-rise mt-4 max-w-[58ch] text-[17px] leading-[1.7] text-fg-muted [animation-delay:220ms]">
                 Then come back and share the story of who you helped. We read every single one.
               </p>
-              <a href="#share" className="fo-intro-rise btn btn-primary btn-lg mt-7 [animation-delay:280ms]">
-                <Heart className="h-4 w-4" aria-hidden="true" /> Share your story
-              </a>
+              <div className="fo-intro-rise mt-7 flex flex-wrap items-center gap-3 [animation-delay:280ms]">
+                <a href="#share" className="btn btn-primary btn-lg">
+                  <Heart className="h-4 w-4" aria-hidden="true" /> Share your story
+                </a>
+                <CoffeeButton label="Or buy us a coffee" className="h-12 px-5" />
+              </div>
             </div>
             <div className="fo-intro-scale [animation-delay:200ms]">
               <KindnessArt />

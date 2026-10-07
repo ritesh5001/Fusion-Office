@@ -5,5 +5,5 @@ export const size = OG_SIZE;
 export const contentType = "image/png";
 
 export default function Image() {
-  return renderOg({ eyebrow: "Pay it forward", title: "Don't pay us. Help someone.", tagline: "Help a random person today, then share the story with us. That's your contribution." });
+  return renderOg({ eyebrow: "Pay it forward", title: "Want to support us? Help someone.", tagline: "Help a random person today and share the story, or buy us a coffee." });
 }

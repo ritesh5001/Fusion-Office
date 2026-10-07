@@ -16,6 +16,8 @@ export interface CloudConfig {
   aiEnabled?: boolean;
   /** Cloudflare Turnstile site key when conversions require a human check. */
   turnstileSiteKey?: string | null;
+  /** Razorpay's public key id when "Buy us a coffee" is set up. */
+  razorpayKeyId?: string | null;
   user: CloudUser | null;
 }
 

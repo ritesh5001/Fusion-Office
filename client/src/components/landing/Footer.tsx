@@ -4,6 +4,7 @@ import { Logo } from "../Logo";
 import { COMPANY } from "@/lib/company";
 import { MotionToggle } from "../site/MotionToggle";
 import { AppBanner } from "../site/AppBanner";
+import { CoffeeButton } from "../site/Coffee";
 
 const COLUMNS = [
   {
@@ -185,6 +186,7 @@ export function Footer() {
           </a>
         </p>
         <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+          <CoffeeButton className="py-2 text-[13px]" />
           <MotionToggle />
           <p>No sign-up. No watermarks.</p>
         </div>

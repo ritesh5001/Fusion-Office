@@ -410,6 +410,12 @@ input[type="color"]::-moz-color-swatch {
 .fo-nudge-in { animation: fo-nudge-in 620ms cubic-bezier(.34,1.56,.64,1) backwards; }
 .fo-nudge-out { animation: fo-nudge-out 200ms cubic-bezier(.4,0,1,1) forwards; }
 .fo-star-in { animation: fo-star-in 520ms cubic-bezier(.34,1.56,.64,1) backwards; }
+/* Buy us a coffee: steam rises off the cup; on thank-you the coffee fills up. */
+@keyframes fo-steam { 0% { opacity: 0; translate: 0 4px; } 30% { opacity: 0.9; } 100% { opacity: 0; translate: 0 -8px; } }
+@keyframes fo-fill { from { translate: 0 28px; } }
+.fo-steam { animation: fo-steam 2.2s ease-out infinite; }
+.fo-fill { animation: fo-fill 1.2s cubic-bezier(.2,.8,.2,1) 200ms both; }
+
 /* A "no" that shakes its head: feedback rejected by moderation. */
 @keyframes fo-shake { 0%, 100% { translate: 0 0; } 15%, 55% { translate: -6px 0; } 35%, 75% { translate: 6px 0; } 90% { translate: -2px 0; } }
 .fo-shake { animation: fo-shake 420ms cubic-bezier(.36,.07,.19,.97) both; }
@@ -433,7 +439,7 @@ input[type="color"]::-moz-color-swatch {
   .fo-intro-fade, .fo-intro-rise, .fo-intro-wipe, .fo-intro-tile, .fo-intro-scale, .fo-intro-pop, .fo-breathe, .fo-slide-out,
   .fo-grow-x, .fo-pulse-once, .fo-palette-in, .fo-zoom-forward, .fo-preview, .fo-r-head, .fo-r-item,
   .fo-pd-packet, .fo-pd-chip, .fo-pd-result, .fo-pd-out, .fo-pd-back, .fo-pd-strip, .fo-pd-deleted, .fo-pd-line, .fo-pd-node,
-  .fo-ping, .fo-heartbeat, .fo-nudge-in, .fo-star-in, .fo-shake,
+  .fo-ping, .fo-heartbeat, .fo-nudge-in, .fo-star-in, .fo-shake, .fo-steam, .fo-fill,
   .fo-kind-wave, .fo-kind-orbit, .fo-kind-counter, .fo-kind-float
 ) { animation: none !important; }
 :root[data-motion="reduced"] .fo-press:active { scale: 1; }

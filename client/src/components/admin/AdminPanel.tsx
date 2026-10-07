@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Download, Heart, Inbox, Loader2, LockKeyhole, LogOut, Mail, MailOpen, MessageSquareHeart, RefreshCw, Search, Star, Trash2 } from "lucide-react";
+import { Coffee, Download, Heart, Inbox, Loader2, LockKeyhole, LogOut, Mail, MailOpen, MessageSquareHeart, RefreshCw, Search, Star, Trash2 } from "lucide-react";
 import { Logo } from "../Logo";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/cn";
@@ -21,11 +21,12 @@ interface Item {
   createdAt: string;
 }
 type Filter = "all" | "unread" | "starred";
-type Kind = "feedback" | "contact" | "story";
+type Kind = "feedback" | "contact" | "story" | "coffee";
 const KINDS: { id: Kind; label: string; noun: string; icon: typeof Inbox }[] = [
   { id: "feedback", label: "Feedback", noun: "feedback", icon: MessageSquareHeart },
   { id: "contact", label: "Contact", noun: "messages", icon: Mail },
   { id: "story", label: "Stories", noun: "stories", icon: Heart },
+  { id: "coffee", label: "Coffees", noun: "coffees", icon: Coffee },
 ];
 type Session = { enabled: boolean; signedIn: boolean } | null;
 
@@ -151,6 +152,7 @@ function Inbox_({ onSignOut }: { onSignOut: () => void }) {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    if (kind === "coffee") return; // Coffees have their own list below.
     setLoading(true);
     setError(null);
     try {
@@ -257,6 +259,10 @@ function Inbox_({ onSignOut }: { onSignOut: () => void }) {
         ))}
       </div>
 
+      {kind === "coffee" ? (
+        <CoffeeList onSignOut={onSignOut} />
+      ) : (
+        <>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           { label: "Total", value: counts.total },
@@ -354,6 +360,8 @@ function Inbox_({ onSignOut }: { onSignOut: () => void }) {
           <p className="mt-1 text-[14px] text-fg-muted">{kind === "feedback" ? "Feedback sent from the website appears here." : kind === "contact" ? "Messages from the Contact us page appear here." : "Stories shared on the Pay it forward page appear here."}</p>
         </div>
       )}
+        </>
+      )}
     </div>
   );
 }
@@ -369,5 +377,95 @@ function IconButton({ label, onClick, danger, children }: { label: string; onCli
     >
       {children}
     </button>
+  );
+}
+
+interface CoffeeItem {
+  id: string;
+  orderId: string;
+  paymentId: string | null;
+  amount: number;
+  status: string;
+  name: string | null;
+  email: string | null;
+  message: string | null;
+  createdAt: string;
+  paidAt: string | null;
+}
+
+const inr = (paise: number) => `₹${(paise / 100).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+
+/** "Buy us a coffee" payments, newest first, with the running total. */
+function CoffeeList({ onSignOut }: { onSignOut: () => void }) {
+  const [data, setData] = useState<{ items: CoffeeItem[]; totals: { count: number; amount: number } } | null>(null);
+  const [all, setAll] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    setError(null);
+    apiFetch(`/api/admin/coffees${all ? "?all=1" : ""}`)
+      .then(async (res) => {
+        if (res.status === 401) return onSignOut();
+        const body = await json<{ items: CoffeeItem[]; totals: { count: number; amount: number } }>(res);
+        if (live) setData(body);
+      })
+      .catch((e: Error) => live && setError(e.message));
+    return () => {
+      live = false;
+    };
+  }, [all, onSignOut]);
+
+  return (
+    <div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {[
+          { label: "Coffees", value: data?.totals.count ?? "–" },
+          { label: "Total received", value: data ? inr(data.totals.amount) : "–", accent: true },
+          { label: "Average", value: data?.totals.count ? inr(Math.round(data.totals.amount / data.totals.count)) : "–" },
+        ].map((s) => (
+          <div key={s.label} className="rounded-2xl border border-line bg-surface p-4">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.1em] text-fg-subtle">{s.label}</p>
+            <p className={cn("mt-1 font-display text-[28px] font-bold tabular-nums tracking-[-0.02em]", s.accent ? "text-accent" : "text-fg")}>{s.value}</p>
+          </div>
+        ))}
+      </div>
+      <label className="mt-4 flex items-center gap-2 text-[13px] text-fg-muted">
+        <input type="checkbox" checked={all} onChange={(e) => setAll(e.target.checked)} /> Also show checkouts that weren't completed
+      </label>
+      {error && (
+        <p role="alert" className="mt-4 rounded-xl bg-red-500/10 px-4 py-3 text-[14px] text-red-300 ring-1 ring-inset ring-red-500/25">
+          {error}
+        </p>
+      )}
+      <ul className="mt-4 space-y-3">
+        {data?.items.map((c) => (
+          <li key={c.id} className="flex items-start gap-3 rounded-2xl border border-line bg-surface p-5">
+            <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#ffdd6b] text-[#3b2400]">
+              <Coffee className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="flex flex-wrap items-center gap-x-2 text-[15px] font-semibold text-fg">
+                {inr(c.amount)} <span className="font-normal text-fg-muted">from {c.name || "someone kind"}</span>
+                {c.status !== "paid" && <span className="rounded-full bg-raised px-2 py-0.5 text-[11px] font-semibold text-fg-subtle">Not completed</span>}
+              </p>
+              <p className="mt-0.5 text-[12.5px] text-fg-subtle">
+                {new Date(c.paidAt ?? c.createdAt).toLocaleString("en-IN")} · <span className="font-mono">{c.paymentId ?? c.orderId}</span>
+                {c.email && (
+                  <>
+                    {" "}·{" "}
+                    <a href={`mailto:${c.email}`} className="text-brand-300 hover:text-brand-200">
+                      {c.email}
+                    </a>
+                  </>
+                )}
+              </p>
+              {c.message && <p className="mt-2 whitespace-pre-wrap break-words text-[14.5px] leading-relaxed text-fg-muted">“{c.message}”</p>}
+            </div>
+          </li>
+        ))}
+      </ul>
+      {data && !data.items.length && <p className="mt-10 text-center text-[15px] text-fg-muted">No coffees yet. They'll show up here once someone buys one.</p>}
+    </div>
   );
 }
