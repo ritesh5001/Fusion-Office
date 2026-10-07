@@ -169,10 +169,29 @@ export function Coffee() {
     }
   };
 
-  if (!visible) return null;
+  // Floating button, bottom-left (Feedback sits bottom-right). site-chrome hides it inside the mobile app.
+  const floating = (
+    <button
+      type="button"
+      onClick={(e) => {
+        opener.current = e.currentTarget;
+        setOpen(true);
+      }}
+      aria-haspopup="dialog"
+      className="site-chrome fo-press group fixed bottom-5 left-5 z-40 inline-flex h-12 items-center gap-2 rounded-full border border-[#ffdd6b]/40 bg-overlay/90 pl-3.5 pr-4 text-[14px] font-semibold text-fg shadow-pop backdrop-blur-xl transition-[border-color,box-shadow] hover:border-[#ffdd6b] hover:shadow-[0_12px_32px_-12px_rgb(255_200_80/0.6)] sm:bottom-6 sm:left-6 xl:left-[232px]"
+    >
+      <CoffeeIcon className="h-[18px] w-[18px] text-[#ffdd6b] transition-transform group-hover:-rotate-12 group-hover:scale-110" aria-hidden="true" />
+      <span className="hidden min-[380px]:inline">Buy us a coffee</span>
+      <span className="min-[380px]:hidden">Coffee</span>
+    </button>
+  );
+
+  if (!visible) return floating;
   const busy = phase.kind === "starting" || phase.kind === "confirming";
 
   return (
+    <>
+    {floating}
     <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-labelledby={`${id}-title`}>
       <div aria-hidden="true" onClick={close} className="fo-intro-fade absolute inset-0 bg-[#05060a]/65 backdrop-blur-sm [animation-duration:200ms]" />
       <div className="fo-palette-in relative w-full max-w-[440px] overflow-y-auto overscroll-contain rounded-t-[26px] border border-line-strong bg-overlay p-6 shadow-[0_30px_80px_-20px_rgb(0_0_0/0.8)] [max-height:calc(100dvh-24px)] sm:rounded-[26px] sm:p-7">
@@ -288,6 +307,7 @@ export function Coffee() {
         )}
       </div>
     </div>
+    </>
   );
 }
 

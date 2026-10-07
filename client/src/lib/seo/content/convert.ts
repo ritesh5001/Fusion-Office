@@ -146,7 +146,7 @@ export const CONVERT_TO: Record<string, ToolSeo> = {
       ["Can I convert CDR to SVG to edit it in another program?", "Yes. Choose SVG as the output and open it in Illustrator, Inkscape or Figma. SVG keeps shapes as editable vectors."],
       ["Which CorelDRAW versions are supported?", "Most files from older CorelDRAW versions up to the modern X-series open. Very new files that use the latest effects may look slightly different."],
     ],
-    related: ["pdf-to-jpg", "compress-pdf", "convert-image", "merge-pdf"],
+    related: ["jpg-to-svg", "pdf-to-jpg", "compress-pdf", "convert-image"],
   },
   "ebook-to-pdf": {
     title: "EPUB to PDF Converter – Convert eBooks, TXT & HTML to PDF",

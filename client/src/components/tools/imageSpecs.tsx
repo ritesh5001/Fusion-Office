@@ -397,7 +397,69 @@ const rotateImage: ToolSpec<RotateOpts> = {
   },
 };
 
+type TraceOpts = { mode: "logo" | "detailed" | "lineart"; detail: "smooth" | "precise"; dropWhite: boolean };
+/** JPG/PNG → editable SVG vectors (opens in CorelDRAW, Illustrator, Inkscape, Figma). Traced in a worker, on this device. */
+const traceImage: ToolSpec<TraceOpts> = {
+  action: "Convert to vector",
+  defaults: { mode: "logo", detail: "smooth", dropWhite: true },
+  Options: ({ options: o, set }) => (
+    <>
+      <Segmented
+        label="Image type"
+        value={o.mode}
+        onChange={(mode) => set({ mode })}
+        options={[
+          { value: "logo", label: "Logo", hint: "Flat colours, clean shapes" },
+          { value: "detailed", label: "Photo", hint: "More colours and detail" },
+          { value: "lineart", label: "Line art", hint: "Black lines, signatures, sketches" },
+        ]}
+      />
+      <Segmented
+        label="Detail"
+        value={o.detail}
+        onChange={(detail) => set({ detail })}
+        options={[
+          { value: "smooth", label: "Smooth", hint: "Fewer, cleaner shapes" },
+          { value: "precise", label: "Precise", hint: "Follows every edge" },
+        ]}
+      />
+      {o.mode !== "lineart" && <Toggle label="Remove white background" checked={o.dropWhite} onChange={(dropWhite) => set({ dropWhite })} />}
+    </>
+  ),
+  run: async (files, o, progress) => {
+    const { newCanvas, resample } = await canvasLib();
+    const { TRACE_MAX_SIDE, shapeCount } = await import("@/lib/image/trace");
+    return eachImage(files, progress, async (img, f) => {
+      // Big photos are scaled down first: extra pixels only add shapes, not quality.
+      const scale = Math.min(1, TRACE_MAX_SIDE[o.mode] / Math.max(img.width, img.height));
+      const width = Math.max(1, Math.round(img.width * scale));
+      const height = Math.max(1, Math.round(img.height * scale));
+      const canvas = scale < 1 ? resample(img.source, { sx: 0, sy: 0, sw: img.width, sh: img.height }, width, height) : newCanvas(width, height);
+      const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
+      if (scale === 1) ctx.drawImage(img.source, 0, 0);
+      const { data } = ctx.getImageData(0, 0, width, height);
+      progress(files.length > 1 ? `Tracing ${f.name}…` : "Tracing shapes…");
+      const svg = await new Promise<string>((resolve, reject) => {
+        const worker = new Worker(new URL("../../lib/image/trace.worker.ts", import.meta.url));
+        worker.onmessage = (ev: MessageEvent<{ svg?: string; error?: string }>) => {
+          worker.terminate();
+          if (ev.data.svg) resolve(ev.data.svg);
+          else reject(new Error(ev.data.error ?? "Couldn't trace this image."));
+        };
+        worker.onerror = () => {
+          worker.terminate();
+          reject(new Error("Couldn't trace this image. Try a smaller image or the Smooth setting."));
+        };
+        worker.postMessage({ data, width, height, mode: o.mode, detail: o.detail, dropWhite: o.dropWhite }, [data.buffer]);
+      });
+      const bytes = new TextEncoder().encode(svg);
+      return { name: `${f.name.replace(/\.[^.]+$/, "")}.svg`, bytes, type: "image/svg+xml", width, height, quality: 1, fits: true, note: `${shapeCount(svg).toLocaleString("en-IN")} shapes` };
+    });
+  },
+};
+
 export const IMAGE_SPECS = {
+  "jpg-to-svg": traceImage,
   "compress-image": compressImage,
   "resize-image": resizeImage,
   "convert-image": convertImage,

@@ -57,6 +57,7 @@ export function outputOf(tool: ToolDef): { format: string; label: string } {
   if (tool.runs === "ai") return { format: "MD", label: tool.slug.startsWith("translate") ? "Translated text" : tool.slug.startsWith("chat") ? "Answers from your PDF" : "Summary" };
   if (tool.slug.startsWith("split") || tool.slug === "extract-images") return { format: "ZIP", label: tool.slug === "extract-images" ? "Extracted images" : "Separate PDF files" };
   if (tool.slug === "extract-text") return { format: "TXT", label: "Plain text" };
+  if (tool.slug === "jpg-to-svg") return { format: "SVG", label: "Editable vector" };
   if (LABELS[tool.slug]) return { format: tool.category === "image" ? "IMG" : "PDF", label: LABELS[tool.slug] };
   return tool.category === "image" ? { format: "IMG", label: "Edited image" } : { format: "PDF", label: "Updated PDF" };
 }

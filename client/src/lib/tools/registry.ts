@@ -122,6 +122,7 @@ export const TOOLS: ToolDef[] = [
   { slug: "crop-image", name: "Crop image", description: "Cut to any shape: square, 16:9, passport photo or free.", category: "image", icon: "Crop", accept: ANY_IMAGE, multiple: false, runs: "browser", status: "ready" },
   { slug: "convert-image", name: "Convert image", description: "Change images to JPG, PNG or WEBP, including HEIC, GIF, BMP and SVG.", category: "image", icon: "ArrowLeftRight", accept: ANY_IMAGE, multiple: true, runs: "browser", status: "ready" },
   { slug: "remove-watermark-image", name: "Remove watermark from image", description: "Paint over a watermark, logo or date stamp and it's filled in from its surroundings.", category: "image", icon: "Brush", accept: ANY_IMAGE, multiple: false, runs: "browser", status: "ready" },
+  { slug: "jpg-to-svg", name: "JPG to SVG", description: "Turn JPG and PNG images into editable vectors for CorelDRAW, Illustrator and Figma.", category: "image", icon: "PenTool", accept: "image/png,image/jpeg,image/webp,image/bmp,image/gif", multiple: true, runs: "browser", status: "ready" },
   { slug: "rotate-image", name: "Rotate image", description: "Turn or mirror many images at once.", category: "image", icon: "FlipHorizontal2", accept: ANY_IMAGE, multiple: true, runs: "browser", status: "ready" },
   { slug: "thumbmark-maker", name: "Thumbmark maker", description: "Photograph your thumbprint and get a clean transparent PNG for forms.", category: "image", icon: "Fingerprint", accept: ANY_IMAGE, multiple: false, runs: "browser", status: "ready" },
 ];

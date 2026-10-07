@@ -110,6 +110,7 @@ const TOOL_SWATCH: Record<string, Swatch> = {
   "convert-image": "violet",
   "remove-watermark-image": "pink",
   "rotate-image": "teal",
+  "jpg-to-svg": "violet",
   workflows: "indigo",
   "alternate-mix": "violet",
   "pages-per-sheet": "teal",

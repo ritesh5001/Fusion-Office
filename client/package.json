@@ -30,6 +30,7 @@
     "exceljs": "^4.4.0",
     "fabric": "^6.9.1",
     "fflate": "^0.8.3",
+    "imagetracerjs": "^1.2.6",
     "lucide-react": "^0.577.0",
     "mammoth": "^1.13.0",
     "marked": "^18.0.14",
