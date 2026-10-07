@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Star, X } from "lucide-react";
 import { TASK_DONE } from "@/lib/taskDone";
 import { cn } from "@/lib/cn";
+import { liftStyle, useFooterLift } from "@/lib/footerLift";
 
 /**
  * After a task finishes, a small card slides in asking how it went. Picking a
@@ -47,6 +48,7 @@ export function FeedbackNudge({ paused }: { paused: boolean }) {
   const [phase, setPhase] = useState<"hidden" | "in" | "out">("hidden");
   const [hover, setHover] = useState(0);
   const timers = useRef<number[]>([]);
+  const lift = useFooterLift();
 
   const later = (fn: () => void, ms: number) => timers.current.push(window.setTimeout(fn, ms));
   const clear = () => {
@@ -98,8 +100,9 @@ export function FeedbackNudge({ paused }: { paused: boolean }) {
       role="dialog"
       aria-labelledby="fo-nudge-title"
       onKeyDown={(e) => e.key === "Escape" && notNow()}
+      style={liftStyle(lift)}
       className={cn(
-        "fixed bottom-[84px] right-4 z-50 w-[340px] max-w-[calc(100vw-2rem)] sm:bottom-[92px] sm:right-6",
+        "fo-float-dock transition-transform fixed bottom-[84px] right-4 z-50 w-[340px] max-w-[calc(100vw-2rem)] sm:bottom-[92px] sm:right-6",
         phase === "in" ? "fo-nudge-in" : "fo-nudge-out",
       )}
     >

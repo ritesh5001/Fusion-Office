@@ -158,7 +158,7 @@ export function Footer() {
           ))}
         </nav>
       </div>
-      <div className="mx-auto flex flex-col items-center gap-4 border-t border-line px-4 py-5 text-[13px] text-fg-subtle sm:px-6 lg:flex-row lg:justify-between lg:px-8">
+      <div data-float-dock className="mx-auto flex flex-col items-center gap-4 border-t border-line px-4 py-5 text-[13px] text-fg-subtle sm:px-6 lg:flex-row lg:justify-between lg:px-8">
         <p>
           © {new Date().getFullYear()} Fusion Office ·{" "}
           <a

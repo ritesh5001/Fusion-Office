@@ -416,6 +416,10 @@ input[type="color"]::-moz-color-swatch {
 .fo-steam { animation: fo-steam 2.2s ease-out infinite; }
 .fo-fill { animation: fo-fill 1.2s cubic-bezier(.2,.8,.2,1) 200ms both; }
 
+/* Floating buttons glide up to rest above the footer's bottom bar, and back down. */
+.fo-float-dock { transition-duration: 280ms; transition-timing-function: cubic-bezier(.2,.8,.2,1); }
+:root[data-motion="reduced"] .fo-float-dock { transition-duration: 0ms; }
+
 /* A "no" that shakes its head: feedback rejected by moderation. */
 @keyframes fo-shake { 0%, 100% { translate: 0 0; } 15%, 55% { translate: -6px 0; } 35%, 75% { translate: 6px 0; } 90% { translate: -2px 0; } }
 .fo-shake { animation: fo-shake 420ms cubic-bezier(.36,.07,.19,.97) both; }

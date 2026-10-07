@@ -7,6 +7,7 @@ import { useCloudConfig } from "@/lib/cloudConfig";
 import { useScrollLock } from "@/lib/motion";
 import { cn } from "@/lib/cn";
 import { inApp } from "@/lib/embed";
+import { liftStyle, useFooterLift } from "@/lib/footerLift";
 
 /**
  * "Buy us a coffee": pick ₹49 (or any amount), pay with Razorpay's checkout,
@@ -81,6 +82,7 @@ export function Coffee() {
   const [message, setMessage] = useState("");
   const [phase, setPhase] = useState<Phase>({ kind: "form" });
   const opener = useRef<HTMLElement | null>(null);
+  const lift = useFooterLift();
 
   // Razorpay's checkout takes the screen while paying, so our dialog steps aside.
   const visible = open && phase.kind !== "paying";
@@ -181,7 +183,8 @@ export function Coffee() {
         setOpen(true);
       }}
       aria-haspopup="dialog"
-      className="site-chrome fo-press group fixed bottom-5 left-5 z-40 inline-flex h-12 items-center gap-2 rounded-full border border-[#ffdd6b]/40 bg-overlay/90 pl-3.5 pr-4 text-[14px] font-semibold text-fg shadow-pop backdrop-blur-xl transition-[border-color,box-shadow] hover:border-[#ffdd6b] hover:shadow-[0_12px_32px_-12px_rgb(255_200_80/0.6)] sm:bottom-6 sm:left-6 xl:left-[232px]"
+      className="site-chrome fo-press group fixed bottom-5 left-5 z-40 inline-flex h-12 items-center gap-2 rounded-full border border-[#ffdd6b]/40 bg-overlay/90 pl-3.5 pr-4 text-[14px] font-semibold text-fg shadow-pop backdrop-blur-xl fo-float-dock transition-[border-color,box-shadow,transform] hover:border-[#ffdd6b] hover:shadow-[0_12px_32px_-12px_rgb(255_200_80/0.6)] sm:bottom-6 sm:left-6 xl:left-[232px]"
+      style={liftStyle(lift)}
     >
       <CoffeeIcon className="h-[18px] w-[18px] text-[#ffdd6b] transition-transform group-hover:-rotate-12 group-hover:scale-110" aria-hidden="true" />
       <span className="hidden min-[380px]:inline">Buy us a coffee</span>

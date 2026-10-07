@@ -7,6 +7,7 @@ import { apiFetch } from "@/lib/api";
 import { useScrollLock } from "@/lib/motion";
 import { cn } from "@/lib/cn";
 import { inApp } from "@/lib/embed";
+import { liftStyle, useFooterLift } from "@/lib/footerLift";
 import { FeedbackNudge, markFeedbackSent } from "./FeedbackNudge";
 
 /** Opens the feedback form from anywhere (e.g. the footer link), optionally with a star rating chosen. */
@@ -32,6 +33,7 @@ export function Feedback() {
   const nameInput = useRef<HTMLInputElement>(null);
   const opener = useRef<HTMLElement | null>(null);
   const id = useId();
+  const lift = useFooterLift();
 
   useScrollLock(open);
 
@@ -123,7 +125,8 @@ export function Feedback() {
           opener.current = e.currentTarget;
           setOpen(true);
         }}
-        className="fo-press group fixed bottom-5 right-5 z-40 inline-flex h-12 items-center gap-2 rounded-full border border-line-strong bg-overlay/90 pl-3.5 pr-4 text-[14px] font-semibold text-fg shadow-pop backdrop-blur-xl transition-[border-color,box-shadow] hover:border-brand-400 hover:shadow-[0_12px_32px_-12px_rgb(139_124_246/0.6)] sm:bottom-6 sm:right-6"
+        className="fo-press group fixed bottom-5 right-5 z-40 inline-flex h-12 items-center gap-2 rounded-full border border-line-strong bg-overlay/90 pl-3.5 pr-4 text-[14px] font-semibold text-fg shadow-pop backdrop-blur-xl fo-float-dock transition-[border-color,box-shadow,transform] hover:border-brand-400 hover:shadow-[0_12px_32px_-12px_rgb(139_124_246/0.6)] sm:bottom-6 sm:right-6"
+        style={liftStyle(lift)}
         aria-haspopup="dialog"
       >
         <MessageSquareHeart className="h-[18px] w-[18px] text-accent transition-transform group-hover:-rotate-6 group-hover:scale-110" aria-hidden="true" />
