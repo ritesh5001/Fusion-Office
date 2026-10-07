@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Alert, ScrollView, TextInput, View } from "react-native";
-import Animated, { FadeInDown, LinearTransition } from "react-native-reanimated";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowDown, ArrowUp, Plus, X } from "lucide-react-native";
 import { C } from "@/theme";
+import { layoutMove } from "@/lib/ease";
 import { useReduced } from "@/lib/motion";
 import { useSession } from "@/lib/session";
 import { formatBytes, pickDocuments, pickPhotos, takePhoto, type PickedFile } from "@/lib/files";
@@ -16,6 +17,7 @@ import { Segmented } from "./Segmented";
 import { DoneCard, ErrorCard, PrivacyStrip, ProgressCard } from "./Stage";
 import { StepTracker } from "./StepTracker";
 import { GlowCard } from "./GlowCard";
+import { ResizeOptions } from "./ResizeOptions";
 import { BeforeAfter, ToolDropCard } from "./ToolStage";
 import { Backdrop, KindGlyph, PressScale, T, ToolTile } from "./ui";
 
@@ -61,17 +63,18 @@ export function ToolRunnerScreen({ tool, native, useStaged }: { tool: ToolDef; n
   const step = state.phase === "done" ? 3 : state.phase === "running" ? 2 : files.length ? 1 : 0;
   const need = native.minFiles ?? 1;
   const working = state.phase !== "idle";
+  const problem = files.length >= need ? native.validate?.(options) ?? null : null;
+  const blocked = files.length < need || offline || !!problem;
 
   return (
     <View style={{ flex: 1, backgroundColor: C.app }}>
       <Backdrop />
-      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 6, paddingHorizontal: 16, paddingBottom: 260 + insets.bottom }} showsVerticalScrollIndicator={false}>
+      <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" automaticallyAdjustKeyboardInsets contentContainerStyle={{ paddingTop: insets.top + 6, paddingHorizontal: 16, paddingBottom: 260 + insets.bottom }} showsVerticalScrollIndicator={false}>
         <BackHeader />
         <Animated.View entering={reduced ? undefined : FadeInDown.duration(380)} style={{ flexDirection: "row", gap: 14, alignItems: "center", marginTop: 6 }}>
           <ToolTile tool={tool} size={56} />
           <View style={{ flex: 1 }}>
             <T weight="display" header style={{ fontSize: 24, letterSpacing: -0.6 }}>{tool.name}</T>
-            <T style={{ marginTop: 2, fontSize: 13.5, lineHeight: 19, color: C.fgMuted }}>{tool.description}</T>
           </View>
         </Animated.View>
         <View style={{ marginTop: 20 }}>
@@ -101,7 +104,7 @@ export function ToolRunnerScreen({ tool, native, useStaged }: { tool: ToolDef; n
           <>
             <View style={{ marginTop: 20, gap: 8 }}>
               {files.map((f, i) => (
-                <Animated.View key={`${f.uri}-${i}`} layout={reduced ? undefined : LinearTransition.springify().damping(15)} entering={reduced ? undefined : FadeInDown.delay(Math.min(i, 5) * 50).duration(320)}>
+                <Animated.View key={`${f.uri}-${i}`} layout={reduced ? undefined : layoutMove} entering={reduced ? undefined : FadeInDown.delay(Math.min(i, 5) * 50).duration(320)}>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 16, backgroundColor: C.surface, borderWidth: 1, borderColor: C.line, padding: 10 }}>
                     {tool.multiple && files.length > 1 && (
                       <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: C.fg, alignItems: "center", justifyContent: "center" }}>
@@ -142,6 +145,7 @@ export function ToolRunnerScreen({ tool, native, useStaged }: { tool: ToolDef; n
                 )}
               </View>
             )}
+            {native.panel === "resize" && <ResizeOptions files={files} options={options} set={(patch) => setOptions((cur) => ({ ...cur, ...patch }))} />}
             {native.runs === "server" && (
               <T style={{ marginTop: 12, fontSize: 12.5, color: C.fgMuted }}>This conversion runs on the Fusion Office server: the file is uploaded, converted, and deleted straight after.</T>
             )}
@@ -174,12 +178,12 @@ export function ToolRunnerScreen({ tool, native, useStaged }: { tool: ToolDef; n
             ),
           )}
           <PressScale
-            disabled={files.length < need || offline}
+            disabled={blocked}
             onPress={() => run(native, tool, files, options)}
-            style={{ minHeight: 54, borderRadius: 27, backgroundColor: files.length < need || offline ? C.raised : C.accent, alignItems: "center", justifyContent: "center", paddingHorizontal: 16 }}
+            style={{ minHeight: 54, borderRadius: 27, backgroundColor: blocked ? C.raised : C.accent, alignItems: "center", justifyContent: "center", paddingHorizontal: 16 }}
           >
-            <T weight="bold" style={{ fontSize: 16, color: files.length < need || offline ? C.fgSubtle : C.onAccent }}>
-              {offline ? "Connect to the internet to convert" : files.length < need ? (need > 1 ? `Add at least ${need} files` : "Add a file to start") : `${tool.name}${native.runs === "device" ? " on this device" : ""}`}
+            <T weight="bold" style={{ fontSize: 16, color: blocked ? C.fgSubtle : C.onAccent }}>
+              {offline ? "Connect to the internet to convert" : files.length < need ? (need > 1 ? `Add at least ${need} files` : "Add a file to start") : problem ?? `${tool.name}${native.runs === "device" ? " on this device" : ""}`}
             </T>
           </PressScale>
         </Animated.View>

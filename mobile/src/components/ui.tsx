@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect } from "react";
 import { Platform, Pressable, StyleSheet, Text, View, type PressableProps, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from "react-native";
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withSpring, withTiming } from "react-native-reanimated";
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import MaskedView from "@react-native-masked-view/masked-view";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
@@ -8,6 +8,7 @@ import Svg, { Circle, Defs, Path, Pattern, Rect, Text as SvgText } from "react-n
 import { C, F } from "@/theme";
 import { tileFor, type FileKind, type ToolDef } from "@/lib/tools";
 import { useReduced } from "@/lib/motion";
+import { DUR, IOS } from "@/lib/ease";
 
 export function Logo({ size = 28 }: { size?: number }) {
   return (
@@ -79,8 +80,8 @@ export function PressScale({ children, style, haptic = true, onPress, accessibil
       accessibilityRole={accessibilityRole}
       accessibilityState={{ disabled: !!p.disabled, ...p.accessibilityState }}
       hitSlop={hitSlop}
-      onPressIn={() => !reduced && s.set(withTiming(0.96, { duration: 120 }))}
-      onPressOut={() => s.set(withSpring(1, { damping: 14, stiffness: 260 }))}
+      onPressIn={() => !reduced && s.set(withTiming(0.97, { duration: DUR.press, easing: IOS }))}
+      onPressOut={() => s.set(withTiming(1, { duration: DUR.release, easing: IOS }))}
       onPress={(e) => {
         if (haptic) Haptics.selectionAsync().catch(() => {});
         onPress?.(e);

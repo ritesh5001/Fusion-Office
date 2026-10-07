@@ -19,7 +19,8 @@ export function useFooterLift() {
       raf = 0;
       const band = document.querySelector<HTMLElement>("[data-float-dock]");
       let next = 0;
-      if (band) {
+      // In the app the footer is hidden: the band has no size, so the buttons stay put.
+      if (band && band.offsetParent !== null) {
         const r = band.getBoundingClientRect();
         // Where the button's centre rests now, versus the band's centre.
         const restCentre = window.innerHeight - offset() - BUTTON / 2;

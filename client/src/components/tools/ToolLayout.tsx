@@ -68,7 +68,8 @@ export function ToolLayout({ tool, children }: { tool: ToolDef; children: ReactN
                 <span className="mb-1 block text-[12px] font-semibold uppercase tracking-[0.14em] text-fg-subtle">Fusion Office</span>{" "}
                 {searchName(tool)}
               </h1>
-              <p className="mt-1.5 max-w-[68ch] text-[15px] leading-relaxed text-fg-muted">{c.intro}</p>
+              {/* Descriptions are for the website; the app shows just the tool (site-chrome hides them there). */}
+              <p className="site-chrome mt-1.5 max-w-[68ch] text-[15px] leading-relaxed text-fg-muted">{c.intro}</p>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-3 self-start rounded-xl border border-line bg-surface px-3.5 py-2.5 md:self-auto">
@@ -84,7 +85,7 @@ export function ToolLayout({ tool, children }: { tool: ToolDef; children: ReactN
 
         <div className="mt-8">{children}</div>
 
-        <div className="mt-16 grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px] xl:gap-14">
+        <div className="site-chrome mt-16 grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px] xl:gap-14">
           <article className="min-w-0 space-y-12">
             {c.steps.length > 0 && (
               <section aria-labelledby="how-to">

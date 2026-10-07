@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useDeferredValue, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { FlatList, ScrollView, TextInput, View } from "react-native";
 import Animated, { Easing, FadeInDown, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useLocalSearchParams } from "expo-router";
@@ -29,6 +29,10 @@ export default function Tools() {
   const [cat, setCat] = useState<Cat>("all");
   const [preview, setPreview] = useState<ToolDef | null>(null);
   const input = useRef<TextInput>(null);
+  // The search box keeps its own text (typing never waits for the grid); results
+  // follow a moment after you pause, as a low-priority update.
+  const search = useDeferredValue(query);
+  const searching = !!search.trim();
   const fitMode = params.fit === "1" && !!staged?.length;
 
   useEffect(() => {
@@ -39,11 +43,11 @@ export default function Tools() {
     () => (fitMode ? TOOLS.filter((t) => t.status === "ready" && (staged!.length === 1 || t.multiple) && staged!.every((f) => accepts(t, f.name, f.mimeType))) : TOOLS),
     [fitMode, staged],
   );
-  const results = useMemo(() => searchTools(pool.filter((t) => cat === "all" || t.category === cat), query), [pool, cat, query]);
+  const results = useMemo(() => searchTools(pool.filter((t) => cat === "all" || t.category === cat), search), [pool, cat, search]);
   const recentTools = useMemo(() => [...new Set((recents ?? []).map((r) => r.tool))].map(toolBySlug).filter((t): t is ToolDef => !!t).slice(0, 4), [recents]);
 
   const { columns, gap, cardWidth } = useColumns();
-  const grouped = cat === "all" && !query.trim();
+  const grouped = cat === "all" && !searching;
 
   // A flat list of section titles and card rows, rendered lazily as you scroll.
   const rows = useMemo(() => {
@@ -76,27 +80,10 @@ export default function Tools() {
         {fitMode ? `${pool.length} tools can open ${staged!.length === 1 ? staged![0].name : `${staged!.length} files`}.` : `${TOOLS.length} tools for PDFs, Office files and images.`}
       </T>
 
-      <View style={{ marginTop: 16, flexDirection: "row", alignItems: "center", minHeight: 52, borderRadius: 16, borderWidth: 1, borderColor: C.lineStrong, backgroundColor: C.surface, paddingHorizontal: 14, gap: 10 }}>
-        <Search size={19} color={C.fgSubtle} />
-        <TextInput
-          ref={input}
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Compress a PDF, merge, photo to PDF…"
-          placeholderTextColor={C.fgSubtle}
-          returnKeyType="search"
-          autoCorrect={false}
-          onSubmitEditing={() => results[0] && openTool(results[0].slug, fitMode)}
-          maxFontSizeMultiplier={TEXT_SCALE.label}
-          style={{ flex: 1, minHeight: 50, color: C.fg, fontSize: 16 }}
-          accessibilityLabel="Search tools"
-        />
-        {query ? (
-          <PressScale onPress={() => setQuery("")} accessibilityLabel="Clear search" hitSlop={14} style={{ padding: 4 }}>
-            <X size={18} color={C.fgMuted} />
-          </PressScale>
-        ) : null}
-      </View>
+      <SearchBox inputRef={input} onSearch={setQuery} onSubmit={(text) => {
+        const first = searchTools(pool.filter((t) => cat === "all" || t.category === cat), text)[0];
+        if (first) openTool(first.slug, fitMode);
+      }} />
 
       <Chips value={cat} onChange={setCat} counts={(c) => (c === "all" ? pool.length : pool.filter((t) => t.category === c).length)} />
       <View style={{ height: grouped ? 4 : 16 }} />
@@ -112,7 +99,7 @@ export default function Tools() {
         ListHeaderComponent={header}
         ListEmptyComponent={
           <View style={{ marginTop: 30, alignItems: "center" }}>
-            <T weight="semibold" style={{ fontSize: 16 }}>No tool matches “{query}”</T>
+            <T weight="semibold" style={{ fontSize: 16 }}>No tool matches “{search.trim()}”</T>
             <T style={{ marginTop: 6, color: C.fgMuted, textAlign: "center" }}>Try a simpler word, like “pdf”, “image” or “convert”.</T>
           </View>
         }
@@ -126,7 +113,7 @@ export default function Tools() {
           ) : (
             <View style={{ flexDirection: "row", gap, marginBottom: gap }}>
               {item.tools.map((t, i) => (
-                <ToolCard key={t.slug} tool={t} index={item.start + i} width={cardWidth} onPress={() => openTool(t.slug, fitMode)} onLongPress={() => setPreview(t)} />
+                <ToolCard key={t.slug} tool={t} index={item.start + i} width={cardWidth} animate={!searching} onPress={() => openTool(t.slug, fitMode)} onLongPress={() => setPreview(t)} />
               ))}
             </View>
           )
@@ -143,6 +130,42 @@ export default function Tools() {
     </View>
   );
 }
+
+/**
+ * The search field. It owns its text, so a keystroke only redraws this box;
+ * the screen hears about it once typing pauses (150 ms), or at once when cleared.
+ */
+const SearchBox = memo(function SearchBox({ inputRef, onSearch, onSubmit }: { inputRef: RefObject<TextInput | null>; onSearch: (q: string) => void; onSubmit: (q: string) => void }) {
+  const [text, setText] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => onSearch(text), text.trim() ? 150 : 0);
+    return () => clearTimeout(t);
+  }, [text, onSearch]);
+  return (
+    <View style={{ marginTop: 16, flexDirection: "row", alignItems: "center", minHeight: 52, borderRadius: 16, borderWidth: 1, borderColor: C.lineStrong, backgroundColor: C.surface, paddingHorizontal: 14, gap: 10 }}>
+      <Search size={19} color={C.fgSubtle} />
+      <TextInput
+        ref={inputRef}
+        value={text}
+        onChangeText={setText}
+        placeholder="Compress a PDF, merge, photo to PDF…"
+        placeholderTextColor={C.fgSubtle}
+        returnKeyType="search"
+        autoCorrect={false}
+        autoCapitalize="none"
+        onSubmitEditing={() => onSubmit(text)}
+        maxFontSizeMultiplier={TEXT_SCALE.label}
+        style={{ flex: 1, minHeight: 50, color: C.fg, fontSize: 16 }}
+        accessibilityLabel="Search tools"
+      />
+      {text ? (
+        <PressScale onPress={() => setText("")} accessibilityLabel="Clear search" hitSlop={14} style={{ padding: 4 }}>
+          <X size={18} color={C.fgMuted} />
+        </PressScale>
+      ) : null}
+    </View>
+  );
+});
 
 type Row = { kind: "title"; key: string; title: string; color?: string; count?: number } | { kind: "cards"; key: string; tools: ToolDef[]; start: number };
 

@@ -8,6 +8,9 @@
       ],
       "@shared/*": [
         "../client/src/lib/tools/*"
+      ],
+      "@shared-image/*": [
+        "../client/src/lib/image/*"
       ]
     }
   },
@@ -17,6 +20,8 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
     "../client/src/lib/tools/registry.ts",
-    "../client/src/lib/tools/search.ts"
+    "../client/src/lib/tools/search.ts",
+    "../client/src/lib/image/geometry.ts",
+    "../client/src/lib/image/encode.ts"
   ]
 }

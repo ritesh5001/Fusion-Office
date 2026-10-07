@@ -7,7 +7,7 @@ import { ArrowRight, FileText, Search, Workflow, X } from "lucide-react";
 import { CATEGORIES, TOOLS, type Category, type ToolDef } from "@/lib/tools/registry";
 import { accepts, appPath, handFiles, toolPath } from "@/lib/tools/handoff";
 import { formatBytes } from "@/lib/tools/files";
-import { matches, rank } from "@/lib/tools/search";
+import { matches, queryWords, rank } from "@/lib/tools/search";
 import { ToolTile } from "./icons";
 import { Mascot } from "../mascot/Mascot";
 import { CATEGORY_COLOR, CATEGORY_META } from "../site/categories";
@@ -43,11 +43,11 @@ export function ToolsHub({
   const input = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLElement>(null);
 
-  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const words = query.trim() ? queryWords(query) : [];
   const pool = useMemo(() => (staged?.length ? TOOLS.filter((t) => fitsFiles(t, staged)) : TOOLS), [staged]);
   const results = useMemo(() => {
     const inCat = pool.filter((t) => cat === "all" || t.category === cat);
-    return words.length ? inCat.filter((t) => matches(t, words)).sort((a, b) => rank(a, words) - rank(b, words)) : inCat;
+    return words.length ? inCat.filter((t) => matches(t, words)).sort((a, b) => rank(a, words, query) - rank(b, words, query)) : inCat;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cat, query, pool]);
 

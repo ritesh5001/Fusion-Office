@@ -14,6 +14,7 @@ import { QuickActions } from "@/components/QuickActions";
 import { ToolCard } from "@/components/ToolCard";
 import { ToolPreview } from "@/components/ToolPreview";
 import { GradientText, PressScale, T } from "@/components/ui";
+import { IOS } from "@/lib/ease";
 
 const POPULAR = ["edit-pdf", "split-pdf", "ocr-pdf", "jpg-to-pdf", "sign-pdf", "word-to-pdf", "protect-pdf", "pdf-to-jpg"];
 
@@ -53,7 +54,7 @@ export default function Home() {
         </Animated.View>
       </View>
 
-      <Animated.View entering={reduced ? undefined : FadeInDown.delay(300).duration(420).springify().damping(16)} style={{ marginTop: 22 }}>
+      <Animated.View entering={reduced ? undefined : FadeInDown.delay(300).duration(420).easing(IOS)} style={{ marginTop: 22 }}>
         <DropStage />
       </Animated.View>
 

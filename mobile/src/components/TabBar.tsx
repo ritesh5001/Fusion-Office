@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Keyboard, Platform, Pressable, StyleSheet, View } from "react-native";
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import { DUR, IOS } from "@/lib/ease";
 import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -67,7 +68,7 @@ export function TabBar({ state, navigation }: TabBarProps) {
         }}
         accessibilityRole="button"
         accessibilityLabel="Add a file"
-        style={({ pressed }) => [styles.fab, shadow(C.accent, 18, 0.55), pressed && { transform: [{ scale: 0.94 }] }]}
+        style={({ pressed }) => [styles.fab, shadow(C.accent, 18, 0.55), pressed && { transform: [{ scale: 0.96 }], opacity: 0.92 }]}
       >
         <Plus size={28} color={C.onAccent} strokeWidth={2.6} />
       </Pressable>
@@ -79,7 +80,7 @@ function TabButton({ focused, label, icon: Icon, onPress }: { focused: boolean; 
   const reduced = useReduced();
   const on = useSharedValue(focused ? 1 : 0);
   useEffect(() => {
-    on.value = reduced ? (focused ? 1 : 0) : focused ? withSpring(1, { damping: 15, stiffness: 220 }) : withTiming(0, { duration: 150 });
+    on.value = reduced ? (focused ? 1 : 0) : withTiming(focused ? 1 : 0, { duration: focused ? DUR.small : 150, easing: IOS });
   }, [focused, reduced, on]);
   // The active pill grows in behind the icon.
   const pill = useAnimatedStyle(() => ({ opacity: on.value, transform: [{ scaleX: 0.4 + on.value * 0.6 }] }));

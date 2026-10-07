@@ -1,7 +1,8 @@
 import { Alert, View } from "react-native";
-import Animated, { FadeInDown, LinearTransition } from "react-native-reanimated";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { Clock, Download, Share2, Trash2 } from "lucide-react-native";
 import { C } from "@/theme";
+import { layoutMove } from "@/lib/ease";
 import { useReduced } from "@/lib/motion";
 import { useSession } from "@/lib/session";
 import { formatBytes } from "@/lib/files";
@@ -51,7 +52,7 @@ export default function Recent() {
 
       <View style={{ marginTop: 18, gap: 8 }}>
         {(items ?? []).map((r, i) => (
-          <Animated.View key={r.id} layout={reduced ? undefined : LinearTransition.springify().damping(16)} entering={reduced ? undefined : FadeInDown.delay(Math.min(i, 5) * 50).duration(380)}>
+          <Animated.View key={r.id} layout={reduced ? undefined : layoutMove} entering={reduced ? undefined : FadeInDown.delay(Math.min(i, 5) * 50).duration(380)}>
             <PressScale onPress={() => files.open(r)} accessibilityLabel={`Open ${r.name}, ${formatBytes(r.size)}, made with ${r.toolName}`} style={{ flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.line, padding: 12 }}>
               <View style={{ width: 44, height: 44, borderRadius: 13, backgroundColor: C.ink, alignItems: "center", justifyContent: "center" }}>
                 <T weight="bold" style={{ fontSize: 10.5, color: C.accent }}>{(r.name.split(".").pop() ?? "").toUpperCase()}</T>

@@ -1,10 +1,11 @@
-// The app shares the website's tool registry and search (client/src/lib/tools),
-// so the tool list never drifts. Metro needs to watch that folder.
+// The app shares the website's tool registry and search (client/src/lib/tools)
+// and its pure image size math (client/src/lib/image), so neither drifts.
+// Metro needs to watch those folders.
 const path = require("path");
 const { getDefaultConfig } = require("expo/metro-config");
 
 const config = getDefaultConfig(__dirname);
-config.watchFolders = [...(config.watchFolders ?? []), path.resolve(__dirname, "../client/src/lib/tools")];
+config.watchFolders = [...(config.watchFolders ?? []), path.resolve(__dirname, "../client/src/lib/tools"), path.resolve(__dirname, "../client/src/lib/image")];
 
 // tslib's "import" entry (modules/index.js) default-imports its UMD build, which
 // has no default export on web ("Cannot destructure '__extends' of tslib.default").

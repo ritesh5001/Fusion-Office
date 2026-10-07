@@ -4,6 +4,7 @@ import { fetch } from "expo/fetch";
 import { File } from "expo-file-system";
 import { readBytes, stem, type PickedFile } from "./files";
 import { API_URL } from "./tools";
+import { RESIZE_DEFAULTS, resizeOne, resizeProblem } from "./resize";
 
 /**
  * Tools that run natively in the app. Device tools never upload anything;
@@ -32,7 +33,11 @@ export interface NativeTool {
   /** What the picker should offer. */
   pick: "pdf" | "image" | "document";
   options: OptionDef[];
+  /** A tool with richer settings than `options` draws its own panel (see ToolRunnerScreen). */
+  panel?: "resize";
   defaults: Record<string, string | number>;
+  /** Why the current options can't run yet, shown on the button; null when ready. */
+  validate?: (options: Record<string, string | number>) => string | null;
   run: (files: PickedFile[], options: Record<string, string | number>, progress: Progress) => Promise<Output[]>;
 }
 
@@ -215,16 +220,11 @@ export const NATIVE: Record<string, NativeTool> = {
     verb: "Resizing image",
     runs: "device",
     pick: "image",
-    options: [{ key: "scale", label: "New size", kind: "choice", choices: [{ value: 75, label: "75%" }, { value: 50, label: "50%" }, { value: 25, label: "25%" }] }],
-    defaults: { scale: 50 },
-    run: (files, o, progress) =>
-      eachFile(files, progress, async (f) => {
-        const ctx = ImageManipulator.manipulate(f.uri);
-        const orig = await ctx.renderAsync();
-        ctx.resize({ width: Math.max(1, Math.round((orig.width * Number(o.scale)) / 100)) });
-        const saved = await (await ctx.renderAsync()).saveAsync({ format: SaveFormat.JPEG, compress: 0.9 });
-        return { name: `${stem(f.name)}-${o.scale}pc.jpg`, bytes: await new File(saved.uri).bytes(), mimeType: "image/jpeg" };
-      }),
+    options: [],
+    panel: "resize",
+    defaults: RESIZE_DEFAULTS,
+    validate: resizeProblem,
+    run: (files, o, progress) => eachFile(files, progress, (f) => resizeOne(f, o)),
   },
 
   "convert-image": {

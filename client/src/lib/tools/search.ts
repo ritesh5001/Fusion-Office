@@ -85,21 +85,83 @@ export const SYNONYMS: Record<string, string> = {
 /** Does `text` contain the word, or one of its synonyms? */
 export const hit = (text: string, w: string) => text.includes(w) || (SYNONYMS[w] ?? "").split(" ").some((s) => s && text.includes(s));
 
-/** Every word must match the tool's name, description or category (directly or through a synonym). */
-export function matches(t: ToolDef, words: string[]) {
-  const hay = `${t.name} ${t.description} ${CATEGORIES.find((c) => c.id === t.category)?.label ?? ""}`.toLowerCase();
-  return words.every((w) => hit(hay, w));
+/** Filler words that say nothing about which tool you want ("convert my jpg to pdf"). */
+const FILLER = new Set(["a", "an", "the", "to", "into", "in", "my", "of", "for", "and", "with", "from", "on", "file", "files", "online", "free", "convert", "converter", "tool", "how", "i", "want"]);
+
+/** The words of a query worth matching (lower case, filler removed; falls back to all words). */
+export function queryWords(query: string) {
+  const all = query.toLowerCase().replace(/[^\p{L}\p{N}\s.+-]/gu, " ").split(/\s+/).filter(Boolean);
+  const useful = all.filter((w) => !FILLER.has(w));
+  return useful.length ? useful : all;
 }
 
-/** Name matches first (synonyms count: "shrink pdf" finds Compress PDF), then ready tools before "soon". */
-export function rank(t: ToolDef, words: string[]) {
-  const name = t.name.toLowerCase();
-  return (words.every((w) => hit(name, w)) ? 0 : 1) * 2 + (t.status === "soon" ? 1 : 0);
+// Each tool's searchable text, built once.
+const HAY = new WeakMap<ToolDef, { name: string; all: string; tokens: string[] }>();
+function hay(t: ToolDef) {
+  let h = HAY.get(t);
+  if (!h) {
+    const name = t.name.toLowerCase();
+    const all = `${name} ${t.description} ${CATEGORIES.find((c) => c.id === t.category)?.label ?? ""}`.toLowerCase();
+    h = { name, all, tokens: all.split(/[^\p{L}\p{N}]+/u).filter((x) => x.length > 2) };
+    HAY.set(t, h);
+  }
+  return h;
+}
+
+/** At most one letter added, missing or changed (a typo), for words of 4+ letters. */
+function nearlyEqual(a: string, b: string) {
+  if (Math.abs(a.length - b.length) > 1) return false;
+  let i = 0;
+  let j = 0;
+  let edits = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) {
+      i++;
+      j++;
+      continue;
+    }
+    if (++edits > 1) return false;
+    if (a.length > b.length) i++;
+    else if (b.length > a.length) j++;
+    else {
+      i++;
+      j++;
+    }
+  }
+  return edits + (a.length - i) + (b.length - j) <= 1;
+}
+
+/** Does one query word match this text: directly, through a synonym, or with one typo? */
+function wordHits(t: ToolDef, w: string) {
+  const h = hay(t);
+  if (hit(h.all, w)) return true;
+  // A typo: compare with the tool's words, or with their beginning ("compres" → "compress").
+  return w.length >= 4 && h.tokens.some((tok) => nearlyEqual(w, tok) || (tok.length > w.length && nearlyEqual(w, tok.slice(0, w.length))));
+}
+
+/** Every word must match the tool's name, description or category (directly, through a synonym, or with one typo). */
+export function matches(t: ToolDef, words: string[]) {
+  return words.every((w) => wordHits(t, w));
+}
+
+/**
+ * Lower is better: the exact name, then names starting with what you typed,
+ * then every word in the name in the order you typed them, then in any order,
+ * then description matches; ready tools before "soon" ones. `raw` is the query
+ * as typed, so "pdf to jpg" and "jpg to pdf" find different tools first.
+ */
+export function rank(t: ToolDef, words: string[], raw = words.join(" ")) {
+  const name = hay(t).name;
+  const phrase = raw.trim().toLowerCase().replace(/\s+/g, " ");
+  const inName = words.every((w) => hit(name, w));
+  const inOrder = inName && words.reduce((at, w) => (at < 0 ? -1 : name.indexOf(w, at) < 0 ? -1 : name.indexOf(w, at) + w.length), 0) >= 0;
+  const tier = name === phrase ? 0 : name.startsWith(phrase) ? 1 : inOrder ? 2 : inName ? 3 : words.some((w) => hit(name, w)) ? 4 : 5;
+  return tier * 2 + (t.status === "soon" ? 1 : 0);
 }
 
 /** Tools matching a free-text query, best first. */
 export function searchTools(tools: ToolDef[], query: string) {
-  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const words = queryWords(query);
   if (!words.length) return tools;
-  return tools.filter((t) => matches(t, words)).sort((a, b) => rank(a, words) - rank(b, words));
+  return tools.filter((t) => matches(t, words)).sort((a, b) => rank(a, words, query) - rank(b, words, query));
 }

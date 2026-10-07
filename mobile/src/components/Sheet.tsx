@@ -1,13 +1,14 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { Modal, Pressable, StyleSheet, View } from "react-native";
-import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
+import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { C } from "@/theme";
 import { useReduced } from "@/lib/motion";
+import { DUR, IOS } from "@/lib/ease";
 
 /**
- * Bottom sheet: springs up from the bottom, dims the screen behind it, and
+ * Bottom sheet: glides up from the bottom (iOS curve, no bounce), dims the screen behind it, and
  * closes on a tap outside or a swipe down. Thumb-friendly for tool settings
  * and actions.
  */
@@ -22,11 +23,11 @@ export function Sheet({ open, onClose, children }: { open: boolean; onClose: () 
 
   useEffect(() => {
     if (open) {
-      fade.value = withTiming(1, { duration: 200 });
-      y.value = reduced ? 0 : withSpring(0, { damping: 22, stiffness: 240 });
+      fade.value = withTiming(1, { duration: DUR.small });
+      y.value = reduced ? 0 : withTiming(0, { duration: DUR.sheet, easing: IOS });
     } else if (mounted) {
-      fade.value = withTiming(0, { duration: 160 });
-      y.value = withTiming(600, { duration: reduced ? 0 : 200, easing: Easing.in(Easing.quad) }, (done) => done && runOnJS(setMounted)(false));
+      fade.value = withTiming(0, { duration: DUR.exit });
+      y.value = withTiming(600, { duration: reduced ? 0 : DUR.exit, easing: Easing.bezier(0.4, 0, 1, 1) }, (done) => done && runOnJS(setMounted)(false));
     }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -36,7 +37,7 @@ export function Sheet({ open, onClose, children }: { open: boolean; onClose: () 
     })
     .onEnd((e) => {
       if (e.translationY > 90 || e.velocityY > 800) runOnJS(onClose)();
-      else y.set(withSpring(0, { damping: 22, stiffness: 240 }));
+      else y.set(withTiming(0, { duration: DUR.small, easing: IOS }));
     });
 
   const panel = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));

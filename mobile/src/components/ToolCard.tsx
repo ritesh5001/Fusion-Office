@@ -11,10 +11,11 @@ import { PressScale, T, ToolTile } from "./ui";
  * Cards cascade in 50ms apart, at most six moving at once. The entrance
  * starts once on mount, so re-renders (typing in search) can't interrupt it.
  */
-export function ToolCard({ tool: t, index = 0, width, onPress, onLongPress }: { tool: ToolDef; index?: number; width?: number; onPress: () => void; onLongPress?: () => void }) {
+export function ToolCard({ tool: t, index = 0, width, animate = true, onPress, onLongPress }: { tool: ToolDef; index?: number; width?: number; animate?: boolean; onPress: () => void; onLongPress?: () => void }) {
   const reduced = useReduced();
   const soon = t.status === "soon";
-  const shown = useSharedValue(reduced ? 1 : 0);
+  // Search results appear at once; the cascade is for browsing.
+  const shown = useSharedValue(reduced || !animate ? 1 : 0);
   useEffect(() => {
     shown.value = withDelay(Math.min(index, 5) * 50 + 60, withTiming(1, { duration: 420, easing: Easing.bezier(0.2, 0.8, 0.2, 1) }));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

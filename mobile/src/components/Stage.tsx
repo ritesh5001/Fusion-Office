@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Alert, View } from "react-native";
 import Animated, {
-  Easing, FadeIn, FadeInDown, ZoomIn, useAnimatedProps, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming,
+  Easing, FadeIn, FadeInDown, useAnimatedProps, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming,
 } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 import { Check, ChevronRight, Cpu, Download, Share2, X } from "lucide-react-native";
 import { C } from "@/theme";
+import { IOS, enterFade, enterRise } from "@/lib/ease";
 import { useReduced } from "@/lib/motion";
 import { formatBytes, shareFile, type PickedFile } from "@/lib/files";
 import { STEPS, progressOf, type RunState } from "@/lib/runner";
@@ -45,7 +46,7 @@ export function Landing({ file, count }: { file: PickedFile; count: number }) {
     <View style={{ alignItems: "center", paddingTop: 34, paddingBottom: 30 }} accessibilityLiveRegion="polite">
       <View style={{ width: 200, height: 120, alignItems: "center", justifyContent: "center" }}>
         <Animated.View style={[{ position: "absolute", width: 96, height: 96, borderRadius: 48, borderWidth: 2, borderColor: C.brand400 }, ring]} />
-        <Animated.View entering={reduced ? undefined : ZoomIn.springify().damping(11).stiffness(180)} style={{ width: 88, height: 88, borderRadius: 24, backgroundColor: "#fff", alignItems: "center", justifyContent: "center", overflow: "hidden", shadowColor: C.ink, shadowOpacity: 0.3, shadowRadius: 16, shadowOffset: { width: 0, height: 10 } }}>
+        <Animated.View entering={reduced ? undefined : enterFade()} style={{ width: 88, height: 88, borderRadius: 24, backgroundColor: "#fff", alignItems: "center", justifyContent: "center", overflow: "hidden", shadowColor: C.ink, shadowOpacity: 0.3, shadowRadius: 16, shadowOffset: { width: 0, height: 10 } }}>
           <KindGlyph kind={file.kind} />
           <Animated.View style={[{ position: "absolute", top: 0, bottom: 0, width: 36, backgroundColor: "rgba(205,245,100,0.6)" }, beam]} />
         </Animated.View>
@@ -183,23 +184,13 @@ export function ProgressCard({ state }: { state: Extract<RunState, { phase: "run
 
 const share = (f: Parameters<typeof shareFile>[0]) => shareFile(f).catch((e: Error) => Alert.alert("Couldn't share", e.message));
 
-const PARTICLES = [[-46, -30], [40, -38], [54, 10], [-50, 18], [4, -54]];
 
-function Particle({ dx, dy, color }: { dx: number; dy: number; color: string }) {
-  const t = useSharedValue(0);
-  useEffect(() => {
-    t.value = withDelay(120, withTiming(1, { duration: 800, easing: Easing.bezier(0.2, 0.7, 0.3, 1) }));
-  }, [t]);
-  const a = useAnimatedStyle(() => ({ opacity: 1 - t.value, transform: [{ translateX: dx * t.value }, { translateY: dy * t.value }, { scale: 1 - t.value * 0.6 }] }));
-  return <Animated.View style={[{ position: "absolute", width: 8, height: 8, borderRadius: 4, backgroundColor: color }, a]} />;
-}
-
-/** Lime burst, the check draws itself, the result rises and Share springs in. */
+/** A soft ring, the check draws itself, then the result and its buttons fade up (calm, no bounce). */
 export function DoneCard({ state, onAgain }: { state: Extract<RunState, { phase: "done" }>; onAgain: () => void }) {
   const reduced = useReduced();
   const burst = useSharedValue(0);
   useEffect(() => {
-    if (!reduced) burst.value = withTiming(1, { duration: 700, easing: Easing.out(Easing.quad) });
+    if (!reduced) burst.value = withTiming(1, { duration: 600, easing: IOS });
   }, [reduced, burst]);
   const ring = useAnimatedStyle(() => ({ opacity: (1 - burst.value) * 0.8, transform: [{ scale: 0.5 + burst.value * 1.9 }] }));
   const first = state.outputs[0];
@@ -213,17 +204,16 @@ export function DoneCard({ state, onAgain }: { state: Extract<RunState, { phase:
     <View style={{ alignItems: "center" }}>
       <View style={{ width: 64, height: 64, alignItems: "center", justifyContent: "center" }}>
         {!reduced && <Animated.View style={[{ position: "absolute", width: 64, height: 64, borderRadius: 32, backgroundColor: "rgba(205,245,100,0.5)" }, ring]} />}
-        {!reduced && PARTICLES.map(([dx, dy], i) => <Particle key={i} dx={dx} dy={dy} color={i % 2 ? C.brand400 : C.accent} />)}
-        <Animated.View entering={reduced ? undefined : ZoomIn.springify().damping(10)} style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: C.accent, alignItems: "center", justifyContent: "center", shadowColor: C.accent, shadowOpacity: 0.8, shadowRadius: 14 }}>
+        <Animated.View entering={reduced ? undefined : enterFade(60)} style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: C.accent, alignItems: "center", justifyContent: "center", shadowColor: C.accent, shadowOpacity: 0.8, shadowRadius: 14 }}>
           <Svg width={28} height={28} viewBox="0 0 24 24"><DrawPath d="m5.5 12.5 4 4 9-9" length={19} color={C.ink} width={2.8} delay={200} /></Svg>
         </Animated.View>
       </View>
-      <Animated.View entering={reduced ? undefined : FadeInDown.delay(150).duration(300)}>
+      <Animated.View entering={reduced ? undefined : enterRise(140)}>
         <T weight="displayBold" style={{ marginTop: 10, fontSize: 21, color: C.ink, letterSpacing: -0.4, textAlign: "center" }}>{many ? `${state.outputs.length} files are ready` : "Your file is ready"}</T>
         {many && saved > 0 && <T weight="semibold" style={{ marginTop: 2, fontSize: 13, color: C.successInk, textAlign: "center" }}>{saved}% smaller in total</T>}
       </Animated.View>
 
-      <Animated.View entering={reduced ? undefined : FadeInDown.delay(250).duration(400)} style={{ alignSelf: "stretch", marginTop: 12, gap: 8 }}>
+      <Animated.View entering={reduced ? undefined : enterRise(220)} style={{ alignSelf: "stretch", marginTop: 12, gap: 8 }}>
         {state.outputs.slice(0, 4).map((o) => (
           <PressScale
             key={o.uri}
@@ -258,7 +248,7 @@ export function DoneCard({ state, onAgain }: { state: Extract<RunState, { phase:
         {state.outputs.length > 4 && <T style={{ fontSize: 12.5, color: C.paperMuted, textAlign: "center" }}>+{state.outputs.length - 4} more in Recent</T>}
       </Animated.View>
 
-      <Animated.View entering={reduced ? undefined : ZoomIn.delay(450).springify().damping(12)} style={{ marginTop: 16, alignSelf: "stretch" }}>
+      <Animated.View entering={reduced ? undefined : enterRise(320)} style={{ marginTop: 16, alignSelf: "stretch" }}>
         <View style={{ flexDirection: "row", gap: 10 }}>
           <View style={{ flex: 1 }}>
           <PressScale onPress={() => files.download(first)} accessibilityLabel={many ? `Download ${first.name}` : undefined} style={{ height: 52, borderRadius: 26, backgroundColor: C.inkDeep, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}>
