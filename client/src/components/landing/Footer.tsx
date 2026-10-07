@@ -63,7 +63,7 @@ export function Footer() {
   return (
     <footer className="site-chrome border-t border-line bg-app">
       <AppBanner />
-      <div className="mx-auto grid gap-12 px-4 py-14 sm:px-6 lg:grid-cols-12 lg:gap-10 lg:px-8">
+      <div className="mx-auto grid gap-12 px-4 pt-14 sm:px-6 lg:grid-cols-12 lg:gap-10 lg:px-8">
         <div className="flex flex-col items-center text-center sm:items-start sm:text-left lg:col-span-4">
           <Link href="/" className="flex items-center gap-2.5 font-display text-[17px] font-bold tracking-[-0.02em] text-fg">
             <Logo className="h-7 w-7" /> Fusion Office
@@ -158,7 +158,9 @@ export function Footer() {
           ))}
         </nav>
       </div>
-      <div data-float-dock className="mx-auto flex flex-col items-center gap-4 border-t border-line px-4 py-5 text-[13px] text-fg-subtle sm:px-6 lg:flex-row lg:justify-between lg:px-8">
+      {/* An empty band the floating Feedback / coffee buttons settle into at the end of the page. */}
+      <div data-float-dock aria-hidden="true" className="h-20" />
+      <div className="mx-auto flex flex-col items-center gap-4 border-t border-line px-4 py-5 text-[13px] text-fg-subtle sm:px-6 lg:flex-row lg:justify-between lg:px-8">
         <p>
           © {new Date().getFullYear()} Fusion Office ·{" "}
           <a
