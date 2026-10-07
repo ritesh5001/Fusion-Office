@@ -83,6 +83,7 @@ const TOOL_SWATCH: Record<string, Swatch> = {
   "powerpoint-to-pdf": "orange",
   "excel-to-pdf": "green",
   "html-to-pdf": "indigo",
+  "cdr-converter": "green",
   "pdf-to-jpg": "amber",
   "pdf-to-word": "blue",
   "pdf-to-powerpoint": "orange",

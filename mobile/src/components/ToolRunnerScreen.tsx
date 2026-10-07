@@ -42,7 +42,7 @@ export function ToolRunnerScreen({ tool, native, useStaged }: { tool: ToolDef; n
       const picked =
         source === "photos" ? await pickPhotos(tool.multiple) : source === "camera" ? [await takePhoto()].filter((f): f is PickedFile => !!f) : await pickDocuments(PICK_TYPES[native.pick], tool.multiple);
       const fit = picked.filter(fits);
-      if (picked.length && !fit.length) Alert.alert("That file doesn't fit", `${tool.name} takes ${native.pick === "pdf" ? "PDF files" : native.pick === "image" ? "images" : "Word, Excel or PowerPoint files"}.`);
+      if (picked.length && !fit.length) Alert.alert("That file doesn't fit", `${tool.name} takes ${native.slug === "cdr-converter" ? "CorelDRAW (.cdr) files" : native.pick === "pdf" ? "PDF files" : native.pick === "image" ? "images" : "Word, Excel or PowerPoint files"}.`);
       setFiles((cur) => (tool.multiple ? [...cur, ...fit] : fit.slice(0, 1)));
     } catch (e) {
       Alert.alert("Couldn't open that", (e as Error).message);

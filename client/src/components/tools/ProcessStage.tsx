@@ -63,6 +63,7 @@ export function outputOf(tool: ToolDef): { format: string; label: string } {
 
 const LABELS: Record<string, string> = {
   "merge-pdf": "One merged PDF",
+  "cdr-converter": "Converted drawing",
   "compress-pdf": "Smaller PDF",
   "rotate-pdf": "Rotated PDF",
   "organize-pdf": "Reordered PDF",

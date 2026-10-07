@@ -183,7 +183,7 @@ export const CLUSTERS: Cluster[] = [
         blurb: "Every image tool, from a full editor to one-click compression and format conversion.",
       },
       {
-        slugs: ["jpg-to-pdf", "pdf-to-jpg", "scan-to-pdf"],
+        slugs: ["jpg-to-pdf", "pdf-to-jpg", "scan-to-pdf", "cdr-converter"],
         heading: "Images and PDFs",
         blurb: "Put photos into a PDF, scan paper with your camera, or turn PDF pages back into images.",
       },

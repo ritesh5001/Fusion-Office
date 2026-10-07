@@ -27,16 +27,33 @@ const FORMATS: Record<string, number[] | null> = {
   xlsx: ZIP,
   ods: ZIP,
   csv: null,
+  // CorelDRAW: checked by isCorelDraw below (two container formats).
+  cdr: [],
 };
 
 export const OFFICE_EXTENSIONS = Object.keys(FORMATS);
+
+const ascii = (s: string) => Buffer.from(s, "latin1");
+const startsWith = (bytes: Uint8Array, sig: number[]) => sig.every((b, i) => bytes[i] === b);
+
+/**
+ * A real CorelDRAW drawing: old versions are RIFF files of form "CDR…"; X4 and
+ * newer are ZIP archives holding content/riffData.cdr or content/root.dat.
+ */
+export function isCorelDraw(bytes: Uint8Array): boolean {
+  const b = Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  if (b.subarray(0, 4).equals(ascii("RIFF")) && b.subarray(8, 11).equals(ascii("CDR"))) return true;
+  return startsWith(bytes, ZIP) && (b.includes(ascii("content/riffData.cdr")) || b.includes(ascii("content/root.dat")));
+}
 
 /** Check the file name and the leading bytes agree with a supported format. */
 export function officeFormat(filename: string, bytes: Uint8Array): string {
   const ext = path.extname(filename).slice(1).toLowerCase();
   if (!(ext in FORMATS)) throw new HttpError(415, `Unsupported file type. Use one of: ${OFFICE_EXTENSIONS.map((e) => `.${e}`).join(", ")}.`);
   const magic = FORMATS[ext];
-  if (magic) {
+  if (ext === "cdr") {
+    if (!isCorelDraw(bytes)) throw new HttpError(415, "This doesn't look like a CorelDRAW (.cdr) file.");
+  } else if (magic) {
     if (!magic.every((b, i) => bytes[i] === b)) throw new HttpError(415, `This doesn't look like a real .${ext} file.`);
   } else if (bytes.subarray(0, 4096).includes(0)) {
     throw new HttpError(415, `This doesn't look like a text .${ext} file.`);
@@ -47,13 +64,15 @@ export function officeFormat(filename: string, bytes: Uint8Array): string {
 // LibreOffice is memory hungry; convert one or two files at a time.
 const queue = semaphore(Number(process.env.CONVERT_CONCURRENCY) || 1);
 
-export type OfficeTarget = "pdf" | "docx" | "xlsx" | "pptx";
+export type OfficeTarget = "pdf" | "docx" | "xlsx" | "pptx" | "svg";
 
 /** Which inputs can become which editable format (PDF works from all of them). */
 const EDITABLE_FROM: Record<Exclude<OfficeTarget, "pdf">, string[]> = {
   docx: ["doc", "docx", "odt", "rtf"],
   xlsx: ["xls", "xlsx", "ods", "csv"],
   pptx: ["ppt", "pptx", "odp"],
+  // Drawings keep their vectors as SVG.
+  svg: ["cdr"],
 };
 
 export function checkTarget(ext: string, to: string): OfficeTarget {

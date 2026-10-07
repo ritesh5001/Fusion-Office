@@ -71,6 +71,7 @@ export const TOOLS: ToolDef[] = [
   { slug: "html-to-pdf", name: "HTML to PDF", description: "Turn a web page into a PDF from its address.", category: "convert-to", icon: "Globe", accept: "", multiple: false, runs: "server", status: "ready" },
   { slug: "markdown-to-pdf", name: "Markdown to PDF", description: "Turn Markdown into a clean PDF with headings, tables and code blocks.", category: "convert-to", icon: "FileCode2", accept: ".md,.markdown,.txt,text/markdown", multiple: true, runs: "server", status: "ready" },
   { slug: "csv-to-pdf", name: "CSV to PDF", description: "Turn a CSV spreadsheet into a neat, printable table.", category: "convert-to", icon: "Table", accept: ".csv,.tsv,text/csv", multiple: true, runs: "server", status: "ready" },
+  { slug: "cdr-converter", name: "CDR Converter", description: "Convert CorelDRAW .cdr files to PDF, PNG, JPG or SVG.", category: "convert-to", icon: "PenTool", accept: ".cdr", multiple: true, runs: "server", status: "ready" },
   { slug: "ebook-to-pdf", name: "eBook to PDF", description: "Convert EPUB books, text and HTML files into typeset PDFs.", category: "convert-to", icon: "BookOpen", accept: ".epub,.txt,.html,.htm,.xhtml", multiple: true, runs: "server", status: "ready" },
   // Convert from PDF
   { slug: "pdf-to-jpg", name: "PDF to JPG", description: "Turn pages into images, or pull out the photos inside.", category: "convert-from", icon: "Image", accept: PDF, multiple: false, runs: "browser", status: "ready" },

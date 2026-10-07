@@ -297,6 +297,54 @@ const officeTo: ToolSpec<Record<string, never>> = {
   }),
 };
 
+type CdrOpts = { format: "pdf" | "png" | "jpg" | "svg"; dpi: number };
+/** CorelDRAW: the server (LibreOffice) makes a PDF or SVG; images are rendered from that PDF here, at the chosen quality. */
+const cdrConverter: ToolSpec<CdrOpts> = {
+  action: "Convert",
+  defaults: { format: "pdf", dpi: 150 },
+  Options: ({ options: o, set }) => (
+    <>
+      <Segmented
+        label="Convert to"
+        value={o.format}
+        onChange={(format) => set({ format })}
+        options={[
+          { value: "pdf", label: "PDF", hint: "Sharp vectors, for print" },
+          { value: "png", label: "PNG" },
+          { value: "jpg", label: "JPG" },
+          { value: "svg", label: "SVG", hint: "Editable vectors, first page" },
+        ]}
+      />
+      {(o.format === "png" || o.format === "jpg") && (
+        <Segmented label="Quality" value={o.dpi} onChange={(dpi) => set({ dpi })} options={[{ value: 96, label: "Screen" }, { value: 150, label: "Standard" }, { value: 300, label: "Print" }]} />
+      )}
+    </>
+  ),
+  run: async (files, o, progress) => {
+    const out: ToolFile[] = [];
+    for (const [i, f] of files.entries()) {
+      progress(files.length > 1 ? `Converting ${i + 1} of ${files.length}…` : "Converting the drawing…", i / files.length);
+      const to = o.format === "svg" ? "svg" : "pdf";
+      const res = await apiFetch(`/api/convert/office?to=${to}`, {
+        method: "POST",
+        headers: { "content-type": "application/octet-stream", "x-filename": encodeURIComponent(f.name) },
+        body: new Blob([f.bytes as BlobPart]),
+      });
+      if (!res.ok) throw await serverError(res);
+      const bytes = new Uint8Array(await res.arrayBuffer());
+      if (o.format === "svg") out.push({ name: `${stem(f.name)}.svg`, bytes, type: "image/svg+xml" });
+      else if (o.format === "pdf") out.push(pdfOut(`${stem(f.name)}.pdf`, bytes));
+      else {
+        const { pdfToImages } = await import("@/lib/tools/processors/images");
+        const pages = await pdfToImages({ name: `${stem(f.name)}.pdf`, bytes, type: PDF }, { format: o.format, dpi: o.dpi });
+        // One-page drawings keep the drawing's own name.
+        out.push(...(pages.length === 1 ? [{ ...pages[0], name: `${stem(f.name)}.${o.format}` }] : pages));
+      }
+    }
+    return { files: out };
+  },
+};
+
 type HtmlOpts = { url: string; pageSize: "A4" | "Letter"; landscape: boolean };
 const htmlToPdf: ToolSpec<HtmlOpts> = {
   action: "Convert to PDF",
@@ -567,6 +615,7 @@ export const SPECS: Record<string, ToolSpec<never>> = {
   "pdf-to-excel": officeFrom("excel"),
   "pdf-to-markdown": officeFrom("markdown"),
   "word-to-pdf": officeTo,
+  "cdr-converter": cdrConverter,
   "powerpoint-to-pdf": officeTo,
   "excel-to-pdf": officeTo,
   "html-to-pdf": htmlToPdf,

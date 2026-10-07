@@ -20,6 +20,10 @@ const AnimatedRect = Animated.createAnimatedComponent(Rect);
 
 const WHAT: Record<NativeTool["pick"], string> = { pdf: "PDF files", image: "photos", document: "Word, Excel or PowerPoint files" };
 const FORMATS: Record<NativeTool["pick"], string> = { pdf: "PDF", image: "JPG, PNG, HEIC, WEBP", document: "DOCX, XLSX, PPTX and more" };
+/** Tools whose files aren't the usual ones for their kind. */
+const FILES_FOR: Record<string, { what: string; formats: string }> = {
+  "cdr-converter": { what: "CorelDRAW files", formats: "CorelDRAW .CDR" },
+};
 
 /** The empty state: dashed card with the file outline and "+", like the homepage. */
 export function ToolDropCard({ native, multiple, onFiles, onPhotos, onCamera }: { native: NativeTool; multiple: boolean; onFiles: () => void; onPhotos: () => void; onCamera: () => void }) {
@@ -47,7 +51,7 @@ export function ToolDropCard({ native, multiple, onFiles, onPhotos, onCamera }: 
         onPressOut={() => setHot(false)}
         onPress={primary}
         accessibilityRole="button"
-        accessibilityLabel={`Choose ${WHAT[native.pick]}`}
+        accessibilityLabel={`Choose ${FILES_FOR[native.slug]?.what ?? WHAT[native.pick]}`}
         onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
         style={{ alignItems: "center", paddingTop: 30, paddingBottom: 24, paddingHorizontal: 14 }}
       >
@@ -65,7 +69,7 @@ export function ToolDropCard({ native, multiple, onFiles, onPhotos, onCamera }: 
           </Animated.View>
         </Float>
         <Animated.View key={hot ? "hot" : "idle"} entering={reduced ? undefined : FadeIn.duration(200)}>
-          <T weight="display" style={{ marginTop: 18, fontSize: 23, letterSpacing: -0.6, color: C.ink, textAlign: "center" }}>{hot ? "Choose a file to begin" : images ? "Choose your photos" : native.pick === "pdf" ? (multiple ? "Choose your PDFs" : "Choose a PDF") : "Choose a document"}</T>
+          <T weight="display" style={{ marginTop: 18, fontSize: 23, letterSpacing: -0.6, color: C.ink, textAlign: "center" }}>{hot ? "Choose a file to begin" : images ? "Choose your photos" : native.pick === "pdf" ? (multiple ? "Choose your PDFs" : "Choose a PDF") : native.slug === "cdr-converter" ? "Choose a CorelDRAW file" : "Choose a document"}</T>
         </Animated.View>
         <T style={{ marginTop: 4, fontSize: 13.5, color: C.paperMuted, textAlign: "center" }}>or tap to choose {multiple ? "files" : "a file"}</T>
 
@@ -92,7 +96,7 @@ export function ToolDropCard({ native, multiple, onFiles, onPhotos, onCamera }: 
         </View>
 
         <View style={{ marginTop: 14, flexDirection: "row", flexWrap: "wrap", justifyContent: "center", alignItems: "center", columnGap: 10, rowGap: 4 }}>
-          <T weight="medium" style={{ fontSize: 12.5, color: C.paperText }}>{FORMATS[native.pick]}</T>
+          <T weight="medium" style={{ fontSize: 12.5, color: C.paperText }}>{FILES_FOR[native.slug]?.formats ?? FORMATS[native.pick]}</T>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <Svg width={13} height={13} viewBox="0 0 24 24"><Path d="M12 2 4 5v6c0 5.1 3.4 9.4 8 11 4.6-1.6 8-5.9 8-11V5z" fill={C.successIcon} /><Path d="m8.4 12.2 2.5 2.5 4.7-5" stroke="#fff" strokeWidth={2.4} fill="none" strokeLinecap="round" /></Svg>
             <T style={{ fontSize: 12.5, color: C.paperMuted }}>{native.runs === "device" ? "Stays on this device" : "Deleted right after"}</T>
@@ -104,6 +108,7 @@ export function ToolDropCard({ native, multiple, onFiles, onPhotos, onCamera }: 
 }
 
 const RESULT: Record<string, [string, string]> = {
+  "cdr-converter": ["PDF", "PDF of your drawing"],
   "merge-pdf": ["PDF", "One merged PDF"],
   "split-pdf": ["PDF", "Separate PDFs"],
   "rotate-pdf": ["PDF", "Rotated PDF"],

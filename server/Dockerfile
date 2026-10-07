@@ -7,7 +7,7 @@ FROM node:22-bookworm-slim
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       ca-certificates openssl \
-      libreoffice-writer-nogui libreoffice-calc-nogui libreoffice-impress-nogui \
+      libreoffice-writer-nogui libreoffice-calc-nogui libreoffice-impress-nogui libreoffice-draw-nogui \
       chromium \
       fonts-dejavu-core fonts-liberation2 fonts-crosextra-carlito fonts-crosextra-caladea \
       fonts-noto-core fonts-noto-cjk \

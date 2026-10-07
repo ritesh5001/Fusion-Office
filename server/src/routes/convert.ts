@@ -12,6 +12,7 @@ const MIME = {
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  svg: "image/svg+xml",
 };
 
 const sendPdf = (res: express.Response, bytes: Uint8Array, name: string) => sendFile(res, bytes, name, MIME.pdf);
@@ -24,8 +25,9 @@ const sendFile = (res: express.Response, bytes: Uint8Array, name: string, type: 
 };
 
 /**
- * Word / PowerPoint / Excel (and OpenDocument, RTF, CSV) to PDF, or old
- * formats to DOCX / XLSX / PPTX for the editors (?to=docx|xlsx|pptx).
+ * Word / PowerPoint / Excel (and OpenDocument, RTF, CSV) and CorelDRAW (.cdr)
+ * to PDF, old formats to DOCX / XLSX / PPTX for the editors (?to=docx|xlsx|pptx),
+ * or a CorelDRAW drawing to SVG (?to=svg).
  * Body: the raw file. Header X-Filename: its URI-encoded name.
  */
 convert.post("/office", express.raw({ type: () => true, limit: `${MAX_MB}mb` }), async (req, res, next) => {

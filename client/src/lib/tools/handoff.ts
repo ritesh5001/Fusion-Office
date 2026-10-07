@@ -59,7 +59,7 @@ export type FileKind = "pdf" | "document" | "image";
 
 export const KIND_ACCEPT: Record<FileKind, string> = {
   pdf: "application/pdf,.pdf",
-  document: ".docx,.doc,.odt,.rtf,.xlsx,.xls,.ods,.csv,.pptx,.ppt,.odp,.md,.markdown,.txt,.epub,.html,.htm",
+  document: ".docx,.doc,.odt,.rtf,.xlsx,.xls,.ods,.csv,.pptx,.ppt,.odp,.md,.markdown,.txt,.epub,.html,.htm,.cdr",
   image: "image/*,.heic,.heif,.avif",
 };
 

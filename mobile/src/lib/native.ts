@@ -285,6 +285,8 @@ const officeTo = (slug: string, verb: string): NativeTool => ({
 NATIVE["word-to-pdf"] = officeTo("word-to-pdf", "Converting to PDF");
 NATIVE["excel-to-pdf"] = officeTo("excel-to-pdf", "Converting to PDF");
 NATIVE["powerpoint-to-pdf"] = officeTo("powerpoint-to-pdf", "Converting to PDF");
+/** CorelDRAW drawings: PDF in the app (PNG, JPG and SVG are on the website version). */
+NATIVE["cdr-converter"] = officeTo("cdr-converter", "Converting the drawing");
 
 /** "Scan to PDF" in the app is the camera feeding JPG to PDF. */
 NATIVE["scan-to-pdf"] = { ...NATIVE["jpg-to-pdf"], slug: "scan-to-pdf", verb: "Building your scan" };

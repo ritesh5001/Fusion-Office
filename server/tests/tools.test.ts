@@ -12,7 +12,7 @@ import express from "express";
 process.env.GROQ_API_KEY = "";
 const { createApp } = await import("../src/app.js");
 const { isPublicAddress, checkPublicUrl, startEgressProxy, BLOCKED_HEADER } = await import("../src/lib/netGuard.js");
-const { officeFormat } = await import("../src/lib/office.js");
+const { officeFormat, isCorelDraw } = await import("../src/lib/office.js");
 const { rateLimit } = await import("../src/lib/rateLimit.js");
 
 let server: Server;
@@ -169,5 +169,36 @@ test("old formats convert to the editable ones (?to=docx)", { skip: !hasSoffice 
   assert.equal(bytes.subarray(0, 2).toString(), "PK");
   // A spreadsheet can't become a Word document.
   const bad = await fetch(`${base}/api/convert/office?to=docx`, { method: "POST", headers: { "x-filename": "t.csv" }, body: "a,b\n1,2\n" });
+  assert.equal(bad.status, 400);
+});
+
+// tests/fixtures/drawing.cdr: a CorelDRAW X4+ drawing from LibreOffice's test suite
+// (writerperfect/qa/unit/data/draw/libcdr/pass/fdo65220-2.cdr, MPL-2.0).
+const { readFileSync } = await import("node:fs");
+const drawing = readFileSync(new URL("./fixtures/drawing.cdr", import.meta.url));
+
+test("only real CorelDRAW files are accepted as .cdr", () => {
+  assert.equal(isCorelDraw(drawing), true);
+  // Old RIFF-based CorelDRAW (version 3 to X3).
+  assert.equal(isCorelDraw(new Uint8Array([...Buffer.from("RIFF"), 0, 0, 0, 0, ...Buffer.from("CDR9vrsn")])), true);
+  assert.equal(officeFormat("logo.CDR", drawing), "cdr");
+  // A plain ZIP, a WAV (also RIFF) and junk renamed to .cdr are refused.
+  assert.throws(() => officeFormat("x.cdr", new Uint8Array([0x50, 0x4b, 3, 4, ...Buffer.from("word/document.xml")])), /CorelDRAW/);
+  assert.throws(() => officeFormat("x.cdr", new Uint8Array([...Buffer.from("RIFF"), 0, 0, 0, 0, ...Buffer.from("WAVEfmt ")])), /CorelDRAW/);
+  assert.throws(() => officeFormat("x.cdr", new Uint8Array([0x19, 0x1e, 0xd1, 0xa8])), /CorelDRAW/);
+});
+
+test("CorelDRAW drawings convert to PDF and SVG", { skip: !hasSoffice && "soffice not installed", timeout: 180_000 }, async () => {
+  const pdf = await fetch(`${base}/api/convert/office`, { method: "POST", headers: { "x-filename": "logo.cdr" }, body: drawing });
+  assert.equal(pdf.status, 200, await pdf.clone().text());
+  assert.match(pdf.headers.get("content-disposition") ?? "", /logo\.pdf/);
+  assert.equal(Buffer.from(await pdf.arrayBuffer()).subarray(0, 5).toString(), "%PDF-");
+
+  const svg = await fetch(`${base}/api/convert/office?to=svg`, { method: "POST", headers: { "x-filename": "logo.cdr" }, body: drawing });
+  assert.equal(svg.status, 200, await svg.clone().text());
+  assert.equal(svg.headers.get("content-type"), "image/svg+xml");
+  assert.match(await svg.text(), /<svg/);
+  // Only drawings can become SVG.
+  const bad = await fetch(`${base}/api/convert/office?to=svg`, { method: "POST", headers: { "x-filename": "t.csv" }, body: "a,b\n1,2\n" });
   assert.equal(bad.status, 400);
 });

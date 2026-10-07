@@ -111,6 +111,43 @@ export const CONVERT_TO: Record<string, ToolSeo> = {
     uses: ["Print a transaction export from your bank.", "Share a contact or inventory list as a PDF."],
     related: ["pdf-to-csv", "excel-to-pdf", "excel-editor"],
   },
+  "cdr-converter": {
+    title: "CDR Converter – Convert CorelDRAW CDR to PDF, PNG, JPG & SVG",
+    description: "Open and convert CorelDRAW .cdr files online without CorelDRAW: save them as PDF, PNG, JPG or SVG. Free, several files at once, no sign-up.",
+    intent: ["cdr converter", "cdr to pdf", "cdr to png", "cdr to jpg", "cdr to svg", "open cdr file online", "coreldraw to pdf", "cdr file viewer"],
+    anchor: "Convert a CorelDRAW CDR file",
+    howTo: "convert a CDR file",
+    intro: "Got a .cdr file but no CorelDRAW? Turn it into a PDF, image or SVG anyone can open. The drawing is converted on our server and deleted as soon as the result is ready.",
+    steps: [
+      "Choose one or more CorelDRAW .cdr files.",
+      "Pick the output: PDF for printing and sharing, PNG or JPG for images, or SVG to keep editable vectors.",
+      "For PNG or JPG, pick the quality: Screen, Standard or Print.",
+      "Press Convert and download the result (or a ZIP for several files).",
+    ],
+    features: [
+      "Reads CorelDRAW files from old versions up to modern X-series files.",
+      "PDF and SVG keep shapes and text as sharp vectors.",
+      "PNG and JPG at up to 300 DPI, one image per page.",
+      "Converts several drawings in one go.",
+    ],
+    uses: [
+      "Open a logo or design a printer or designer sent you as .cdr.",
+      "Share a CorelDRAW design with a client as a PDF.",
+      "Get a PNG of a logo for a website or social media.",
+      "Bring a CDR drawing into Figma, Illustrator or Inkscape as SVG.",
+    ],
+    limits: [
+      "The newest CorelDRAW features, special effects and some fonts may not appear exactly as in CorelDRAW. Fonts that aren't on our server are replaced with similar ones.",
+      "Password-protected or damaged CDR files can't be converted.",
+      "SVG output contains the first page only; use PDF for multi-page drawings.",
+    ],
+    faq: [
+      ["How can I open a CDR file without CorelDRAW?", "Convert it here to PDF or PNG. Any phone or computer can open those, and the PDF keeps the drawing as sharp vectors."],
+      ["Can I convert CDR to SVG to edit it in another program?", "Yes. Choose SVG as the output and open it in Illustrator, Inkscape or Figma. SVG keeps shapes as editable vectors."],
+      ["Which CorelDRAW versions are supported?", "Most files from older CorelDRAW versions up to the modern X-series open. Very new files that use the latest effects may look slightly different."],
+    ],
+    related: ["pdf-to-jpg", "compress-pdf", "convert-image", "merge-pdf"],
+  },
   "ebook-to-pdf": {
     title: "EPUB to PDF Converter – Convert eBooks, TXT & HTML to PDF",
     description: "Convert EPUB eBooks, plain text and HTML files into typeset PDFs that are easy to print and read on any device. Free online eBook to PDF converter.",
