@@ -6,6 +6,7 @@ import { apiFetch } from "@/lib/api";
 import { useCloudConfig } from "@/lib/cloudConfig";
 import { useScrollLock } from "@/lib/motion";
 import { cn } from "@/lib/cn";
+import { inApp } from "@/lib/embed";
 
 /**
  * "Buy us a coffee": pick ₹49 (or any amount), pay with Razorpay's checkout,
@@ -60,7 +61,8 @@ const rupees = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 /** A pill that opens the dialog. Renders nothing until payments are set up. */
 export function CoffeeButton({ className, label = "Buy us a coffee" }: { className?: string; label?: string }) {
   const { razorpayKeyId } = useCloudConfig();
-  if (!razorpayKeyId) return null;
+  // No payments inside the mobile app (Google Play rules).
+  if (!razorpayKeyId || inApp()) return null;
   return (
     <button type="button" onClick={openCoffee} className={cn("fo-press group inline-flex items-center gap-2 rounded-full bg-[#ffdd6b] px-4 py-2.5 text-[14px] font-semibold text-[#3b2400] shadow-[0_8px_22px_-10px_rgb(255_200_80/0.8)] transition-shadow hover:shadow-[0_10px_26px_-8px_rgb(255_200_80/0.9)]", className)}>
       <CoffeeIcon className="h-4 w-4 transition-transform group-hover:-rotate-12" aria-hidden="true" /> {label}
@@ -117,7 +119,8 @@ export function Coffee() {
     return () => window.removeEventListener("keydown", onKey);
   }, [visible, phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!razorpayKeyId) return null;
+  // No payments inside the mobile app (Google Play rules), not even via a #coffee link.
+  if (!razorpayKeyId || inApp()) return null;
 
   const amount = preset === "custom" ? Number(custom) : preset;
   const amountOk = Number.isInteger(amount) && amount >= MIN && amount <= MAX;

@@ -40,6 +40,8 @@ export const ROASTS = [
 ];
 
 export const ABUSE_REPLY_TAIL = "Ab dubara real feedback de.";
+/** What the mobile app shows instead of a roast: the app keeps a clean, store-safe tone. */
+export const POLITE_ABUSE_REPLY = "Please keep your feedback respectful, and tell us what you liked or what went wrong.";
 export const FAKE_REPLY =
   "This doesn't look like real feedback. Please tell us what you actually think: what you liked, what's missing or what broke, and use your real name.";
 

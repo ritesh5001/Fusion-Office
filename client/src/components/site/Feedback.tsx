@@ -6,6 +6,7 @@ import { MessageSquareHeart, Star, X } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useScrollLock } from "@/lib/motion";
 import { cn } from "@/lib/cn";
+import { inApp } from "@/lib/embed";
 import { FeedbackNudge, markFeedbackSent } from "./FeedbackNudge";
 
 /** Opens the feedback form from anywhere (e.g. the footer link), optionally with a star rating chosen. */
@@ -93,7 +94,7 @@ export function Feedback() {
       const res = await apiFetch("/api/feedback", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name, message, rating: rating || undefined, page: pathname, website }),
+        body: JSON.stringify({ name, message, rating: rating || undefined, page: pathname, website, app: inApp() }),
       });
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string; code?: string };

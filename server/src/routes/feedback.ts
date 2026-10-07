@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { dbEnabled, prisma } from "../lib/db.js";
 import { HttpError } from "../lib/http.js";
-import { FAKE_REPLY, moderate, roast } from "../lib/moderation.js";
+import { FAKE_REPLY, POLITE_ABUSE_REPLY, moderate, roast } from "../lib/moderation.js";
 
 /** Public: anyone can send feedback (name + message). Rate limited in app.ts. */
 export const feedback = Router();
@@ -30,7 +30,9 @@ feedback.post("/", async (req, res, next) => {
     const data = parseFeedback(req.body);
     // Only real feedback reaches the inbox: abuse gets roasted, junk gets a polite retry.
     const verdict = await moderate(data.name, data.message);
-    if (verdict === "abusive") return void res.status(422).json({ error: roast(), code: "abusive" });
+    // The website roasts abuse; the mobile app (in-app browser) gets a polite reply instead.
+    const fromApp = (req.body as { app?: unknown } | undefined)?.app === true;
+    if (verdict === "abusive") return void res.status(422).json({ error: fromApp ? POLITE_ABUSE_REPLY : roast(), code: "abusive" });
     if (verdict === "fake") return void res.status(422).json({ error: FAKE_REPLY, code: "fake" });
     await prisma.feedback.create({ data: { ...data, userAgent: req.get("user-agent")?.slice(0, 300) ?? null } });
     res.status(201).json({ ok: true });
