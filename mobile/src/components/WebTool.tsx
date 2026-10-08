@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert, Linking, View } from "react-native";
+import { Alert, BackHandler, Linking, View } from "react-native";
 import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
+import type { ShouldStartLoadRequest } from "react-native-webview/lib/WebViewTypes";
 import * as Speech from "expo-speech";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ExternalLink } from "lucide-react-native";
@@ -96,6 +97,19 @@ async function deviceVoices() {
   }));
 }
 
+/**
+ * Everything a page loads stays inside the app: web pages and the frames
+ * inside them (the security check, audio, downloads use blob:/data:/about:).
+ * Android can't tell a frame from the page, and the default rule sends any
+ * non-https address to the phone's browser, which is what kicked people out.
+ * Only links meant for other apps (email, phone, WhatsApp, UPI…) leave.
+ */
+function stayInApp(req: ShouldStartLoadRequest) {
+  if (/^(https?|about|blob|data|javascript):/i.test(req.url)) return true;
+  Linking.openURL(req.url).catch(() => {});
+  return false;
+}
+
 type TtsMessage = { type: "tts-speak"; id: number; text: string; rate?: number; pitch?: number; lang?: string; voice?: string | null } | { type: "tts-cancel" | "tts-pause" | "tts-resume" | "tts-voices" };
 
 export function WebTool({ tool }: { tool: ToolDef }) {
@@ -112,6 +126,17 @@ export function WebTool({ tool }: { tool: ToolDef }) {
 
   // Leaving the tool stops any reading.
   useEffect(() => () => void Speech.stop(), []);
+
+  // Android's back button goes back inside the tool first, then leaves it.
+  const canGoBack = useRef(false);
+  useEffect(() => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (!canGoBack.current) return false;
+      web.current?.goBack();
+      return true;
+    });
+    return () => sub.remove();
+  }, []);
 
   const onTts = async (m: TtsMessage) => {
     if (m.type === "tts-voices") return toPage({ type: "voices", voices: await deviceVoices() });
@@ -181,13 +206,19 @@ export function WebTool({ tool }: { tool: ToolDef }) {
           injectedJavaScript={BRIDGE}
           onMessage={onMessage}
           onLoadProgress={(e) => setProgress(e.nativeEvent.progress)}
+          onNavigationStateChange={(n) => (canGoBack.current = n.canGoBack)}
+          onShouldStartLoadWithRequest={stayInApp}
           onError={() => setFailed(true)}
           allowsBackForwardNavigationGestures
           allowFileAccess
-          mediaPlaybackRequiresUserAction
+          // Read aloud plays one clip per sentence, each starting when the last ends (not on a tap).
+          mediaPlaybackRequiresUserAction={false}
+          allowsInlineMediaPlayback
           setSupportMultipleWindows={false}
+          thirdPartyCookiesEnabled
+          domStorageEnabled
           forceDarkOn={false}
-          originWhitelist={["https://*"]}
+          originWhitelist={["*"]}
         />
       )}
       {files.viewer}
