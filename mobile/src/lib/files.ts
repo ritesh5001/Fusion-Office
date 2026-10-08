@@ -5,7 +5,7 @@ import * as IntentLauncher from "expo-intent-launcher";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getContentUriAsync } from "expo-file-system/legacy";
-import { canSaveToDownloads, saveToDownloads } from "../../modules/fo-downloads";
+import { canRenderPdf, canSaveToDownloads, saveToDownloads } from "../../modules/fo-downloads";
 import { Directory, File, Paths } from "expo-file-system";
 import { kindOf, type FileKind } from "./tools";
 
@@ -127,10 +127,14 @@ export function formatBytes(n: number) {
 
 export const stem = (name: string) => name.replace(/\.[^.]+$/, "");
 
-/** Can the in-app viewer show this file? Images everywhere; PDFs and text on iOS, whose web view renders them. */
+/**
+ * Can the in-app viewer show this file? Images and text everywhere; PDFs on
+ * iOS (its web view renders them) and on Android through the app's own page
+ * renderer. Other types open in the phone's app for them.
+ */
 export function viewableInApp(f: Pick<SavedFile, "mimeType">) {
-  if (f.mimeType.startsWith("image/")) return true;
-  return Platform.OS === "ios" && (f.mimeType === "application/pdf" || f.mimeType.startsWith("text/"));
+  if (f.mimeType.startsWith("image/") || f.mimeType.startsWith("text/")) return true;
+  return f.mimeType === "application/pdf" && (Platform.OS === "ios" || canRenderPdf());
 }
 
 /**

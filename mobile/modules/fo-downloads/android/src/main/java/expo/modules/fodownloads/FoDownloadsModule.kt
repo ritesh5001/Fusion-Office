@@ -1,7 +1,11 @@
 package expo.modules.fodownloads
 
 import android.content.ContentValues
+import android.graphics.Bitmap
+import android.graphics.Color
+import android.graphics.pdf.PdfRenderer
 import android.net.Uri
+import android.os.ParcelFileDescriptor
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
@@ -16,8 +20,65 @@ import java.io.File
  * and the file shows up in Files > Downloads straight away.
  */
 class FoDownloadsModule : Module() {
+  // PdfRenderer handles one page at a time per document; keep renders in line.
+  private val pdfLock = Any()
+
+  private fun openPdf(uri: String): Pair<ParcelFileDescriptor, PdfRenderer> {
+    val path = Uri.parse(uri).path ?: throw CodedException("ERR_BAD_URI", "Bad file address.", null)
+    val fd = ParcelFileDescriptor.open(File(path), ParcelFileDescriptor.MODE_READ_ONLY)
+    return try {
+      fd to PdfRenderer(fd)
+    } catch (e: Exception) {
+      fd.close()
+      // Password-protected or damaged: the caller falls back to another app.
+      throw CodedException("ERR_PDF", "This PDF can't be shown here.", e)
+    }
+  }
+
   override fun definition() = ModuleDefinition {
     Name("FoDownloads")
+
+    /** Page sizes of a PDF (in points), for laying out the in-app viewer before pages are drawn. */
+    AsyncFunction("pdfPages") { uri: String ->
+      synchronized(pdfLock) {
+        val (fd, pdf) = openPdf(uri)
+        try {
+          (0 until pdf.pageCount).map { i -> pdf.openPage(i).use { listOf(it.width, it.height) } }
+        } finally {
+          pdf.close()
+          fd.close()
+        }
+      }
+    }
+
+    /**
+     * Draws one page (0-based) `width` pixels wide with Android's own PDF
+     * renderer and saves it as a JPEG in the cache. Resolves with its file URI.
+     */
+    AsyncFunction("renderPdfPage") { uri: String, index: Int, width: Int ->
+      val context = appContext.reactContext ?: throw CodedException("ERR_NO_CONTEXT", "The app isn't ready yet.", null)
+      val dir = File(context.cacheDir, "fo-pdf-pages").apply { mkdirs() }
+      val out = File(dir, "${(uri.hashCode().toLong() and 0xffffffffL)}-$index-$width.jpg")
+      if (out.exists() && out.length() > 0) return@AsyncFunction Uri.fromFile(out).toString()
+      synchronized(pdfLock) {
+        val (fd, pdf) = openPdf(uri)
+        try {
+          pdf.openPage(index).use { page ->
+            val w = width.coerceIn(200, 3000)
+            val h = (w.toDouble() * page.height / page.width).toInt().coerceAtLeast(1)
+            val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+            bitmap.eraseColor(Color.WHITE)
+            page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+            out.outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, 92, it) }
+            bitmap.recycle()
+          }
+        } finally {
+          pdf.close()
+          fd.close()
+        }
+      }
+      Uri.fromFile(out).toString()
+    }
 
     Function("isSupported") { Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q }
 

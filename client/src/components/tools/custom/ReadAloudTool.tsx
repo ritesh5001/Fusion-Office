@@ -9,6 +9,27 @@ import { useCloudConfig } from "@/lib/cloudConfig";
 import { Dropzone } from "../Dropzone";
 import { Mascot } from "../../mascot/Mascot";
 import { cn } from "@/lib/cn";
+import { inApp } from "@/lib/embed";
+
+const hasSpeech = () => typeof window !== "undefined" && "speechSynthesis" in window;
+
+/**
+ * Whether this browser can speak. Inside the Fusion Office app, the app adds
+ * speech to its web view as the page loads, so wait a moment for it there.
+ */
+function useSpeechSupport() {
+  const [supported, setSupported] = useState(hasSpeech);
+  useEffect(() => {
+    if (supported || !inApp()) return;
+    let tries = 0;
+    const t = setInterval(() => {
+      if (hasSpeech()) setSupported(true);
+      if (hasSpeech() || ++tries > 30) clearInterval(t);
+    }, 100);
+    return () => clearInterval(t);
+  }, [supported]);
+  return supported;
+}
 
 interface Sentence {
   page: number;
@@ -135,8 +156,7 @@ export function ReadAloudTool() {
   const [playing, setPlaying] = useState(false);
   const playingRef = useRef(false);
   const list = useRef<HTMLDivElement>(null);
-  const supported =
-    typeof window !== "undefined" && "speechSynthesis" in window;
+  const supported = useSpeechSupport();
 
   useEffect(() => {
     if (!supported) return;

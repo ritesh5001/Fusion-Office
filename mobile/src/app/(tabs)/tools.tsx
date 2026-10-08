@@ -1,4 +1,4 @@
-import { memo, useDeferredValue, useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { FlatList, ScrollView, TextInput, View } from "react-native";
 import Animated, { Easing, FadeInDown, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useLocalSearchParams } from "expo-router";
@@ -29,6 +29,7 @@ export default function Tools() {
   const [cat, setCat] = useState<Cat>("all");
   const [preview, setPreview] = useState<ToolDef | null>(null);
   const input = useRef<TextInput>(null);
+  const listRef = useRef<FlatList<Row>>(null);
   // The search box keeps its own text (typing never waits for the grid); results
   // follow a moment after you pause, as a low-priority update.
   const search = useDeferredValue(query);
@@ -48,6 +49,24 @@ export default function Tools() {
 
   const { columns, gap, cardWidth } = useColumns();
   const grouped = cat === "all" && !searching;
+
+  // New results start from the top; otherwise a shorter list can leave you
+  // scrolled past its end, looking at an empty screen.
+  useEffect(() => {
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
+  }, [search, cat]);
+
+  // Stable callbacks, so rows whose tools didn't change aren't redrawn.
+  const latest = useRef({ pool, cat, fitMode });
+  useEffect(() => {
+    latest.current = { pool, cat, fitMode };
+  }, [pool, cat, fitMode]);
+  const submit = useCallback((text: string) => {
+    const { pool, cat, fitMode } = latest.current;
+    const first = searchTools(pool.filter((t) => cat === "all" || t.category === cat), text)[0];
+    if (first) openTool(first.slug, fitMode);
+  }, []);
+  const open = useCallback((slug: string) => openTool(slug, latest.current.fitMode), []);
 
   // A flat list of section titles and card rows, rendered lazily as you scroll.
   const rows = useMemo(() => {
@@ -80,10 +99,7 @@ export default function Tools() {
         {fitMode ? `${pool.length} tools can open ${staged!.length === 1 ? staged![0].name : `${staged!.length} files`}.` : `${TOOLS.length} tools for PDFs, Office files and images.`}
       </T>
 
-      <SearchBox inputRef={input} onSearch={setQuery} onSubmit={(text) => {
-        const first = searchTools(pool.filter((t) => cat === "all" || t.category === cat), text)[0];
-        if (first) openTool(first.slug, fitMode);
-      }} />
+      <SearchBox inputRef={input} onSearch={setQuery} onSubmit={submit} />
 
       <Chips value={cat} onChange={setCat} counts={(c) => (c === "all" ? pool.length : pool.filter((t) => t.category === c).length)} />
       <View style={{ height: grouped ? 4 : 16 }} />
@@ -94,6 +110,7 @@ export default function Tools() {
     <View style={{ flex: 1, backgroundColor: C.app }}>
       <Backdrop />
       <FlatList
+        ref={listRef}
         data={rows}
         keyExtractor={(r) => r.key}
         ListHeaderComponent={header}
@@ -111,20 +128,16 @@ export default function Tools() {
               {item.count != null && <T style={{ fontSize: 13, color: C.fgSubtle }}>{item.count}</T>}
             </Animated.View>
           ) : (
-            <View style={{ flexDirection: "row", gap, marginBottom: gap }}>
-              {item.tools.map((t, i) => (
-                <ToolCard key={t.slug} tool={t} index={item.start + i} width={cardWidth} animate={!searching} onPress={() => openTool(t.slug, fitMode)} onLongPress={() => setPreview(t)} />
-              ))}
-            </View>
+            <CardRow tools={item.tools} start={item.start} gap={gap} width={cardWidth} animate={!searching} onOpen={open} onPreview={setPreview} />
           )
         }
         contentContainerStyle={{ paddingTop: insets.top + 6, paddingBottom: TAB_BAR_SPACE + insets.bottom + 12, paddingHorizontal: 16, width: "100%", maxWidth: MAX_CONTENT, alignSelf: "center" }}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
-        initialNumToRender={8}
-        windowSize={7}
-        removeClippedSubviews
+        initialNumToRender={6}
+        maxToRenderPerBatch={4}
+        windowSize={9}
       />
       <ToolPreview tool={preview} onClose={() => setPreview(null)} />
     </View>
@@ -136,6 +149,8 @@ export default function Tools() {
  * the screen hears about it once typing pauses (150 ms), or at once when cleared.
  */
 const SearchBox = memo(function SearchBox({ inputRef, onSearch, onSubmit }: { inputRef: RefObject<TextInput | null>; onSearch: (q: string) => void; onSubmit: (q: string) => void }) {
+  // Uncontrolled: Android can drop or repeat letters when a controlled input
+  // waits on a busy screen. `text` only decides whether the clear button shows.
   const [text, setText] = useState("");
   useEffect(() => {
     const t = setTimeout(() => onSearch(text), text.trim() ? 150 : 0);
@@ -146,7 +161,7 @@ const SearchBox = memo(function SearchBox({ inputRef, onSearch, onSubmit }: { in
       <Search size={19} color={C.fgSubtle} />
       <TextInput
         ref={inputRef}
-        value={text}
+        defaultValue=""
         onChangeText={setText}
         placeholder="Compress a PDF, merge, photo to PDF…"
         placeholderTextColor={C.fgSubtle}
@@ -159,13 +174,27 @@ const SearchBox = memo(function SearchBox({ inputRef, onSearch, onSubmit }: { in
         accessibilityLabel="Search tools"
       />
       {text ? (
-        <PressScale onPress={() => setText("")} accessibilityLabel="Clear search" hitSlop={14} style={{ padding: 4 }}>
+        <PressScale onPress={() => (inputRef.current?.clear(), setText(""))} accessibilityLabel="Clear search" hitSlop={14} style={{ padding: 4 }}>
           <X size={18} color={C.fgMuted} />
         </PressScale>
       ) : null}
     </View>
   );
 });
+
+/** One row of cards. Redrawn only when its tools or size change, not on every keystroke. */
+const CardRow = memo(
+  function CardRow({ tools, start, gap, width, animate, onOpen, onPreview }: { tools: ToolDef[]; start: number; gap: number; width: number; animate: boolean; onOpen: (slug: string) => void; onPreview: (t: ToolDef) => void }) {
+    return (
+      <View style={{ flexDirection: "row", gap, marginBottom: gap }}>
+        {tools.map((t, i) => (
+          <ToolCard key={t.slug} tool={t} index={start + i} width={width} animate={animate} onPress={() => onOpen(t.slug)} onLongPress={() => onPreview(t)} />
+        ))}
+      </View>
+    );
+  },
+  (a, b) => a.start === b.start && a.gap === b.gap && a.width === b.width && a.animate === b.animate && a.tools.length === b.tools.length && a.tools.every((t, i) => t === b.tools[i]),
+);
 
 type Row = { kind: "title"; key: string; title: string; color?: string; count?: number } | { kind: "cards"; key: string; tools: ToolDef[]; start: number };
 

@@ -16,14 +16,14 @@ const quiet = (p: Promise<void>) => p.catch(() => {});
 const system = (type: Haptics.AndroidHaptics, fallback: Haptics.AndroidHaptics) =>
   Haptics.performAndroidHapticsAsync(type).catch(() => quiet(Haptics.performAndroidHapticsAsync(fallback)));
 
-/** A tap or a change of choice: the lightest tick. */
-export const tick = () => void (android ? system(Haptics.AndroidHaptics.Segment_Tick, Haptics.AndroidHaptics.Clock_Tick) : quiet(Haptics.selectionAsync()));
+/** A tap or a change of choice: a light, crisp tick (one step above the faintest). */
+export const tick = () => void (android ? system(Haptics.AndroidHaptics.Context_Click, Haptics.AndroidHaptics.Context_Click) : quiet(Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)));
 
-/** A main action, like the + button: a little firmer than a tick, still soft. */
-export const press = () => void (android ? system(Haptics.AndroidHaptics.Virtual_Key, Haptics.AndroidHaptics.Virtual_Key) : quiet(Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft)));
+/** A main action, like the + button: a little firmer than a tick. */
+export const press = () => void (android ? system(Haptics.AndroidHaptics.Virtual_Key, Haptics.AndroidHaptics.Virtual_Key) : quiet(Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid)));
 
 /** Something finished well. */
-export const success = () => void (android ? system(Haptics.AndroidHaptics.Confirm, Haptics.AndroidHaptics.Context_Click) : quiet(Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)));
+export const success = () => void (android ? system(Haptics.AndroidHaptics.Confirm, Haptics.AndroidHaptics.Long_Press) : quiet(Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)));
 
 /** Something went wrong. */
 export const failure = () => void (android ? system(Haptics.AndroidHaptics.Reject, Haptics.AndroidHaptics.Context_Click) : quiet(Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid)));

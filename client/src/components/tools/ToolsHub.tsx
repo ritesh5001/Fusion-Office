@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useDeferredValue, memo } from "react";
 import { ArrowRight, FileText, Search, Workflow, X } from "lucide-react";
 import { CATEGORIES, TOOLS, type Category, type ToolDef } from "@/lib/tools/registry";
 import { accepts, appPath, handFiles, toolPath } from "@/lib/tools/handoff";
@@ -43,13 +43,16 @@ export function ToolsHub({
   const input = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLElement>(null);
 
-  const words = query.trim() ? queryWords(query) : [];
+  // The box shows every keystroke at once; the results (the heavy part on a
+  // phone) follow as a lower-priority update, so typing never stutters.
+  const search = useDeferredValue(query);
+  const words = search.trim() ? queryWords(search) : [];
   const pool = useMemo(() => (staged?.length ? TOOLS.filter((t) => fitsFiles(t, staged)) : TOOLS), [staged]);
   const results = useMemo(() => {
     const inCat = pool.filter((t) => cat === "all" || t.category === cat);
-    return words.length ? inCat.filter((t) => matches(t, words)).sort((a, b) => rank(a, words, query) - rank(b, words, query)) : inCat;
+    return words.length ? inCat.filter((t) => matches(t, words)).sort((a, b) => rank(a, words, search) - rank(b, words, search)) : inCat;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cat, query, pool]);
+  }, [cat, search, pool]);
 
   // Links into the page (#search from the header, #cat-… from the menus) show the full list first.
   useEffect(() => {
@@ -205,14 +208,14 @@ export function ToolsHub({
       </div>
 
       <p className="sr-only" aria-live="polite">
-        {words.length ? `${results.length} tools match “${query}”` : ""}
+        {words.length ? `${results.length} tools match “${search}”` : ""}
       </p>
 
       <div className="mt-6">
         {results.length === 0 ? (
           <div className="card flex flex-col items-center px-6 py-12 text-center">
             <Mascot mood="confused" size={80} />
-            <p className="mt-4 text-[16px] font-semibold text-fg">{query ? <>No tool matches “{query}”.</> : "No tool here can open this file."}</p>
+            <p className="mt-4 text-[16px] font-semibold text-fg">{search ? <>No tool matches “{search}”.</> : "No tool here can open this file."}</p>
             <p className="mt-1 text-[14px] text-fg-muted">{query ? "Try a simpler word, like “pdf”, “image” or “convert”." : "Try another category, or clear the file."}</p>
             <button
               type="button"
@@ -278,8 +281,8 @@ function ToolGrid({ tools, staged, reveal = false }: { tools: ToolDef[]; staged?
   );
 }
 
-/** One tool: its icon and name, centred. */
-export function ToolCard({ tool: t, staged }: { tool: ToolDef; staged?: File[] | null }) {
+/** One tool: its icon and name, centred. Memoised: a new search only redraws cards that changed. */
+export const ToolCard = memo(function ToolCard({ tool: t, staged }: { tool: ToolDef; staged?: File[] | null }) {
   const router = useRouter();
   const soon = t.status === "soon";
   const body = (
@@ -311,7 +314,7 @@ export function ToolCard({ tool: t, staged }: { tool: ToolDef; staged?: File[] |
       {body}
     </Link>
   );
-}
+});
 
 function WorkflowCard() {
   return (
