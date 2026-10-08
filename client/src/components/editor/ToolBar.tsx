@@ -111,10 +111,39 @@ const HINTS: Partial<Record<ToolId, string>> = {
   whiteout: "Drag to cover an area with white",
 };
 
+const TOUCH_HINTS: Partial<Record<ToolId, string>> = {
+  edittext: "Tap a line of text to change it",
+  text: "Tap the page to add text",
+  rect: "Drag to draw · tap for a default size",
+  ellipse: "Drag to draw · tap for a default size",
+  triangle: "Drag to draw · tap for a default size",
+  line: "Drag from start to end",
+  arrow: "Drag from tail to head",
+  draw: "Draw with your finger",
+  highlighter: "Draw with the marker",
+  eraser: "Tap or drag over drawings to erase",
+  highlight: "Drag across text to highlight it",
+  underline: "Drag across text to underline it",
+  strikeout: "Drag across text to strike it out",
+  comment: "Tap to place a sticky note",
+  redact: "Drag over content to redact it",
+  whiteout: "Drag to cover an area with white",
+};
+
+/** How the tool is used. On touch screens, tools other than Select and Edit text take one finger, so two scroll. */
+export function toolHint(tool: ToolId, touch = false) {
+  if (!touch) return HINTS[tool];
+  const hint = TOUCH_HINTS[tool];
+  return hint && tool !== "edittext" ? `${hint} · two fingers to scroll` : hint;
+}
+
+const OPTION_TOOLS: ToolId[] = ["rect", "ellipse", "triangle", "line", "arrow", "draw", "highlighter", "highlight", "underline", "strikeout", "text"];
+
 export function ToolBar() {
   const tool = useEditor((s) => s.tool);
   return (
-    <div className="flex h-11 shrink-0 items-center gap-0.5 overflow-x-auto border-b border-line bg-surface px-2 [scrollbar-width:none]">
+    <>
+    <div className="flex h-11 shrink-0 items-center gap-0.5 overflow-x-auto border-b border-line bg-surface px-2 [scrollbar-width:none] pointer-coarse:h-12">
       {GROUPS.map((group, gi) => (
         <div key={gi} className="flex items-center gap-0.5">
           {gi > 0 && <Divider />}
@@ -125,14 +154,23 @@ export function ToolBar() {
           ))}
         </div>
       ))}
-      <Divider />
-      <ToolOptions />
+      <div className="hidden items-center md:flex">
+        <Divider />
+        <ToolOptions />
+      </div>
       <div className="ml-auto hidden shrink-0 pl-3 pr-1 text-[12px] text-fg-subtle xl:block">
         {HINTS[tool]}
         {/* Tools stay on until another tool is picked. */}
         {tool !== "select" && <span className="text-fg-subtle"> · Esc to stop</span>}
       </div>
     </div>
+    {/* Phones: the active tool's settings get their own row instead of scrolling off to the right. */}
+    {OPTION_TOOLS.includes(tool) && (
+      <div className="fo-intro-fade flex h-11 shrink-0 items-center overflow-x-auto border-b border-line bg-surface px-3 [animation-duration:200ms] [scrollbar-width:none] md:hidden">
+        <ToolOptions />
+      </div>
+    )}
+    </>
   );
 }
 

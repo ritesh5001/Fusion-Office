@@ -22,6 +22,7 @@ import { createLine, createShape, createText, newId } from "@/lib/editor/objects
 import { findById, fitLineWidth, pathToLocalD, readFabricObject, syncCanvas, type Tagged } from "@/lib/editor/fabricAdapter";
 import { setLiveText } from "@/lib/editor/liveText";
 import { linePath } from "@/lib/pdf/geometry";
+import { coarsePointer, pinch, primeKeyboard } from "@/lib/editor/touch";
 
 const DRAG_TOOLS: ToolId[] = ["rect", "ellipse", "triangle", "line", "arrow", "redact", "whiteout", "highlight", "underline", "strikeout"];
 const MARKUP_TOOLS: ToolId[] = ["highlight", "underline", "strikeout"];
@@ -117,7 +118,17 @@ function PageSurface({ page, zoom }: { page: EditorPage; zoom: number }) {
     fabricRef.current = canvas;
     const cleanup = attachInteractions(canvas, () => pageRef.current);
     syncCanvas(canvas, () => pageRef.current, afterSync);
+    // A second finger turns a move into a pinch: put the object back where it was.
+    const stopPinch = pinch.onStart(() => {
+      const t = (canvas as unknown as { _currentTransform: { target: FabricObject; original: Record<string, unknown> } | null })._currentTransform;
+      if (!t) return;
+      t.target.set(t.original);
+      t.target.setCoords();
+      (canvas as unknown as { _currentTransform: null })._currentTransform = null;
+      canvas.requestRenderAll();
+    });
     return () => {
+      stopPinch();
       cleanup();
       fabricRef.current = null;
       canvas.dispose().catch(() => {});
@@ -245,7 +256,13 @@ function applyTool(canvas: Canvas) {
   const select = tool === "select";
   // Both text tools let you click an existing text box to type in it.
   const textTool = tool === "text" || tool === "edittext";
-  canvas.selection = select;
+  // On touch screens one finger scrolls the document with Select (and Edit
+  // text); a selected object still moves when dragged. Other tools take the
+  // finger, and two fingers scroll and zoom (see Viewport).
+  const scroll = select || tool === "edittext";
+  canvas.allowTouchScrolling = scroll;
+  canvas.upperCanvasEl.style.touchAction = scroll ? "pan-x pan-y" : "none";
+  canvas.selection = select && !coarsePointer();
   canvas.skipTargetFind = !(select || tool === "eraser" || textTool);
   canvas.defaultCursor = select || tool === "edittext" ? "default" : tool === "text" ? "text" : tool === "eraser" ? "cell" : "crosshair";
   for (const obj of canvas.getObjects() as Tagged[]) {
@@ -274,6 +291,8 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
   let markupToken = 0;
   // When text editing last ended; a click that ends an edit shouldn't also start a new box.
   let lastEditExit = 0;
+  // When the current press began, to tell whether a pinch interrupted it.
+  let downAt = 0;
 
   const point = (opt: TPointerEventInfo<TPointerEvent>) => {
     const p = (opt as unknown as { scenePoint?: { x: number; y: number } }).scenePoint ?? canvas.getScenePoint(opt.e);
@@ -290,6 +309,7 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
   };
 
   const onDown = (opt: TPointerEventInfo<TPointerEvent>) => {
+    downAt = performance.now();
     const { tool, toolOptions } = st();
     const page = getPage();
     if (st().currentPageId !== page.id) st().setCurrentPage(page.id);
@@ -299,6 +319,7 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
     // on a text box → edit it; outside the box being edited → finish that
     // edit; otherwise (Text tool) → start a new box.
     if (tool === "text" || tool === "edittext") {
+      primeKeyboard();
       const target = opt.target as Tagged | undefined;
       const targetId = target?.editorId;
       const active = canvas.getActiveObject();
@@ -417,6 +438,7 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
   };
 
   const onMove = (opt: TPointerEventInfo<TPointerEvent>) => {
+    if (pinch.active) return;
     if (erasing) return eraseTarget(opt.target);
     if (drag) updatePreview(point(opt));
   };
@@ -428,6 +450,7 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
     drag = null;
     if (preview) canvas.remove(preview);
     canvas.requestRenderAll();
+    if (pinch.since(downAt)) return; // the drag became a pinch
     const end = point(opt);
     const page = getPage();
     const { toolOptions } = st();
@@ -479,6 +502,7 @@ function attachInteractions(canvas: Canvas, getPage: () => EditorPage) {
     const { tool, toolOptions } = st();
     const path = opt.path;
     canvas.remove(path);
+    if (pinch.since(downAt)) return canvas.requestRenderAll(); // the stroke became a pinch
     const local = pathToLocalD(path);
     const highlighter = tool === "highlighter";
     st().addObject(
@@ -718,7 +742,10 @@ function TextLinesLayer({ page, zoom }: { page: EditorPage; zoom: number }) {
           type="button"
           title={`Edit "${l.text}"`}
           aria-label={`Edit text: ${l.text}`}
-          onClick={() => edit(l, i)}
+          onClick={() => {
+            primeKeyboard();
+            edit(l, i);
+          }}
           className={`pointer-events-auto absolute cursor-text rounded-[2px] outline-1 outline-offset-1 transition-colors ${
             busy === i ? "bg-brand-500/20 outline-brand-600" : "outline-brand-500/35 outline-dashed hover:bg-brand-500/10 hover:outline-solid hover:outline-brand-600"
           }`}

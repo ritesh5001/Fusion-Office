@@ -29,7 +29,8 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
         "inline-flex shrink-0 items-center justify-center rounded-md text-fg-muted transition-colors",
         "hover:bg-raised hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-500",
         "disabled:pointer-events-none disabled:opacity-35",
-        size === "md" ? "h-8 w-8" : "h-7 w-7",
+        // Fingers need bigger targets than a mouse.
+        size === "md" ? "h-8 w-8 pointer-coarse:h-10 pointer-coarse:w-10" : "h-7 w-7 pointer-coarse:h-9 pointer-coarse:w-9",
         active && "bg-brand-500/15 text-brand-300 hover:bg-brand-500/25 hover:text-brand-300",
         className,
       )}
@@ -275,8 +276,11 @@ export function Menu({
   label,
   items,
   align = "left",
+  ariaLabel,
 }: {
   label: ReactNode;
+  /** For a menu whose button is only an icon. */
+  ariaLabel?: string;
   items: ({ label: string; onSelect: () => void; shortcut?: string; disabled?: boolean; icon?: ReactNode } | "divider")[];
   align?: "left" | "right";
 }) {
@@ -300,11 +304,12 @@ export function Menu({
       <button
         type="button"
         className={cn(
-          "h-8 rounded-lg px-2.5 text-[13px] text-fg-muted transition-colors hover:bg-raised hover:text-fg",
+          "h-8 rounded-lg px-2.5 text-[13px] text-fg-muted transition-colors hover:bg-raised hover:text-fg pointer-coarse:h-10",
           open && "bg-raised text-fg",
         )}
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-label={ariaLabel}
         onClick={() => setOpen((o) => !o)}
       >
         {label}
@@ -313,7 +318,7 @@ export function Menu({
         <div
           role="menu"
           className={cn(
-            "absolute top-full z-40 mt-1.5 min-w-56 rounded-xl border border-line-strong bg-overlay p-1 shadow-pop",
+            "thin-scroll absolute top-full z-40 mt-1.5 max-h-[calc(100dvh-72px)] min-w-56 overflow-y-auto overscroll-contain rounded-xl border border-line-strong bg-overlay p-1 shadow-pop",
             align === "right" ? "right-0" : "left-0",
           )}
         >
@@ -326,7 +331,7 @@ export function Menu({
                 role="menuitem"
                 type="button"
                 disabled={item.disabled}
-                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[13px] text-fg hover:bg-raised disabled:opacity-40"
+                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[13px] text-fg hover:bg-raised disabled:opacity-40 pointer-coarse:py-2.5 pointer-coarse:text-[14.5px]"
                 onClick={() => {
                   setOpen(false);
                   item.onSelect();

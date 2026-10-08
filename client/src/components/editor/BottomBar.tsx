@@ -24,7 +24,7 @@ export function BottomBar() {
   };
 
   return (
-    <footer className="flex h-9 shrink-0 items-center gap-1 border-t border-line bg-surface px-2 text-[12px] text-fg-muted">
+    <footer className="flex h-9 shrink-0 items-center gap-1 border-t border-line bg-surface px-2 pb-[env(safe-area-inset-bottom)] text-[12px] text-fg-muted pointer-coarse:h-12 pointer-coarse:box-content">
       <IconButton size="sm" label="Previous page" disabled={index === 0} onClick={() => go(index - 1)}>
         <ChevronUp className="h-4 w-4" />
       </IconButton>
@@ -57,7 +57,7 @@ export function BottomBar() {
         <IconButton size="sm" label="Fit width" active={fitMode === "width"} onClick={() => setZoom(zoom, "width")}>
           <MoveHorizontal className="h-4 w-4" />
         </IconButton>
-        <IconButton size="sm" label="Fit page" active={fitMode === "page"} onClick={() => setZoom(zoom, "page")}>
+        <IconButton size="sm" label="Fit page" active={fitMode === "page"} onClick={() => setZoom(zoom, "page")} className="max-sm:hidden">
           <Maximize className="h-3.5 w-3.5" />
         </IconButton>
         <Divider />

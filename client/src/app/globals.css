@@ -332,6 +332,11 @@ input[type="color"]::-moz-color-swatch {
 @keyframes fo-palette-out { to { opacity: 0; scale: 0.97; } }
 @keyframes fo-fade-out { to { opacity: 0; } }
 .fo-palette-in { animation: fo-palette-in 220ms cubic-bezier(.2,.8,.2,1) backwards; }
+/* Editor on phones: the pages drawer and the properties sheet glide in on the iOS curve (no bounce). */
+@keyframes fo-drawer-in { from { translate: -100% 0; } }
+@keyframes fo-sheet-up { from { translate: 0 100%; } }
+.fo-drawer-in { animation: fo-drawer-in 320ms cubic-bezier(.32,.72,0,1) backwards; }
+.fo-sheet-up { animation: fo-sheet-up 340ms cubic-bezier(.32,.72,0,1) backwards; }
 .fo-palette-out { animation: fo-palette-out 160ms ease-in forwards; }
 .fo-fade-out { animation: fo-fade-out 160ms ease-in forwards; }
 @keyframes fo-zoom-forward { to { scale: 1.04; } }
@@ -441,7 +446,7 @@ input[type="color"]::-moz-color-swatch {
   .fo-sweep, .fo-twinkle, .fo-float-sm, .fo-dash-march, .fo-fade, .fo-rise, .fo-pop, .fo-drop-in, .fo-scan, .fo-ripple,
   .fo-draw, .fo-chip-pulse, .fo-packet, .fo-streak, .fo-burst, .fo-particle,
   .fo-intro-fade, .fo-intro-rise, .fo-intro-wipe, .fo-intro-tile, .fo-intro-scale, .fo-intro-pop, .fo-breathe, .fo-slide-out,
-  .fo-grow-x, .fo-pulse-once, .fo-palette-in, .fo-zoom-forward, .fo-preview, .fo-r-head, .fo-r-item,
+  .fo-grow-x, .fo-pulse-once, .fo-palette-in, .fo-drawer-in, .fo-sheet-up, .fo-zoom-forward, .fo-preview, .fo-r-head, .fo-r-item,
   .fo-pd-packet, .fo-pd-chip, .fo-pd-result, .fo-pd-out, .fo-pd-back, .fo-pd-strip, .fo-pd-deleted, .fo-pd-line, .fo-pd-node,
   .fo-ping, .fo-heartbeat, .fo-nudge-in, .fo-star-in, .fo-shake, .fo-steam, .fo-fill,
   .fo-kind-wave, .fo-kind-orbit, .fo-kind-counter, .fo-kind-float

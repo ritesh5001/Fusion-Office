@@ -8,6 +8,7 @@ import {
   FileDown,
   FolderOpen,
   Loader2,
+  MoreHorizontal,
   Printer,
   Redo2,
   Search,
@@ -68,7 +69,7 @@ export function TopBar({ onToggleSidebar, onTogglePanel }: { onToggleSidebar: ()
 
   return (
     <header className="flex h-12 shrink-0 items-center gap-1 border-b border-line bg-surface px-2">
-      <Link href="/" className="flex items-center gap-2 rounded-lg px-1.5 py-1 hover:bg-raised" title="Fusion Office home">
+      <Link href="/" className="flex shrink-0 items-center gap-2 rounded-lg px-1.5 py-1 hover:bg-raised" title="Fusion Office home">
         <Logo className="h-6 w-6" />
       </Link>
       <DocName />
@@ -164,18 +165,54 @@ export function TopBar({ onToggleSidebar, onTogglePanel }: { onToggleSidebar: ()
         <IconButton label={redoLabel ? `Redo ${redoLabel.toLowerCase()}` : "Redo"} shortcut={isMac ? "⇧⌘Z" : "Ctrl+Y"} disabled={!canRedo} onClick={() => st().redo()}>
           <Redo2 className="h-4 w-4" />
         </IconButton>
-        <Divider />
-        <IconButton label="Search" shortcut={`${MOD}F`} onClick={() => st().setSearch({ searchOpen: !st().searchOpen })}>
-          <Search className="h-4 w-4" />
-        </IconButton>
-        <IconButton label="Print" shortcut={`${MOD}P`} onClick={() => run(printDocument())}>
+        <div className="hidden items-center sm:flex">
+          <Divider />
+          <IconButton label="Search" shortcut={`${MOD}F`} onClick={() => st().setSearch({ searchOpen: !st().searchOpen })}>
+            <Search className="h-4 w-4" />
+          </IconButton>
+        </div>
+        <IconButton label="Print" shortcut={`${MOD}P`} onClick={() => run(printDocument())} className="max-md:hidden">
           <Printer className="h-4 w-4" />
         </IconButton>
         {cloud.enabled && (
-          <IconButton label={cloud.user ? "Save to cloud" : "Sign in to save to cloud"} onClick={() => run(saveToCloud(cloud, { version: true }))}>
+          <IconButton label={cloud.user ? "Save to cloud" : "Sign in to save to cloud"} onClick={() => run(saveToCloud(cloud, { version: true }))} className="max-sm:hidden">
             <CloudUpload className="h-4 w-4" />
           </IconButton>
         )}
+        {/* Phones and small tablets: every menu in one. */}
+        <div className="md:hidden">
+          <Menu
+            align="right"
+            ariaLabel="More"
+            label={<MoreHorizontal className="h-[18px] w-[18px]" />}
+            items={[
+              { label: "Pages", onSelect: onToggleSidebar },
+              { label: "Properties", onSelect: onTogglePanel },
+              { label: "Find…", icon: <Search className="h-3.5 w-3.5" />, onSelect: () => st().setSearch({ searchOpen: true }) },
+              "divider",
+              { label: "Open PDF…", icon: <FolderOpen className="h-3.5 w-3.5" />, onSelect: () => openDialog() },
+              { label: "New blank document", onSelect: () => newBlankDocument() },
+              { label: "Export options…", icon: <FileDown className="h-3.5 w-3.5" />, onSelect: () => st().setDialog("export") },
+              { label: "Print", icon: <Printer className="h-3.5 w-3.5" />, onSelect: () => run(printDocument()) },
+              ...(cloud.enabled
+                ? ([{ label: cloud.user ? "Save to cloud" : "Sign in to save to cloud", icon: <CloudUpload className="h-3.5 w-3.5" />, onSelect: () => run(saveToCloud(cloud, { version: true })) }] as const)
+                : []),
+              "divider",
+              { label: "Add blank page", onSelect: () => st().addBlankPage() },
+              { label: "Insert pages from PDF…", onSelect: () => insertDialog("application/pdf") },
+              { label: "Insert image as page…", onSelect: () => insertDialog("image/png,image/jpeg,image/webp") },
+              "divider",
+              { label: "Rotate page right", onSelect: () => st().rotatePages(pageSelection(), 90) },
+              { label: "Rotate page left", onSelect: () => st().rotatePages(pageSelection(), -90) },
+              { label: "Duplicate page", onSelect: () => st().duplicatePages(pageSelection()) },
+              { label: "Delete page", onSelect: () => requestDeletePages(pageSelection()) },
+              { label: "Extract pages…", onSelect: () => run(extractPages(pageSelection())) },
+              { label: "Split document…", onSelect: () => st().setDialog("split") },
+              "divider",
+              { label: "Close document", icon: <X className="h-3.5 w-3.5" />, onSelect: () => st().closeDocument() },
+            ]}
+          />
+        </div>
         <Button variant="primary" size="sm" className="ml-1.5" onClick={download} disabled={busy} title={`Download (${MOD}S)`}>
           {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
           <span className="hidden sm:inline">Download</span>
@@ -222,7 +259,7 @@ function DocName() {
       onChange={(e) => setDraft(e.target.value)}
       onBlur={commit}
       onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-      className="h-8 w-[min(28vw,260px)] truncate rounded-md border border-transparent px-2 text-[14px] font-medium text-fg outline-none hover:border-line-strong focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25 bg-transparent focus:bg-sunken"
+      className="h-8 w-[min(28vw,260px)] min-w-0 truncate rounded-md border border-transparent px-2 text-[14px] font-medium text-fg outline-none hover:border-line-strong focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25 bg-transparent focus:bg-sunken"
     />
   );
 }
