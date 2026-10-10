@@ -37,6 +37,8 @@ export interface RemovalResult {
   unsafe: boolean[];
   /** Font resource names of the removed glyphs, per rect, most used first. */
   fonts?: string[][];
+  /** Per underline passed in: whether its stroke was found and deleted. */
+  underlines?: boolean[];
 }
 
 export type Mat = [number, number, number, number, number, number];
@@ -371,9 +373,15 @@ const hex = (bytes: number[]) => "<" + bytes.map((b) => b.toString(16).padStart(
  * Remove every glyph whose center lies inside one of `rects` from the page's
  * own content stream. Returns per-rect counts; `unsafe` flags rects that
  * contain text we could not measure (caller should cover those).
+ *
+ * `underlines` are the areas painted by the strokes that underlined that text
+ * (thin lines or slivers, drawn apart from the glyphs). Each straight path
+ * that paints one of them is deleted too, so no underline is left behind
+ * under words that are gone.
  */
-export function removeTextInRects(page: PDFPage, rects: UserRect[]): RemovalResult {
+export function removeTextInRects(page: PDFPage, rects: UserRect[], underlines: UserRect[] = []): RemovalResult {
   const result: RemovalResult = { removed: rects.map(() => 0), unsafe: rects.map(() => false) };
+  if (underlines.length) result.underlines = underlines.map(() => false);
   const fontUse = rects.map(() => new Map<string, number>());
   if (!rects.length) return result;
   const content = pageContent(page);
@@ -398,7 +406,7 @@ export function removeTextInRects(page: PDFPage, rects: UserRect[]): RemovalResu
 
   // graphics + text state
   let ctm: Mat = I;
-  const gstack: { ctm: Mat; font: string; fs: number; tc: number; tw: number; th: number; tl: number }[] = [];
+  const gstack: { ctm: Mat; font: string; fs: number; tc: number; tw: number; th: number; tl: number; lw: number }[] = [];
   let tm: Mat = I;
   let tlm: Mat = I;
   let font = "";
@@ -407,6 +415,45 @@ export function removeTextInRects(page: PDFPage, rects: UserRect[]): RemovalResu
   let tw = 0;
   let th = 1;
   let tl = 0;
+  let lw = 1;
+
+  // The path being built: each sub-path with its bytes and user-space points.
+  type Sub = { start: number; end: number; pts: [number, number][]; straight: boolean };
+  let subs: Sub[] = [];
+  let clipping = false;
+  const extend = (op: Op, pts: [number, number][], straight = true) => {
+    const sub = subs[subs.length - 1];
+    if (!sub) return; // no current point: malformed, leave it alone
+    sub.end = op.end;
+    sub.pts.push(...pts);
+    if (!straight) sub.straight = false;
+  };
+  const paintPath = (op: Op, stroked: boolean, filled: boolean) => {
+    const path = subs;
+    const clipped = clipping;
+    subs = [];
+    clipping = false;
+    if (!underlines.length || !path.length || clipped) return;
+    const half = stroked ? (lw * Math.sqrt(Math.abs(ctm[0] * ctm[3] - ctm[1] * ctm[2]))) / 2 : 0;
+    const hits = path.map((sub) => {
+      if (!sub.straight || sub.pts.length < 2) return -1;
+      const xs = sub.pts.map((q) => q[0]);
+      const ys = sub.pts.map((q) => q[1]);
+      const box = [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+      // A stroke only counts when its path is a single straight line, not an outline.
+      if (!filled && Math.min(box[2] - box[0], box[3] - box[1]) > 0.05) return -1;
+      const painted = [box[0] - half, box[1] - half, box[2] + half, box[3] + half];
+      return underlines.findIndex((u) => painted.every((v, k) => Math.abs(v - u[k]) < 0.6));
+    });
+    if (hits.every((h) => h < 0)) return;
+    for (const [k, sub] of path.entries()) {
+      if (hits[k] < 0) continue;
+      result.underlines![hits[k]] = true;
+      replacements.push({ start: sub.start, end: sub.end, text: " " });
+    }
+    // Nothing left to paint: drop the paint operator as well.
+    if (hits.every((h) => h >= 0)) replacements.push({ start: op.start, end: op.end, text: " " });
+  };
 
   const nextLine = () => {
     tlm = mul([1, 0, 0, 1, 0, -tl], tlm);
@@ -496,13 +543,58 @@ export function removeTextInRects(page: PDFPage, rects: UserRect[]): RemovalResu
     const a = op.args;
     switch (op.op) {
       case "q":
-        gstack.push({ ctm, font, fs, tc, tw, th, tl });
+        gstack.push({ ctm, font, fs, tc, tw, th, tl, lw });
         break;
       case "Q": {
         const s = gstack.pop();
-        if (s) ({ ctm, font, fs, tc, tw, th, tl } = s);
+        if (s) ({ ctm, font, fs, tc, tw, th, tl, lw } = s);
         break;
       }
+      case "w":
+        lw = Number(a[0] ?? 1);
+        break;
+      case "m":
+        subs.push({ start: op.start, end: op.end, pts: [apply(ctm, Number(a[0]), Number(a[1]))], straight: true });
+        break;
+      case "l":
+        extend(op, [apply(ctm, Number(a[0]), Number(a[1]))]);
+        break;
+      case "re": {
+        const [x, y, w, h] = a.map(Number);
+        subs.push({ start: op.start, end: op.end, pts: [apply(ctm, x, y), apply(ctm, x + w, y), apply(ctm, x + w, y + h), apply(ctm, x, y + h)], straight: true });
+        break;
+      }
+      case "c":
+      case "v":
+      case "y":
+        extend(op, [], false);
+        break;
+      case "h":
+        extend(op, []);
+        break;
+      case "W":
+      case "W*":
+        clipping = true;
+        break;
+      case "S":
+      case "s":
+        paintPath(op, true, false);
+        break;
+      case "f":
+      case "F":
+      case "f*":
+        paintPath(op, false, true);
+        break;
+      case "B":
+      case "B*":
+      case "b":
+      case "b*":
+        paintPath(op, true, true);
+        break;
+      case "n":
+        subs = [];
+        clipping = false;
+        break;
       case "cm":
         if (a.length === 6) ctm = mul(a as Mat, ctm);
         break;

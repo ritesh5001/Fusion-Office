@@ -667,6 +667,28 @@ const lookOf = (o: EditorObject): Look =>
 // Reading back from Fabric rounds positions, so compare them with a tolerance.
 const sameLook = (a: Look, b: Look) => a.key === b.key && a.box.every((v, i) => Math.abs(v - b.box[i]) < 0.1);
 
+/**
+ * The line's main colour and underline, plus the letters that differ from it.
+ * `sampled` is the colour measured from the rendered page, used when the
+ * drawing commands don't give one (patterned text, say).
+ */
+function inkLook(line: TextLine, sampled: string): { color: string; underline: boolean; chars: Record<number, CharStyle> } {
+  const letters = (line.ink ?? []).flatMap((c, k) => (line.text[k]?.trim() ? [{ ...c, k }] : []));
+  if (!letters.length) return { color: sampled, underline: false, chars: {} };
+  const counts = new Map<string, number>();
+  for (const c of letters) if (c.color) counts.set(c.color, (counts.get(c.color) ?? 0) + 1);
+  const color = [...counts].sort((a, b) => b[1] - a[1])[0]?.[0] ?? sampled;
+  const underline = letters.every((c) => c.underline);
+  const chars: Record<number, CharStyle> = {};
+  line.ink!.forEach((c, k) => {
+    const st: CharStyle = {};
+    if (c.color && c.color !== color) st.color = c.color;
+    if (!underline && c.underline) st.underline = true;
+    if (Object.keys(st).length) chars[k] = st;
+  });
+  return { color, underline, chars };
+}
+
 /** Outlines every line of existing text; clicking one turns it into editable text. */
 function TextLinesLayer({ page, zoom }: { page: EditorPage; zoom: number }) {
   const [lines, setLines] = useState<TextLine[] | null>(null);
@@ -701,6 +723,17 @@ function TextLinesLayer({ page, zoom }: { page: EditorPage; zoom: number }) {
       if (r.pdfFont === main.pdfFont) continue;
       for (let k = r.start; k < r.end; k++) chars[k] = { pdfFont: r.pdfFont, bold: r.bold, italic: r.italic };
     }
+    // …and each letter keeps its own colour and underline (black words next to blue links).
+    const look = inkLook(line, colors.text);
+    for (const [k, st] of Object.entries(look.chars)) chars[Number(k)] = { ...chars[Number(k)], ...st };
+    // The cover also hides the old underlines, which sit a little below the words.
+    const cover = line.underlines.reduce(
+      (c, u) => {
+        const [x0, y0] = [Math.min(c.x, u.rect.x - 0.5), Math.min(c.y, u.rect.y - 0.5)];
+        return { x: x0, y: y0, w: Math.max(c.x + c.w, u.rect.x + u.rect.w + 0.5) - x0, h: Math.max(c.y + c.h, u.rect.y + u.rect.h + 0.5) - y0 };
+      },
+      { x: line.rect.x - 1, y: line.rect.y - 1, w: line.rect.w + 2, h: line.rect.h + 2 },
+    );
     const obj = createText(line.x, top, {
       text: line.text,
       width,
@@ -711,13 +744,15 @@ function TextLinesLayer({ page, zoom }: { page: EditorPage; zoom: number }) {
       italic: line.italic,
       pdfFont: line.pdfFont,
       charStyles: Object.keys(chars).length ? { 0: chars } : undefined,
-      color: colors.text,
+      color: look.color,
+      underline: look.underline,
       lineHeight: 1.16,
       replaces: {
         original: line.text,
         userRect: line.userRect,
-        rect: { x: line.rect.x - 1, y: line.rect.y - 1, w: line.rect.w + 2, h: line.rect.h + 2 },
+        rect: cover,
         background: colors.background,
+        underlines: line.underlines.length ? line.underlines.map((u) => u.userRect) : undefined,
       },
     });
     // The Edit text tool stays active, so the next line is one click away.

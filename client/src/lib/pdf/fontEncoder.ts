@@ -8,6 +8,7 @@
 import { Encodings } from "@pdf-lib/standard-fonts";
 import { PDFArray, PDFDict, PDFName, PDFNumber, PDFStream, type PDFDocument, type PDFPage } from "pdf-lib";
 import { fontInfoFor, streamBytes } from "./textRemoval";
+import { fontNameStyle } from "./fontNames";
 
 export interface FontEncoder {
   /** Font resource name on the page (without the slash). */
@@ -102,8 +103,9 @@ export function encoderFor(doc: PDFDocument, page: PDFPage, name: string): FontE
     return f instanceof PDFDict ? f.lookup(PDFName.of("FontDescriptor")) : null;
   })() : dict.lookup(PDFName.of("FontDescriptor"));
   const flags = desc instanceof PDFDict ? ((desc.lookup(PDFName.of("Flags")) as PDFNumber | undefined)?.asNumber() ?? 0) : 0;
-  const bold = /bold|black|heavy|semibold|demi/i.test(baseFont) || !!(flags & (1 << 18));
-  const italic = /italic|oblique/i.test(baseFont) || !!(flags & (1 << 6));
+  const named = fontNameStyle(baseFont);
+  const bold = named.bold || !!(flags & (1 << 18));
+  const italic = named.italic || !!(flags & (1 << 6));
   const m = map;
   return {
     resource: name,
@@ -115,8 +117,10 @@ export function encoderFor(doc: PDFDocument, page: PDFPage, name: string): FontE
       const c = m.get(ch);
       if (c === undefined) return undefined;
       // A zero or missing width usually means the glyph isn't in the (subset) font.
+      // That goes for the space too: TeX fonts name a code for it but never draw it
+      // (words are simply placed apart), so writing it would close every gap in the line.
       const w = info.width(c);
-      return w !== undefined && (w > 0 || ch === " ") ? c : undefined;
+      return w !== undefined && w > 0 ? c : undefined;
     },
     width: info.width,
   };

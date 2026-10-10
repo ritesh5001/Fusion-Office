@@ -1,6 +1,9 @@
 import type { PageViewport } from "pdfjs-dist";
 import type { TextItem } from "pdfjs-dist/types/src/display/api";
 import { getPdfDocument } from "./sources";
+import { getPdfjs } from "./pdfjs";
+import { fontNameStyle } from "./fontNames";
+import { lineInk, projectInk, readInk, type CharInk, type LineInk, type ViewInk } from "./ink";
 import { totalRotation, type EditorPage, type FontFamily, type Rect } from "../editor/types";
 
 /** A run of text on the page with its geometry in PDF user space. */
@@ -235,6 +238,10 @@ export interface TextLine {
   pdfFont: string;
   /** Character ranges of `text` and the font each uses (a line can mix regular and bold). */
   runs: { start: number; end: number; pdfFont: string; bold: boolean; italic: boolean }[];
+  /** Colour and underline of each character of `text` (a line can mix black words and blue links). Absent when unknown. */
+  ink?: CharInk[];
+  /** The strokes that underline parts of the line; they are drawn separately from the text. */
+  underlines: LineInk["underlines"];
 }
 
 interface StyledItem {
@@ -248,17 +255,20 @@ const lineCache = new Map<string, Promise<TextLine[]>>();
 
 function styleOf(realName: string, generic: string, flags: { bold?: boolean; black?: boolean; italic?: boolean }) {
   const name = realName.replace(/^[A-Z]{6}\+/, ""); // strip subset prefix
-  const fontFamily: FontFamily = /courier|mono|consol/i.test(name) || generic === "monospace"
-    ? "Courier"
-    : /times|roman|serif|georgia|garamond|cambria|book|minion|palatino/i.test(name) && !/sans/i.test(name)
-      ? "Times"
-      : generic === "serif" && !/sans|arial|helvet/i.test(name)
+  const named = fontNameStyle(realName);
+  const fontFamily: FontFamily = named.family
+    ? named.family
+    : /courier|mono|consol/i.test(name) || generic === "monospace"
+      ? "Courier"
+      : /times|roman|serif|georgia|garamond|cambria|book|minion|palatino/i.test(name) && !/sans/i.test(name)
         ? "Times"
-        : "Helvetica";
+        : generic === "serif" && !/sans|arial|helvet/i.test(name)
+          ? "Times"
+          : "Helvetica";
   return {
     fontFamily,
-    bold: !!flags.bold || !!flags.black || /bold|black|heavy|semibold|demi/i.test(name),
-    italic: !!flags.italic || /italic|oblique/i.test(name),
+    bold: !!flags.bold || !!flags.black || named.bold,
+    italic: !!flags.italic || named.italic,
   };
 }
 
@@ -275,7 +285,18 @@ export async function getTextLines(page: EditorPage): Promise<TextLine[]> {
       const vp = pdfPage.getViewport({ scale: 1, rotation: totalRotation(page) });
       const content = await pdfPage.getTextContent();
       // Load fonts so their real names (e.g. "TimesNewRomanPS-BoldMT") are known.
-      await pdfPage.getOperatorList().catch(() => null);
+      const opList = await pdfPage.getOperatorList().catch(() => null);
+      // The drawing commands also say what colour each letter is and what is underlined.
+      let ink: ViewInk | null = null;
+      if (opList) {
+        try {
+          const { OPS } = await getPdfjs();
+          const drawn = readInk(opList, OPS as unknown as Record<string, number>, (name) => pdfPage.commonObjs.get(name));
+          ink = projectInk(drawn, (x, y) => vp.convertToViewportPoint(x, y));
+        } catch (err) {
+          console.warn("[edit text] could not read text colours", err);
+        }
+      }
       const fontStyle = new Map<string, ReturnType<typeof styleOf>>();
       const styleFor = (fontName: string) => {
         let st = fontStyle.get(fontName);
@@ -351,6 +372,7 @@ export async function getTextLines(page: EditorPage): Promise<TextLine[]> {
           // Offsets after trimming, with neighbouring spans of the same font merged.
           const lead = text.length - text.trimStart().length;
           const trimmed = text.trim();
+          const look = ink && lineInk(ink, cur.map((s, i) => ({ str: s.item.str, start: spans[i].start, x0: s.x0, x1: s.x1 })), text, cur[0].base, cur[0].size);
           const runs: TextLine["runs"] = [];
           for (const sp of spans) {
             const start = Math.max(0, sp.start - lead);
@@ -388,6 +410,8 @@ export async function getTextLines(page: EditorPage): Promise<TextLine[]> {
             ...styleFor(mainFont),
             pdfFont: mainFont,
             runs,
+            ink: look?.chars.slice(lead, lead + trimmed.length),
+            underlines: look?.underlines ?? [],
           });
         }
         cur = [];

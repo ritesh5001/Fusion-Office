@@ -99,6 +99,11 @@ export interface ReplacedText {
   rect: Rect;
   /** Colour behind the original text, used to hide it while editing. */
   background: string;
+  /**
+   * Underline strokes drawn under the original words (PDF user space). They are
+   * separate drawings, not text, so export deletes them along with the words.
+   */
+  underlines?: [number, number, number, number][];
 }
 
 export interface ImageObject extends Positioned {

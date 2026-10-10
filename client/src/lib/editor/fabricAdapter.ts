@@ -27,7 +27,7 @@ import type {
   TextObject,
 } from "./types";
 import { linePath } from "../pdf/geometry";
-import { objectBounds } from "./objects";
+import { hasCharStyle, objectBounds } from "./objects";
 
 /** Fabric objects carry a back-reference to the model object they render. */
 export type Tagged = FabricObject & { editorId?: string; __model?: EditorObject };
@@ -525,6 +525,18 @@ function applyTextChanges(tb: Textbox, prev: TextObject, o: TextObject) {
   if (prev.cx !== o.cx || prev.cy !== o.cy || prev.angle !== o.angle) Object.assign(patch, { left: o.cx, top: o.cy, angle: o.angle });
   // Letter styles cleared (whole-line bold, new font…): drop Fabric's too.
   if (prev.charStyles && !o.charStyles) patch.styles = {};
+  else {
+    // One colour or underline for the whole box: letters give up their own. Done on
+    // Fabric's live styles, whose positions follow the text as it is typed.
+    const drop: (keyof FabricCharStyle)[] = [];
+    if (hasCharStyle(prev.charStyles, "color") && !hasCharStyle(o.charStyles, "color")) drop.push("fill", "foColor");
+    if (hasCharStyle(prev.charStyles, "underline") && !hasCharStyle(o.charStyles, "underline")) drop.push("underline", "foUnderline");
+    if (drop.length) {
+      const styles = structuredClone(tb.styles ?? {}) as Record<string, Record<string, FabricCharStyle>>;
+      for (const row of Object.values(styles)) for (const st of Object.values(row)) for (const k of drop) delete st[k];
+      patch.styles = styles;
+    }
+  }
   if (!Object.keys(patch).length) return;
   tb.set(patch);
   tb.initDimensions();

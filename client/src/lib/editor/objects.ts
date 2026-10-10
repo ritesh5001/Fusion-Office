@@ -176,6 +176,24 @@ export function rotateObjectWithPage(obj: EditorObject, delta: number, w: number
   }
 }
 
+/**
+ * Letter styles without `key`, for when the whole box is given one colour or
+ * underline: letters that had their own would otherwise ignore the change.
+ */
+export function withoutCharStyle(styles: TextObject["charStyles"], key: "color" | "underline"): TextObject["charStyles"] {
+  const out: NonNullable<TextObject["charStyles"]> = {};
+  for (const [line, chars] of Object.entries(styles ?? {})) {
+    for (const [ch, st] of Object.entries(chars)) {
+      const { [key]: _dropped, ...rest } = st;
+      if (Object.keys(rest).length) (out[Number(line)] ??= {})[Number(ch)] = rest;
+    }
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
+export const hasCharStyle = (styles: TextObject["charStyles"], key: "color" | "underline") =>
+  Object.values(styles ?? {}).some((chars) => Object.values(chars).some((st) => st[key] !== undefined));
+
 /** A copy that no longer claims to replace original text (for paste/duplicate). */
 export function detachReplacement<T extends EditorObject>(obj: T): T {
   if (obj.type === "text" && obj.replaces) {

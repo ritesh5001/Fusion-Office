@@ -176,6 +176,8 @@ async function exportPage(ctx: ExportContext, page: EditorPage, opts: ExportOpti
   const replacements = replacing.map((o) => o.replaces!);
   // Replaced text that could not be removed from the content stream gets covered.
   let covers: { rect: Rect; background: string }[] = [];
+  // Old underlines that could not be deleted get covered too (source page's user space).
+  const strokeCovers: { rect: UserRect; background: string }[] = [];
 
   let pdfPage: PDFPage;
   let matrix: Matrix;
@@ -215,14 +217,17 @@ async function exportPage(ctx: ExportContext, page: EditorPage, opts: ExportOpti
         // Delete the original glyphs so the old words are really gone.
         const pad = 0.5;
         const rects = replacements.map((r) => [r.userRect[0] - pad, r.userRect[1] - pad, r.userRect[2] + pad, r.userRect[3] + pad] as UserRect);
+        // The lines drawn under the old words (link underlines) go with them.
+        const strokes = replacements.flatMap((r) => (r.underlines ?? []).map((rect) => ({ rect: rect as UserRect, background: r.background })));
         let result: ReturnType<typeof removeTextInRects>;
         try {
-          result = removeTextInRects(pdfPage, rects);
+          result = removeTextInRects(pdfPage, rects, strokes.map((s) => s.rect));
         } catch (err) {
           console.warn("[export] text removal failed, covering instead", err);
           result = { removed: rects.map(() => 0), unsafe: rects.map(() => true) };
         }
         covers = replacements.filter((_, i) => result.removed[i] === 0 || result.unsafe[i]);
+        strokeCovers.push(...strokes.filter((_, i) => !result.underlines?.[i]));
         // The new wording is written with the fonts the old wording used, where possible.
         replacing.forEach((o, i) => {
           const encs = (result.fonts?.[i] ?? []).map((name) => encoderFor(out, pdfPage, name)).filter((e): e is FontEncoder => !!e);
@@ -238,6 +243,10 @@ async function exportPage(ctx: ExportContext, page: EditorPage, opts: ExportOpti
     const start = out.context.register(out.context.contentStream([pushGraphicsState()]));
     const end = out.context.register(out.context.contentStream([popGraphicsState()]));
     pdfPage.node.wrapContentStreams(start, end);
+    for (const s of strokeCovers) {
+      const pad = 0.3;
+      pdfPage.drawRectangle({ x: s.rect[0] - pad, y: s.rect[1] - pad, width: s.rect[2] - s.rect[0] + pad * 2, height: s.rect[3] - s.rect[1] + pad * 2, color: color(s.background) });
+    }
     matrix = viewToUserMatrix(totalRotation(page), box);
   }
 
@@ -510,8 +519,9 @@ async function drawText(ctx: ExportContext, page: PDFPage, obj: TextObject, vh: 
           }
         }
         // Underline per run, so only underlined words get one (continuous across runs).
+        // A run of spaces is underlined only between underlined words, never at an end.
         const span = g.width + spacing * (si === segs.length - 1 ? n - 1 : n);
-        if (g.underline && g.text.trim()) {
+        if (g.underline && (g.text.trim() || (segs[si - 1]?.underline && segs[si + 1]?.underline))) {
           page.drawRectangle({ x, y: y - size * 0.12, width: span, height: Math.max(0.6, size / 15), color: segColor, opacity: obj.opacity });
         }
         x += g.width + spacing * n;

@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 import { useEditor } from "@/lib/editor/store";
-import { HIGHLIGHT_COLORS, OBJECT_LABELS } from "@/lib/editor/objects";
+import { HIGHLIGHT_COLORS, OBJECT_LABELS, withoutCharStyle } from "@/lib/editor/objects";
 import { readImageFile } from "@/lib/editor/images";
 import { toast } from "@/lib/editor/events";
 import { viewSize, type EditorObject, type FontFamily, type Rect, type TextAlign } from "@/lib/editor/types";
@@ -205,7 +205,7 @@ function ObjectProperties({ pageId, obj }: { pageId: string; obj: EditorObject }
               label="Underline"
               active={obj.underline}
               onMouseDown={(e) => e.preventDefault()}
-              onClick={() => styleSelection(obj, { kind: "underline" }) || update({ underline: !obj.underline })}
+              onClick={() => styleSelection(obj, { kind: "underline" }) || update({ underline: !obj.underline, charStyles: withoutCharStyle(obj.charStyles, "underline") })}
             >
               <Underline className="h-4 w-4" />
             </IconButton>
@@ -216,7 +216,7 @@ function ObjectProperties({ pageId, obj }: { pageId: string; obj: EditorObject }
               </IconButton>
             ))}
             <div className="ml-auto">
-              <ColorInput label="Text color" value={obj.color} onChange={(color) => styleSelection(obj, { kind: "color", value: color }) || update({ color }, "color")} />
+              <ColorInput label="Text color" value={obj.color} onChange={(color) => styleSelection(obj, { kind: "color", value: color }) || update({ color, charStyles: withoutCharStyle(obj.charStyles, "color") }, "color")} />
             </div>
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2">
