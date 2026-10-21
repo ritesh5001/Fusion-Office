@@ -3,10 +3,11 @@ import { TOOLS } from "@/lib/tools/registry";
 
 /**
  * Canonical origin: every canonical URL, sitemap entry and structured-data
- * URL uses this host. The hosting should redirect www (and the onrender.com
- * address) here so search engines see a single version of each page.
+ * URL uses this host. It must be the host the site is actually served from:
+ * the hosting redirects fusionoffice.online to www, so canonicals pointing at
+ * the bare domain would send search engines round a redirect on every page.
  */
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://fusionoffice.online").replace(/\/+$/, "");
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.fusionoffice.online").replace(/\/+$/, "");
 export const SITE_NAME = "Fusion Office";
 export const SITE_TAGLINE = "Free online PDF, Office and image tools";
 /** Number of tools people can use today (excludes "coming soon"). */

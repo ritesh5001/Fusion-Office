@@ -4,7 +4,7 @@ import { SiteShell } from "@/components/site/SiteShell";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { plainText } from "@/components/seo/RichText";
-import { GUIDES } from "@/lib/seo/guides";
+import { latestGuides } from "@/lib/seo/guides";
 import { CLUSTERS } from "@/lib/seo/clusters";
 import { breadcrumbs } from "@/lib/seo/jsonld";
 import { absoluteUrl, pageMetadata } from "@/lib/seo/site";
@@ -15,12 +15,16 @@ export const metadata = pageMetadata({
   path: "/guides",
 });
 
+// Scheduled guides appear here once their publish time has passed.
+export const revalidate = 1800;
+
 export default function GuidesPage() {
+  const guides = latestGuides();
   const trail = [
     { name: "Home", path: "/" },
     { name: "Guides", path: "/guides" },
   ];
-  const groups = CLUSTERS.map((c) => ({ c, guides: GUIDES.filter((g) => g.cluster === c.id) })).filter((x) => x.guides.length);
+  const groups = CLUSTERS.map((c) => ({ c, guides: guides.filter((g) => g.cluster === c.id) })).filter((x) => x.guides.length);
   return (
     <SiteShell>
       <JsonLd
@@ -32,7 +36,7 @@ export default function GuidesPage() {
             url: absoluteUrl("/guides"),
             mainEntity: {
               "@type": "ItemList",
-              itemListElement: GUIDES.map((g, i) => ({ "@type": "ListItem", position: i + 1, name: g.h1, url: absoluteUrl(`/guides/${g.slug}`) })),
+              itemListElement: guides.map((g, i) => ({ "@type": "ListItem", position: i + 1, name: g.h1, url: absoluteUrl(`/guides/${g.slug}`) })),
             },
           },
         ]}

@@ -6,6 +6,7 @@
  * Text may contain inline links written as [anchor text](/path).
  */
 import type { ClusterId } from "./clusters";
+import { SCHEDULED_GUIDES } from "./guide-content";
 
 export type GuideBlock = { p: string } | { steps: string[] } | { list: string[] } | { note: string };
 
@@ -16,7 +17,10 @@ export interface Guide {
   h1: string;
   /** Direct answer, shown first. */
   summary: string;
+  /** Publish date (YYYY-MM-DD). The guide stays hidden everywhere until then. */
   published: string;
+  /** Time of day it goes live, "HH:MM" in Indian time; midnight when absent. */
+  time?: string;
   updated: string;
   cluster: ClusterId;
   /** Tools the guide uses, main one first. */
@@ -27,7 +31,7 @@ export interface Guide {
 
 const D = "2026-10-04";
 
-export const GUIDES: Guide[] = [
+const CORE_GUIDES: Guide[] = [
   {
     slug: "how-to-compress-a-pdf",
     title: "How to Compress a PDF and Reduce Its File Size (Free)",
@@ -561,7 +565,40 @@ export const GUIDES: Guide[] = [
   },
 ];
 
-export const guideBySlug = (slug: string) => GUIDES.find((g) => g.slug === slug);
+/**
+ * Every guide, including scheduled ones that aren't public yet. Pages must use
+ * liveGuides() (or the helpers below), never this list directly.
+ */
+export const ALL_GUIDES: Guide[] = [...CORE_GUIDES, ...SCHEDULED_GUIDES];
 
-/** Guides that use a tool, for linking from that tool's page. */
-export const guidesForTool = (slug: string) => GUIDES.filter((g) => g.tools.includes(slug));
+/**
+ * Guides are written ahead and published on a schedule: each one goes live at
+ * its date and time, and the pages that list guides are regenerated every
+ * half hour (`revalidate`), so new guides appear without a deploy.
+ */
+export const liveAt = (g: Pick<Guide, "published" | "time">) => new Date(`${g.published}T${g.time ?? "00:00"}:00+05:30`);
+export const isLive = (g: Guide, now = new Date()) => liveAt(g).getTime() <= now.getTime();
+
+/** Published guides, in the order they were written. */
+export const liveGuides = (now = new Date()) => ALL_GUIDES.filter((g) => isLive(g, now));
+
+/** Published guides, most recent first. */
+export const latestGuides = (now = new Date()) => liveGuides(now).sort((a, b) => liveAt(b).getTime() - liveAt(a).getTime());
+
+/** A published guide by slug (scheduled ones are treated as not existing yet). */
+export const guideBySlug = (slug: string, now = new Date()) => liveGuides(now).find((g) => g.slug === slug);
+
+/** Published guides that use a tool, for linking from that tool's page. */
+export const guidesForTool = (slug: string, now = new Date()) => liveGuides(now).filter((g) => g.tools.includes(slug));
+
+/**
+ * Further reading under a guide: guides sharing its main tool first, then any
+ * shared tool, then the same category, newest first within each group.
+ */
+export function relatedGuides(g: Guide, count = 4, now = new Date()): Guide[] {
+  const score = (x: Guide) => (x.tools[0] === g.tools[0] ? 3 : x.tools.some((t) => g.tools.includes(t)) ? 2 : x.cluster === g.cluster ? 1 : 0);
+  return latestGuides(now)
+    .filter((x) => x.slug !== g.slug && score(x) > 0)
+    .sort((a, b) => score(b) - score(a))
+    .slice(0, count);
+}

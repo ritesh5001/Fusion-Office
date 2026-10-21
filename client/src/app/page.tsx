@@ -7,9 +7,12 @@ import { PrivacyFlows } from "@/components/landing/PrivacyFlows";
 import { TestimonialsSection } from "@/components/ui/testimonials";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { TOOLS } from "@/lib/tools/registry";
-import { GUIDES } from "@/lib/seo/guides";
+import { latestGuides } from "@/lib/seo/guides";
 import { faqPage, organization, website } from "@/lib/seo/jsonld";
 import { SITE_DESCRIPTION, TOOL_COUNT, pageMetadata } from "@/lib/seo/site";
+
+// The latest guides are listed here; regenerate so scheduled ones show up.
+export const revalidate = 1800;
 
 export const metadata = pageMetadata({
   title: "Fusion Office – Free Online PDF, Office & Image Tools",
@@ -83,7 +86,7 @@ export default function Home() {
               </Link>
             </div>
             <ul className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {GUIDES.slice(0, 6).map((g) => (
+              {latestGuides().slice(0, 6).map((g) => (
                 <li key={g.slug}>
                   <Link
                     href={`/guides/${g.slug}`}

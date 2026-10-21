@@ -7,17 +7,21 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { RichText } from "@/components/seo/RichText";
 import { ToolTile } from "@/components/tools/icons";
-import { GUIDES, guideBySlug, type GuideBlock } from "@/lib/seo/guides";
+import { guideBySlug, liveGuides, relatedGuides, type GuideBlock } from "@/lib/seo/guides";
 import { clusterById } from "@/lib/seo/clusters";
 import { toolBySlug, type ToolDef } from "@/lib/tools/registry";
 import { contentFor } from "@/lib/seo/toolContent";
 import { article, breadcrumbs, faqPage } from "@/lib/seo/jsonld";
 import { pageMetadata } from "@/lib/seo/site";
 
-export const dynamicParams = false;
+// Guides published after the build are rendered on first request; until a
+// guide's time comes it is a 404. Regenerating every half hour lets scheduled
+// guides go live (and a cached 404 give way to the page) without a deploy.
+export const dynamicParams = true;
+export const revalidate = 1800;
 
 export function generateStaticParams() {
-  return GUIDES.map((g) => ({ slug: g.slug }));
+  return liveGuides().map((g) => ({ slug: g.slug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -79,7 +83,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
     { name: g.h1, path },
   ];
   const tools = g.tools.map(toolBySlug).filter((t): t is ToolDef => !!t && t.status === "ready");
-  const more = GUIDES.filter((x) => x.slug !== g.slug && (x.cluster === g.cluster || x.tools.some((t) => g.tools.includes(t)))).slice(0, 4);
+  const more = relatedGuides(g);
 
   return (
     <SiteShell>

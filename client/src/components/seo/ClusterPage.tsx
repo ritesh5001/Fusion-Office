@@ -30,7 +30,7 @@ export function ClusterPage({ id }: { id: ClusterId }) {
     { name: c.name, path: c.path },
   ];
   const all = [...new Map(c.sections.flatMap(sectionTools).map((t) => [t.slug, t])).values()];
-  const guides = c.guides.map(guideBySlug).filter((g) => !!g);
+  const guides = c.guides.map((slug) => guideBySlug(slug)).filter((g) => !!g);
   const others = CLUSTERS.filter((x) => x.id !== id);
 
   return (

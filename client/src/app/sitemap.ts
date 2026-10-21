@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { TOOLS } from "@/lib/tools/registry";
 import { CLUSTERS } from "@/lib/seo/clusters";
-import { GUIDES } from "@/lib/seo/guides";
+import { liveGuides } from "@/lib/seo/guides";
 import { isIndexable } from "@/lib/seo/toolContent";
 import { CONTENT_UPDATED, absoluteUrl } from "@/lib/seo/site";
 
@@ -10,6 +10,9 @@ import { CONTENT_UPDATED, absoluteUrl } from "@/lib/seo/site";
  * from. Left out on purpose: the full-screen editors (noindex; their tool
  * pages are listed instead), the dashboard, unreleased tools and the API.
  */
+// Picks up scheduled guides as they go live.
+export const revalidate = 1800;
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const at = new Date(`${CONTENT_UPDATED}T00:00:00Z`);
   const entry = (path: string, priority: number, lastModified = at): MetadataRoute.Sitemap[number] => ({
@@ -29,6 +32,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     entry("/about", 0.5),
     entry("/contact", 0.5),
     entry("/pay-it-forward", 0.5),
-    ...GUIDES.map((g) => entry(`/guides/${g.slug}`, 0.6, new Date(`${g.updated}T00:00:00Z`))),
+    ...liveGuides().map((g) => entry(`/guides/${g.slug}`, 0.6, new Date(`${g.updated}T00:00:00Z`))),
   ];
 }

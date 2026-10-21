@@ -9,6 +9,8 @@ import { pageMetadata } from "@/lib/seo/site";
 
 // Every tool page is generated at build time; unknown slugs are a real 404.
 export const dynamicParams = false;
+// Regenerated every half hour so its "Guides" links pick up scheduled guides.
+export const revalidate = 1800;
 
 export function generateStaticParams() {
   return TOOLS.map((t) => ({ slug: t.slug }));

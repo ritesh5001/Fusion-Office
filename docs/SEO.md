@@ -28,7 +28,7 @@ How Fusion Office is set up to rank for PDF, document and image tool searches, a
 | Home | `/` | Brand + broad category ("free online PDF tools", "online office tools") | `app/page.tsx` |
 | Category | `/pdf-tools`, `/pdf-converter`, `/office-tools`, `/image-tools`, `/ai-pdf-tools` | Groups of tools ("PDF converter", "image tools online") | `lib/seo/clusters.ts` |
 | Tool | `/tools/<slug>` (73 live tools + `/tools/workflows`) | One high-intent task each ("compress PDF online", "PDF to Word") | `lib/seo/content/*.ts` |
-| Guide | `/guides`, `/guides/<slug>` (11 guides) | "How to…" searches | `lib/seo/guides.ts` |
+| Guide | `/guides`, `/guides/<slug>` (11 launch guides + 100 scheduled) | "How to…" searches | `lib/seo/guides.ts`, `lib/seo/guide-content/` |
 | Directory | `/tools` | Full catalogue | `app/tools/page.tsx` |
 
 Each registry category belongs to exactly one category page (`CATEGORY_CLUSTER`), which is the breadcrumb parent of its tools: Home → PDF Tools → Compress PDF.
@@ -52,7 +52,7 @@ Not allowed: invented ratings, reviews, statistics or authors; FAQ markup for qu
 
 ## Technical
 
-- Canonical origin: `NEXT_PUBLIC_SITE_URL`, default `https://fusionoffice.online`. Every page sets a self-referencing canonical via `pageMetadata()` in `lib/seo/site.ts`, plus matching Open Graph and X cards.
+- Canonical origin: `NEXT_PUBLIC_SITE_URL`, default `https://www.fusionoffice.online` (the host the site is actually served from; see Hosting). Every page sets a self-referencing canonical via `pageMetadata()` in `lib/seo/site.ts`, plus matching Open Graph and X cards.
 - `app/sitemap.ts` and `app/robots.ts` are generated from the same data as the pages.
 - Open Graph images are generated per page type (`opengraph-image.tsx` files, rendered by `lib/seo/ogImage.tsx`).
 - `/tools/[slug]` and `/guides/[slug]` use `dynamicParams = false`: unknown slugs are real 404s.
@@ -60,7 +60,15 @@ Not allowed: invented ratings, reviews, statistics or authors; FAQ markup for qu
 
 ## Hosting (needs doing outside the code)
 
-The live site currently redirects `fusionoffice.online` → `www.fusionoffice.online`, but canonical URLs now use the apex domain. In the hosting dashboard, make `fusionoffice.online` the primary domain so `www` (and ideally the `onrender.com` address) redirect to it with a 301/308. Then submit `https://fusionoffice.online/sitemap.xml` in Google Search Console and Bing Webmaster Tools.
+The live site redirects `fusionoffice.online` → `www.fusionoffice.online`, so canonical URLs, the sitemap and robots.txt use the `www` host. If `NEXT_PUBLIC_SITE_URL` is set in the hosting environment it must match (`https://www.fusionoffice.online`). Submit `https://www.fusionoffice.online/sitemap.xml` in Google Search Console and Bing Webmaster Tools.
+
+## Scheduled guides
+
+Guides are written ahead and published on a schedule. Each guide in `lib/seo/guide-content/batch-*.ts` has a `published` date and a `time` (Indian time); until then it is a 404 and is missing from `/guides`, the home page, tool pages and the sitemap. Those pages regenerate every 30 minutes (`revalidate = 1800`), so guides go live on their own without a deploy. Pages must list guides through `liveGuides()`, `latestGuides()`, `guideBySlug()` or `guidesForTool()`, never `ALL_GUIDES`.
+
+`tests/seo.test.mts` checks the schedule: valid dates, at most three guides a day, unique slugs and titles, and that no guide links to one that goes live after it. `docs/blog-titles.csv` lists the schedule.
+
+To add more: write guides in a new batch file with dates after the last scheduled one, add the batch to `guide-content/index.ts`, and run `npm test`. Facts that change (exam limits, password formats, portal rules) must come from the official source and be re-checked when it changes.
 
 ## Adding a tool
 
