@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Download, Heart, Inbox, Loader2, LockKeyhole, LogOut, Mail, MailOpen, MessageSquareHeart, RefreshCw, Search, Star, Trash2 } from "lucide-react";
+import { Check, Copy, Download, Eye, EyeOff, Heart, Inbox, Loader2, LockKeyhole, LogOut, Mail, MailOpen, MessageSquareHeart, RefreshCw, Search, Star, Trash2, Users } from "lucide-react";
 import { Logo } from "../Logo";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/cn";
@@ -144,6 +144,8 @@ function Inbox_({ onSignOut }: { onSignOut: () => void }) {
   const [counts, setCounts] = useState({ total: 0, unread: 0, starred: 0 });
   const [filter, setFilter] = useState<Filter>("all");
   const [kind, setKind] = useState<Kind>("feedback");
+  // The Testers tab replaces the inbox with the early-tester list.
+  const [testersView, setTestersView] = useState(false);
   const [unreadByKind, setUnreadByKind] = useState<Record<string, number>>({});
   const noun = KINDS.find((k) => k.id === kind)!.noun;
   const [query, setQuery] = useState("");
@@ -227,12 +229,16 @@ function Inbox_({ onSignOut }: { onSignOut: () => void }) {
           <p className="font-display text-[17px] font-bold tracking-[-0.02em]">Inbox</p>
           <p className="text-[12.5px] text-fg-subtle">Fusion Office admin</p>
         </div>
-        <button type="button" onClick={load} className="btn btn-ghost btn-sm" aria-label="Refresh">
-          <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} aria-hidden="true" />
-        </button>
-        <button type="button" onClick={exportCsv} disabled={!items.length} className="btn btn-ghost btn-sm disabled:opacity-40">
-          <Download className="h-4 w-4" aria-hidden="true" /> <span className="hidden sm:inline">Export CSV</span>
-        </button>
+        {!testersView && (
+          <>
+            <button type="button" onClick={load} className="btn btn-ghost btn-sm" aria-label="Refresh">
+              <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} aria-hidden="true" />
+            </button>
+            <button type="button" onClick={exportCsv} disabled={!items.length} className="btn btn-ghost btn-sm disabled:opacity-40">
+              <Download className="h-4 w-4" aria-hidden="true" /> <span className="hidden sm:inline">Export CSV</span>
+            </button>
+          </>
+        )}
         <button type="button" onClick={signOut} className="btn btn-secondary btn-sm">
           <LogOut className="h-4 w-4" aria-hidden="true" /> <span className="hidden sm:inline">Sign out</span>
         </button>
@@ -244,18 +250,33 @@ function Inbox_({ onSignOut }: { onSignOut: () => void }) {
             key={k.id}
             type="button"
             role="tab"
-            aria-selected={kind === k.id}
+            aria-selected={!testersView && kind === k.id}
             onClick={() => {
+              setTestersView(false);
               setKind(k.id);
               setFilter("all");
             }}
-            className={cn("fo-press inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl text-[14px] font-semibold transition-colors", kind === k.id ? "bg-raised text-fg ring-1 ring-inset ring-line-strong" : "text-fg-muted hover:text-fg")}
+            className={cn("fo-press inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl text-[14px] font-semibold transition-colors", !testersView && kind === k.id ? "bg-raised text-fg ring-1 ring-inset ring-line-strong" : "text-fg-muted hover:text-fg")}
           >
             <k.icon className="h-4 w-4" aria-hidden="true" /> {k.label}
             {!!unreadByKind[k.id] && <span className="rounded-full bg-accent px-1.5 text-[11px] font-bold tabular-nums text-on-accent">{unreadByKind[k.id]}</span>}
           </button>
         ))}
+        <button
+          type="button"
+          role="tab"
+          aria-selected={testersView}
+          onClick={() => setTestersView(true)}
+          className={cn("fo-press inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl text-[14px] font-semibold transition-colors", testersView ? "bg-raised text-fg ring-1 ring-inset ring-line-strong" : "text-fg-muted hover:text-fg")}
+        >
+          <Users className="h-4 w-4" aria-hidden="true" /> Testers
+        </button>
       </div>
+
+      {testersView ? (
+        <TestersAdmin onSignOut={onSignOut} />
+      ) : (
+      <>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
@@ -352,6 +373,144 @@ function Inbox_({ onSignOut }: { onSignOut: () => void }) {
           </span>
           <p className="mt-4 text-[16px] font-semibold">{query ? `No ${noun} match your search` : filter === "all" ? `No ${noun} yet` : `No ${filter} ${noun}`}</p>
           <p className="mt-1 text-[14px] text-fg-muted">{kind === "feedback" ? "Feedback sent from the website appears here." : kind === "contact" ? "Messages from the Contact us page appear here." : "Stories shared on the Pay it forward page appear here."}</p>
+        </div>
+      )}
+      </>
+      )}
+    </div>
+  );
+}
+
+interface Tester {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  visible: boolean;
+  joinedAt: string;
+}
+
+/** Early testers shown on the app's Special thanks screen: the invite link to share, and who signed up. */
+function TestersAdmin({ onSignOut }: { onSignOut: () => void }) {
+  const [testers, setTesters] = useState<Tester[]>([]);
+  const [invite, setInvite] = useState<{ path: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await apiFetch("/api/admin/testers");
+      if (res.status === 401) return onSignOut();
+      const data = await json<{ invite: { path: string } | null; testers: Tester[] }>(res);
+      setTesters(data.testers);
+      setInvite(data.invite);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, [onSignOut]);
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const link = invite ? `${window.location.origin}${invite.path}` : "";
+  const copy = async () => {
+    await navigator.clipboard.writeText(link).catch(() => {});
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
+  };
+
+  const toggle = async (t: Tester) => {
+    setTesters((cur) => cur.map((x) => (x.id === t.id ? { ...x, visible: !t.visible } : x)));
+    const res = await apiFetch(`/api/admin/testers/${t.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ visible: !t.visible }) });
+    if (!res.ok) load();
+  };
+
+  const remove = async (t: Tester) => {
+    if (!window.confirm(`Remove ${t.name} (@${t.username}) from Special thanks? They can sign up again with the invite link.`)) return;
+    setTesters((cur) => cur.filter((x) => x.id !== t.id));
+    const res = await apiFetch(`/api/admin/testers/${t.id}`, { method: "DELETE" });
+    if (!res.ok) {
+      setError("Couldn't remove that tester.");
+      load();
+    }
+  };
+
+  const shown = testers.filter((t) => t.visible).length;
+
+  return (
+    <div>
+      <section className="rounded-2xl border border-line bg-surface p-5">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.1em] text-fg-subtle">Invite link</p>
+        {invite ? (
+          <>
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+              <input readOnly value={link} aria-label="Invite link" onFocus={(e) => e.currentTarget.select()} className="h-10 min-w-0 flex-1 rounded-xl border border-line-strong bg-sunken px-3 font-mono text-[13px] text-fg outline-none" />
+              <button type="button" onClick={copy} className="btn btn-primary btn-sm">
+                {copied ? <Check className="h-4 w-4" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />} {copied ? "Copied" : "Copy link"}
+              </button>
+            </div>
+            <p className="mt-2 text-[13px] text-fg-muted">Send this only to your testers. The page isn&apos;t linked anywhere or indexed, and sign-up needs this exact link. To retire it, set a new TESTER_INVITE_CODE on the server.</p>
+          </>
+        ) : (
+          <p className="mt-2 text-[13.5px] text-amber-200">Sign-up is closed: the server has no AUTH_SECRET or TESTER_INVITE_CODE.</p>
+        )}
+      </section>
+
+      <div className="mt-5 flex items-center gap-3">
+        <p className="flex-1 text-[14px] text-fg-muted">
+          <span className="font-semibold text-fg tabular-nums">{testers.length}</span> signed up · <span className="tabular-nums">{shown}</span> shown in the app
+        </p>
+        <button type="button" onClick={load} className="btn btn-ghost btn-sm" aria-label="Refresh testers">
+          <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} aria-hidden="true" />
+        </button>
+      </div>
+
+      {error && (
+        <p role="alert" className="mt-4 rounded-xl bg-red-500/10 px-4 py-3 text-[14px] text-red-300 ring-1 ring-inset ring-red-500/25">
+          {error}
+        </p>
+      )}
+
+      <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+        {testers.map((t) => (
+          <li key={t.id} className={cn("flex items-center gap-3 rounded-2xl border bg-surface p-4", t.visible ? "border-line" : "border-dashed border-line-strong opacity-60")}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`/api/admin/testers/${t.id}/photo`} alt="" className="h-12 w-12 shrink-0 rounded-full bg-raised object-cover" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[15px] font-semibold">{t.name}</p>
+              <p className="truncate text-[13px] text-brand-300">@{t.username}</p>
+              <a href={`mailto:${t.email}`} className="block truncate text-[12.5px] text-fg-subtle hover:text-fg-muted">
+                {t.email}
+              </a>
+              <p className="text-[12px] text-fg-subtle" title={new Date(t.joinedAt).toLocaleString("en-IN")}>
+                Joined {relative(t.joinedAt)}
+                {!t.visible && " · hidden"}
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-col gap-0.5">
+              <IconButton label={t.visible ? "Hide from the app" : "Show in the app"} onClick={() => toggle(t)}>
+                {t.visible ? <Eye className="h-4 w-4" aria-hidden="true" /> : <EyeOff className="h-4 w-4" aria-hidden="true" />}
+              </IconButton>
+              <IconButton label="Remove" onClick={() => remove(t)} danger>
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+              </IconButton>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      {!loading && !testers.length && !error && (
+        <div className="mt-10 flex flex-col items-center text-center">
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-raised ring-1 ring-inset ring-line-strong">
+            <Users className="h-6 w-6 text-fg-muted" aria-hidden="true" />
+          </span>
+          <p className="mt-4 text-[16px] font-semibold">No testers yet</p>
+          <p className="mt-1 text-[14px] text-fg-muted">Share the invite link; people who sign up appear here and in the app.</p>
         </div>
       )}
     </div>

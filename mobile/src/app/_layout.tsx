@@ -28,6 +28,7 @@ export default function RootLayout() {
             <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.app }, animation: "slide_from_right" }}>
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="tool/[slug]" />
+              <Stack.Screen name="thanks" />
             </Stack>
             <AddSheet />
             <OfflineBanner />

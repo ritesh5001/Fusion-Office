@@ -125,3 +125,29 @@ model Feedback {
   @@index([createdAt])
   @@index([kind, createdAt])
 }
+
+// ─── Early testers ─────────────────────────────────────────────────
+
+/// People who tested the app before launch, thanked by name in the mobile app.
+/// They sign up through an invite-only page; the admin panel can hide or remove entries.
+model Tester {
+  id          String   @id @default(cuid())
+  /** Display name, as they typed it. */
+  name        String
+  /** Handle shown as @username, as typed (letters, digits, _ and .). */
+  username    String
+  /** Lowercased username, so "Ritesh" and "ritesh" can't both register. */
+  usernameKey String   @unique
+  /** Lowercased. Private: only the admin panel sees it, never the public list. */
+  email       String   @unique
+  /** Profile photo, re-encoded on the server as a small square JPEG. */
+  photo       Bytes
+  photoType   String   @default("image/jpeg")
+  /** Hidden testers stay in the admin panel but disappear from the app. */
+  visible     Boolean  @default(true)
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([visible, createdAt])
+}

@@ -10,7 +10,7 @@ import { fetchCloudConfig } from "./cloudConfig";
 
 type Send = (path: string, init?: RequestInit) => Promise<Response>;
 
-const PROTECTED = [/^\/api\/convert(\/|\?|$)/, /^\/api\/ai(\/|$)/, /^\/api\/feedback(\/|$)/, /^\/api\/admin\/login$/, /^\/api\/(contact|stories)(\/|$)/];
+const PROTECTED = [/^\/api\/convert(\/|\?|$)/, /^\/api\/ai(\/|$)/, /^\/api\/feedback(\/|$)/, /^\/api\/admin\/login$/, /^\/api\/(contact|stories)(\/|$)/, /^\/api\/testers\/join$/];
 const SCRIPT = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 const STORE = "fo-human-pass";
 // Run the check again a minute early rather than racing the cookie's expiry.

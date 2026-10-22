@@ -8,6 +8,7 @@ import { ai, speech } from "./routes/ai.js";
 import { feedback } from "./routes/feedback.js";
 import { contact, stories } from "./routes/messages.js";
 import { admin } from "./routes/admin.js";
+import { testers } from "./routes/testers.js";
 import { errorHandler, signedInWhenAvailable } from "./lib/http.js";
 import { rateLimit } from "./lib/rateLimit.js";
 import { corsPolicy, originGuard, securityHeaders } from "./lib/security.js";
@@ -103,6 +104,8 @@ export function createApp() {
   // Contact form and pay-it-forward stories: same protections, a thank-you email when an address is given.
   app.use("/api/contact", originGuard(), rateLimit({ name: "contact", windowMs: 60 * 60_000, max: Number(process.env.CONTACT_RATE_LIMIT) || 6 }), turnstileGuard(), contact);
   app.use("/api/stories", originGuard(), rateLimit({ name: "stories", windowMs: 60 * 60_000, max: Number(process.env.STORY_RATE_LIMIT) || 6 }), turnstileGuard(), stories);
+  // Early testers: public list and photos for the app; invite-only sign-up (protected inside the router).
+  app.use("/api/testers", testers);
   // Password guessing on the admin login needs a solved human check too.
   app.use("/api/admin/login", turnstileGuard());
   // Admin panel (feedback inbox). Responses are private and never cached.

@@ -1,9 +1,11 @@
-import { Linking, Switch, View } from "react-native";
+import { Image, Linking, Switch, View } from "react-native";
+import { router } from "expo-router";
 import Constants from "expo-constants";
-import { ExternalLink, Heart, Server, ShieldCheck, Sparkles, type LucideIcon } from "lucide-react-native";
+import { ChevronRight, ExternalLink, Heart, Server, ShieldCheck, Sparkles, type LucideIcon } from "lucide-react-native";
 import { C } from "@/theme";
 import { useMotion } from "@/lib/motion";
 import { WEB_URL } from "@/lib/tools";
+import { useTesters } from "@/lib/testers";
 import { Screen } from "@/components/Screen";
 import { CoffeeCard } from "@/components/Coffee";
 import { Eyebrow, PressScale, T } from "@/components/ui";
@@ -20,6 +22,7 @@ function Row({ children }: { children: React.ReactNode }) {
 
 export default function Settings() {
   const { reduced, setReduced } = useMotion();
+  const { testers } = useTesters();
   return (
     <Screen>
       <T weight="display" header style={{ marginTop: 8, fontSize: 28, letterSpacing: -0.9 }}>Settings</T>
@@ -53,6 +56,26 @@ export default function Settings() {
       </View>
 
       <Eyebrow style={{ marginTop: 24, marginBottom: 8 }}>About</Eyebrow>
+      <PressScale accessibilityRole="button" accessibilityLabel="Special thanks to our early testers" onPress={() => router.push("/thanks")} style={{ marginBottom: 8 }}>
+        <Row>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <View style={{ width: 36, height: 36, borderRadius: 11, backgroundColor: C.raised, alignItems: "center", justifyContent: "center" }}>
+              <Heart size={18} color={C.heart} fill={C.heart} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <T weight="semibold" style={{ fontSize: 15 }}>Special thanks</T>
+              <T style={{ marginTop: 2, fontSize: 12.5, color: C.fgMuted }}>The early testers who helped build this app</T>
+            </View>
+            {/* A peek at who's inside, from the cached list. */}
+            <View style={{ flexDirection: "row" }}>
+              {(testers ?? []).slice(0, 3).map((t, i) => (
+                <Image key={t.id} source={{ uri: t.photo }} style={{ width: 26, height: 26, borderRadius: 13, marginLeft: i ? -8 : 0, borderWidth: 2, borderColor: C.surface, backgroundColor: C.raised }} />
+              ))}
+            </View>
+            <ChevronRight size={17} color={C.fgMuted} />
+          </View>
+        </Row>
+      </PressScale>
       <PressScale accessibilityRole="link" onPress={() => Linking.openURL(WEB_URL)}>
         <Row>
           <View style={{ flexDirection: "row", alignItems: "center" }}>

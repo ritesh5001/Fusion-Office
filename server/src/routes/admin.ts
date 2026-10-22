@@ -3,6 +3,7 @@ import { dbEnabled, prisma } from "../lib/db.js";
 import { HttpError } from "../lib/http.js";
 import { rateLimit } from "../lib/rateLimit.js";
 import { adminEnabled, checkPassword, clearAdminCookie, isAdmin, requireAdmin, setAdminCookie } from "../lib/admin.js";
+import { inviteCode, publicTester } from "../lib/testers.js";
 
 const KINDS = ["feedback", "contact", "story"];
 
@@ -72,6 +73,58 @@ admin.delete("/feedback/:id", async (req, res, next) => {
   try {
     const gone = await prisma.feedback.delete({ where: { id: req.params.id } }).catch(() => null);
     if (!gone) throw new HttpError(404, "Feedback not found.");
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── Early testers ─────────────────────────────────────────────────
+
+/** Everyone who signed up (with emails), plus the invite link to send to new testers. */
+admin.get("/testers", async (_req, res, next) => {
+  try {
+    const rows = await prisma.tester.findMany({
+      orderBy: { createdAt: "desc" },
+      select: { id: true, name: true, username: true, email: true, visible: true, createdAt: true, updatedAt: true },
+    });
+    const code = inviteCode();
+    res.json({
+      invite: code ? { code, path: `/testers?invite=${encodeURIComponent(code)}` } : null,
+      testers: rows.map((t) => ({ ...publicTester(t), email: t.email, visible: t.visible })),
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/** A tester's photo for the admin panel, including hidden testers (the public URL 404s for those). */
+admin.get("/testers/:id/photo", async (req, res, next) => {
+  try {
+    const t = await prisma.tester.findUnique({ where: { id: req.params.id }, select: { photo: true, photoType: true } });
+    if (!t) throw new HttpError(404, "Tester not found.");
+    res.set({ "Content-Type": t.photoType, "Cache-Control": "private, no-store" });
+    res.send(Buffer.from(t.photo));
+  } catch (err) {
+    next(err);
+  }
+});
+
+admin.patch("/testers/:id", async (req, res, next) => {
+  try {
+    if (typeof req.body?.visible !== "boolean") throw new HttpError(400, "Nothing to change.");
+    const t = await prisma.tester.update({ where: { id: req.params.id }, data: { visible: req.body.visible }, select: { id: true, visible: true } }).catch(() => null);
+    if (!t) throw new HttpError(404, "Tester not found.");
+    res.json(t);
+  } catch (err) {
+    next(err);
+  }
+});
+
+admin.delete("/testers/:id", async (req, res, next) => {
+  try {
+    const gone = await prisma.tester.delete({ where: { id: req.params.id }, select: { id: true } }).catch(() => null);
+    if (!gone) throw new HttpError(404, "Tester not found.");
     res.json({ ok: true });
   } catch (err) {
     next(err);

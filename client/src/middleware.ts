@@ -14,6 +14,8 @@ import { COMING_SOON_PATH, PREVIEW_COOKIE, isLaunched } from "@/lib/launch";
  */
 /** Where the admin panel page really lives. Never reachable directly: only via ADMIN_PATH. */
 const ADMIN_INTERNAL = "/x-admin";
+/** The invite-only early-tester sign-up page (the invite code in its link is checked by the API). */
+const TESTERS_PATH = "/testers";
 
 export function middleware(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
@@ -28,6 +30,10 @@ export function middleware(req: NextRequest) {
     // Looks exactly like any other missing page.
     return NextResponse.rewrite(new URL("/_not-found", req.url), { status: 404 });
   }
+
+  // Early-tester sign-up: shared privately with an invite link, so it works before
+  // launch too, is never indexed or cached, and doesn't leak the link as a referrer.
+  if (pathname.replace(/\/$/, "") === TESTERS_PATH) return withPrivateHeaders(NextResponse.next());
 
   if (isLaunched()) {
     // After launch the countdown page has nothing to show.
