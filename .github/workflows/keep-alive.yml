@@ -20,7 +20,7 @@ jobs:
     steps:
       - name: Ping health checks
         env:
-          URLS: ${{ vars.KEEP_ALIVE_URLS || 'https://fusion-office.onrender.com/api/health' }}
+          URLS: ${{ vars.KEEP_ALIVE_URLS || 'https://fusion-office-i5x0.onrender.com/api/health' }}
         run: |
           status=0
           for url in $URLS; do

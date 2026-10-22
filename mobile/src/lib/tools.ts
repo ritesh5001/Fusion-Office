@@ -98,4 +98,4 @@ export function accepts(tool: ToolDef, name: string, mime?: string | null) {
 }
 
 export const WEB_URL = "https://www.fusionoffice.online";
-export const API_URL = "https://fusion-office.onrender.com";
+export const API_URL = "https://fusion-office-i5x0.onrender.com";

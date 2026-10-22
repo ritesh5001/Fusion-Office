@@ -19,8 +19,25 @@ import { turnstileEnabled, turnstileGuard, turnstileSiteKey } from "./lib/turnst
  * client's /api proxy that would be this server's own address, so present the
  * public address instead: AUTH_URL when set, else the proxy's X-Forwarded-Host.
  */
+/**
+ * AUTH_URL as a URL, or null when unset or malformed (for example pasted with
+ * quotes around it). A bad value is reported once instead of failing every request.
+ */
+export function publicAuthUrl(raw = process.env.AUTH_URL): URL | null {
+  const value = raw?.trim().replace(/^["']|["']$/g, "");
+  if (!value) return null;
+  try {
+    return new URL(value);
+  } catch {
+    if (!warnedAuthUrl) console.error(`[config] AUTH_URL is not a valid URL (${JSON.stringify(raw)}); ignoring it. Use e.g. https://your-site/api/auth`);
+    warnedAuthUrl = true;
+    return null;
+  }
+}
+let warnedAuthUrl = false;
+
 const usePublicHost: express.RequestHandler = (req, _res, next) => {
-  const publicUrl = process.env.AUTH_URL ? new URL(process.env.AUTH_URL) : null;
+  const publicUrl = publicAuthUrl();
   const host = publicUrl?.host ?? req.get("x-forwarded-host")?.split(",")[0].trim();
   if (host) req.headers.host = host;
   if (publicUrl) req.headers["x-forwarded-proto"] = publicUrl.protocol.replace(":", "");

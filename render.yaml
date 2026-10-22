@@ -12,7 +12,7 @@ databases:
 services:
   # ── Backend: API, Auth.js, file storage ──────────────────────────
   - type: web
-    # Same name as the backend already running at fusion-office.onrender.com.
+    # Same name as the backend already running at fusion-office-i5x0.onrender.com.
     name: fusion-office
     # Docker, because the converters need LibreOffice and Chromium installed.
     # The image applies database migrations, then starts the API.

@@ -15,7 +15,7 @@ If Metro fails with `EMFILE: too many open files`, install Watchman (`brew insta
 ## How tools work
 
 - **Native, on the device:** Merge, Split, Rotate, Page numbers and Watermark PDF; JPG to PDF; Scan to PDF (camera → PDF); Compress, Resize, Convert and Rotate image. Nothing is uploaded.
-- **Native, via the server:** Word, Excel and PowerPoint to PDF call the same `/api/convert/office` endpoint as the website (`fusion-office.onrender.com`).
+- **Native, via the server:** Word, Excel and PowerPoint to PDF call the same `/api/convert/office` endpoint as the website (`fusion-office-i5x0.onrender.com`).
 - **Everything else** opens the website's tool inside the app (WebView) with the site's header and footer hidden. Files the tool downloads are caught, saved to Recent and offered in the share sheet.
 
 The tool list, categories and search come straight from `../client/src/lib/tools` (registry and search), so the app always shows the same 74 tools as the website.
