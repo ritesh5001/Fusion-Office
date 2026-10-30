@@ -20,6 +20,7 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: `${SITE_NAME} – ${SITE_TAGLINE}`, description: SITE_DESCRIPTION },
   icons: { icon: [{ url: "/icon.svg", type: "image/svg+xml" }], apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }] },
   formatDetection: { telephone: false, email: false, address: false },
+  other: { "toolfound-verify": "b4844672f99f506deedb12d7ff072b0ade537445ddbcd9cf" },
 };
 
 export const viewport: Viewport = { themeColor: "#0a0c11", colorScheme: "dark" };
