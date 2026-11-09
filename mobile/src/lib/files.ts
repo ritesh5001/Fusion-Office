@@ -26,7 +26,7 @@ export interface SavedFile {
   mimeType: string;
 }
 
-const guessMime = (name: string) => {
+export const guessMime = (name: string) => {
   const ext = name.split(".").pop()?.toLowerCase() ?? "";
   const map: Record<string, string> = {
     pdf: "application/pdf", jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", heic: "image/heic", gif: "image/gif",
@@ -38,7 +38,7 @@ const guessMime = (name: string) => {
   return map[ext] ?? "application/octet-stream";
 };
 
-const toPicked = (uri: string, name: string, size?: number | null, mime?: string | null): PickedFile => {
+export const toPicked = (uri: string, name: string, size?: number | null, mime?: string | null): PickedFile => {
   const mimeType = mime || guessMime(name);
   return { uri, name, size: size ?? 0, mimeType, kind: kindOf(name, mimeType) };
 };
@@ -128,11 +128,22 @@ export function formatBytes(n: number) {
 export const stem = (name: string) => name.replace(/\.[^.]+$/, "");
 
 /**
- * Can the in-app viewer show this file? Images and text everywhere; PDFs on
+ * Word, Excel, PowerPoint, CSV and Markdown files: the app shows them with the
+ * website's document viewer (in a web view). The file is handed to the page
+ * directly and isn't uploaded; old .doc/.xls/.ppt are converted on the server.
+ */
+export function shownBySite(f: Pick<SavedFile, "name">) {
+  return /\.(docx|doc|odt|rtf|xlsx|xlsm|xls|ods|csv|tsv|pptx|ppt|odp|md|markdown)$/i.test(f.name);
+}
+
+/**
+ * Can the in-app viewer show this file? Office documents (see shownBySite),
+ * images and text everywhere; PDFs on
  * iOS (its web view renders them) and on Android through the app's own page
  * renderer. Other types open in the phone's app for them.
  */
-export function viewableInApp(f: Pick<SavedFile, "mimeType">) {
+export function viewableInApp(f: Pick<SavedFile, "mimeType" | "name">) {
+  if (shownBySite(f)) return true;
   if (f.mimeType.startsWith("image/") || f.mimeType.startsWith("text/")) return true;
   return f.mimeType === "application/pdf" && (Platform.OS === "ios" || canRenderPdf());
 }

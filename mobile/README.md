@@ -20,6 +20,18 @@ If Metro fails with `EMFILE: too many open files`, install Watchman (`brew insta
 
 The tool list, categories and search come straight from `../client/src/lib/tools` (registry and search), so the app always shows the same 74 tools as the website.
 
+## Opening files from other apps (Android)
+
+Fusion Office is listed in Android's **Open with** and **Share** menus for PDF, Word, Excel, PowerPoint, OpenDocument, CSV, text, Markdown and images (`android.intentFilters` in `app.json`: `VIEW`, `SEND` and `SEND_MULTIPLE`).
+
+- The local module `modules/fo-downloads` reads the incoming intent (`takeIncoming`, plus an `onIncoming` event when the app is already open), copies the file into the cache and hands it to JS once.
+- `src/components/IncomingFiles.tsx` (in the root layout) receives it and opens `/open`: the file shows in the viewer straight away, is kept in Recent, and the tools that fit are listed below it.
+- `src/app/+native-intent.tsx` stops the router from treating the `content://` address as a screen.
+- The viewer shows PDFs, images and text on the device. Word, Excel, PowerPoint, CSV and Markdown are shown with the website's `/viewer` in a web view; the file is passed to the page directly, not uploaded.
+- The **Document viewer** tool (Tools tab) picks any file and opens the same screen.
+
+Intent filters and the native module only take effect in a new build (`npm run build:apk`), not in Expo Go.
+
 ## Structure
 
 ```

@@ -11,6 +11,7 @@ import { MotionProvider } from "@/lib/motion";
 import { SessionProvider } from "@/lib/session";
 import { AddSheet } from "@/components/AddSheet";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { IncomingFiles } from "@/components/IncomingFiles";
 
 // A crash anywhere below shows a recovery screen instead of a blank app.
 export { CrashScreen as ErrorBoundary } from "@/components/CrashScreen";
@@ -29,9 +30,11 @@ export default function RootLayout() {
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="tool/[slug]" />
               <Stack.Screen name="thanks" />
+              <Stack.Screen name="open" />
             </Stack>
             <AddSheet />
             <OfflineBanner />
+            <IncomingFiles />
           </SessionProvider>
         </MotionProvider>
       </SafeAreaProvider>

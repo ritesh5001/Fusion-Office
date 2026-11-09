@@ -40,6 +40,8 @@ const IMAGES = "image/png,image/jpeg,image/webp";
 const ANY_IMAGE = "image/*,.heic,.heif,.avif";
 
 export const TOOLS: ToolDef[] = [
+  // Viewer (full-screen app): open and read any document, no sign-in
+  { slug: "document-viewer", name: "Document viewer", description: "Open and read PDF, Word, Excel, PowerPoint, image and text files. No sign-in, nothing uploaded.", category: "office", icon: "Eye", accept: "application/pdf,.pdf,.docx,.doc,.odt,.rtf,.xlsx,.xls,.ods,.csv,.tsv,.pptx,.ppt,.odp,.md,.markdown,.txt,.json,.xml,image/*,.heic,.heif,.avif", multiple: false, runs: "browser", href: "/viewer", status: "ready" },
   // Office editors (full-screen apps)
   { slug: "word-editor", name: "Word editor", description: "Open and edit .docx files: fonts, headings, lists, tables, images. Save as Word or PDF.", category: "office", icon: "FileText", accept: ".docx,.doc,.odt,.rtf", multiple: false, runs: "browser", href: "/write", status: "ready" },
   { slug: "excel-editor", name: "Excel editor", description: "Open and edit .xlsx and CSV: formulas, formatting, sorting, several sheets.", category: "office", icon: "FileSpreadsheet", accept: ".xlsx,.xls,.ods,.csv", multiple: false, runs: "browser", href: "/sheets", status: "ready" },

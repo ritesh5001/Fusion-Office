@@ -8,10 +8,11 @@ import { PDFDocument } from "pdf-lib";
 import { C } from "@/theme";
 import { useSession } from "@/lib/session";
 import { useReduced } from "@/lib/motion";
-import { readBytes, type PickedFile } from "@/lib/files";
+import { readBytes } from "@/lib/files";
 import { NATIVE } from "@/lib/native";
 import { useRunner } from "@/lib/runner";
-import { TOOLS, accepts, toolBySlug, type FileKind, type ToolDef } from "@/lib/tools";
+import { toolBySlug, type FileKind, type ToolDef } from "@/lib/tools";
+import { toolsFor } from "@/lib/suggest";
 import { GlowCard } from "./GlowCard";
 import { KindOutline } from "./KindOutline";
 import { Segmented } from "./Segmented";
@@ -28,13 +29,6 @@ const SUGGESTED: Record<FileKind, string[]> = {
   pdf: ["compress-pdf", "merge-pdf", "edit-pdf", "split-pdf"],
   document: ["word-to-pdf", "word-editor", "excel-editor", "powerpoint-to-pdf"],
   image: ["compress-image", "resize-image", "jpg-to-pdf", "convert-image"],
-};
-
-/** Best first choices per kind of file; anything else that fits follows. */
-const PREFERRED: Record<FileKind, string[]> = {
-  pdf: ["edit-pdf", "merge-pdf", "compress-pdf", "pdf-to-word", "split-pdf", "sign-pdf", "rotate-pdf", "page-numbers"],
-  image: ["jpg-to-pdf", "compress-image", "resize-image", "image-editor", "convert-image", "crop-image"],
-  document: ["word-to-pdf", "excel-to-pdf", "powerpoint-to-pdf", "word-editor", "excel-editor", "powerpoint-editor"],
 };
 
 /** Run right in the card, with default settings. */
@@ -100,14 +94,7 @@ export function DropStage({ onKind }: { onKind?: (k: FileKind) => void }) {
     };
   }, [staged, reset]);
 
-  const matches = useMemo(() => {
-    if (!staged?.length) return [];
-    const order = PREFERRED[staged[0].kind];
-    const at = (t: ToolDef) => (order.includes(t.slug) ? order.indexOf(t.slug) : order.length + TOOLS.indexOf(t));
-    // The app's own image and PDF tools take any photo (HEIC too) or PDF, not just the website's formats.
-    const fits = (t: ToolDef, f: PickedFile) => accepts(t, f.name, f.mimeType) || (NATIVE[t.slug] && NATIVE[t.slug].pick !== "document" && NATIVE[t.slug].pick === f.kind);
-    return TOOLS.filter((t) => t.status === "ready" && (staged.length === 1 || t.multiple) && staged.every((f) => fits(t, f))).sort((a, b) => at(a) - at(b));
-  }, [staged]);
+  const matches = useMemo(() => toolsFor(staged ?? []), [staged]);
 
   const inline = INLINE.map(toolBySlug)
     .filter((t): t is ToolDef => !!t && matches.includes(t) && !!NATIVE[t.slug])

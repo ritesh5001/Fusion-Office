@@ -67,6 +67,15 @@ Running the server tools locally: install LibreOffice (`brew install --cask libr
 
 **AI tools** run on [Groq](https://console.groq.com) with `openai/gpt-oss-120b` (set `AI_MODEL` for another model). Groq's free plan allows about 8,000 tokens a minute, roughly 8–10 pages per request: rate limits are waited out automatically, and longer documents get a "try fewer pages" message. The Developer plan raises the limits.
 
+## Document viewer (`/viewer`)
+
+Anyone can open a document and read it, with no sign-in: PDF (all pages, zoom, password-protected files), Word (.docx; .doc/.odt/.rtf are converted on the server first), Excel (.xlsx, every sheet with number formats; .xls/.ods via the server), CSV/TSV, PowerPoint (.pptx with speaker notes; .ppt/.odp via the server), images, Markdown and text/JSON. Files are read in the browser and never uploaded (except the old Office formats above).
+
+- Open by picking or dropping a file, or with a link: `/viewer?url=https://…` (the other site must allow CORS).
+- "Do more" links hand the open file to the matching editor or tool.
+- Installed as an app (Chrome/Edge), the site registers `file_handlers` in its manifest, so it shows up in the system's "Open with" menu for these files.
+- The tool page is `/tools/document-viewer`. Code: `client/src/components/viewer/`, file-type rules in `client/src/lib/viewer/detect.ts`.
+
 ## Word, Excel and PowerPoint editors
 
 Three full-screen editors that open real Office files, edit them in the browser and save them back. Drafts autosave on the device (IndexedDB) and show under "Recent" on each start screen.

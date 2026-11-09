@@ -28,6 +28,225 @@
       "blockedPermissions": [
         "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.RECORD_AUDIO"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "category": [
+            "DEFAULT"
+          ],
+          "data": [
+            {
+              "scheme": "content",
+              "mimeType": "application/pdf"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "application/msword"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "application/vnd.oasis.opendocument.text"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "application/rtf"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "text/rtf"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "application/vnd.ms-excel"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "application/vnd.oasis.opendocument.spreadsheet"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "text/csv"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "text/comma-separated-values"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "application/vnd.ms-powerpoint"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "application/vnd.oasis.opendocument.presentation"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "text/plain"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "text/markdown"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "image/*"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "application/pdf"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "application/msword"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "application/vnd.oasis.opendocument.text"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "application/rtf"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "text/rtf"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "application/vnd.ms-excel"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "application/vnd.oasis.opendocument.spreadsheet"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "text/csv"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "text/comma-separated-values"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "application/vnd.ms-powerpoint"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "application/vnd.oasis.opendocument.presentation"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "text/plain"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "text/markdown"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "image/*"
+            }
+          ]
+        },
+        {
+          "action": "SEND",
+          "category": [
+            "DEFAULT"
+          ],
+          "data": [
+            {
+              "mimeType": "application/pdf"
+            },
+            {
+              "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            },
+            {
+              "mimeType": "application/msword"
+            },
+            {
+              "mimeType": "application/vnd.oasis.opendocument.text"
+            },
+            {
+              "mimeType": "application/rtf"
+            },
+            {
+              "mimeType": "text/rtf"
+            },
+            {
+              "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            },
+            {
+              "mimeType": "application/vnd.ms-excel"
+            },
+            {
+              "mimeType": "application/vnd.oasis.opendocument.spreadsheet"
+            },
+            {
+              "mimeType": "text/csv"
+            },
+            {
+              "mimeType": "text/comma-separated-values"
+            },
+            {
+              "mimeType": "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            },
+            {
+              "mimeType": "application/vnd.ms-powerpoint"
+            },
+            {
+              "mimeType": "application/vnd.oasis.opendocument.presentation"
+            },
+            {
+              "mimeType": "text/plain"
+            },
+            {
+              "mimeType": "text/markdown"
+            },
+            {
+              "mimeType": "image/*"
+            }
+          ]
+        },
+        {
+          "action": "SEND_MULTIPLE",
+          "category": [
+            "DEFAULT"
+          ],
+          "data": [
+            {
+              "mimeType": "application/pdf"
+            },
+            {
+              "mimeType": "image/*"
+            }
+          ]
+        }
       ]
     },
     "web": {

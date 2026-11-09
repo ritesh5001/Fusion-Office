@@ -159,6 +159,19 @@ export const IMAGE: Record<string, ToolSeo> = {
 };
 
 export const OFFICE: Record<string, ToolSeo> = {
+  "document-viewer": {
+    title: "Online Document Viewer – Open PDF, Word, Excel & PowerPoint Free",
+    description: "Open and read PDF, DOCX, XLSX, PPTX, CSV, images and text files without Office or an account. Scroll pages, sheets and slides. Free; files stay on your device.",
+    intent: ["online document viewer", "open docx online", "pdf viewer online", "view excel file online", "open pptx online", "file viewer"],
+    anchor: "Open a document online",
+    howTo: "open a document online",
+    intro: "One viewer for the files people send you. Open a PDF, Word document, spreadsheet, presentation, image or text file and read it right away, without an account.",
+    steps: ["Choose a file, drop it on the page, or paste a link to it.", "Read it: scroll through pages, slides or sheets and zoom in.", "Open it in an editor or another tool if you want to change it."],
+    features: ["PDF pages, Word documents, every Excel sheet and every slide with notes.", "Images, Markdown, CSV, JSON and plain text.", "Password-protected PDFs.", "Files are read in your browser and never uploaded."],
+    uses: ["Read an attachment on a computer without Office.", "Check a spreadsheet or deck someone shared before replying."],
+    limits: ["Old .doc, .xls and .ppt files are converted on our server to open them.", "Charts, animations and some advanced layout aren't shown exactly as in Office."],
+    related: ["word-editor", "excel-editor", "powerpoint-editor", "edit-pdf"],
+  },
   "word-editor": {
     title: "Online Word Editor – Edit DOCX Files Free in Your Browser",
     description: "Open and edit Word documents (.docx, .doc, .odt, .rtf) online: fonts, headings, lists, tables and images. Save as Word or PDF. Free, no install.",

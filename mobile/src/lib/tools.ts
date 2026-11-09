@@ -1,9 +1,9 @@
 /**
  * The tool catalogue. TOOLS, CATEGORIES and search come straight from the
- * website (client/src/lib/tools), so the app always lists the same 74 tools.
+ * website (client/src/lib/tools), so the app always lists the same tools.
  */
 import {
-  Archive, ArrowLeftRight, BookOpen, BookText, Bookmark, Brush, Camera, ClipboardList, Code, Columns2, Combine, Contrast, Crop, Eraser, EyeOff,
+  Archive, ArrowLeftRight, BookOpen, BookText, Bookmark, Brush, Camera, ClipboardList, Code, Columns2, Combine, Contrast, Crop, Eraser, Eye, EyeOff,
   FileArchive, FileCode, FileCode2, FileCog, FileSpreadsheet, FileText, FileType, Fingerprint, FlipHorizontal2, GitCompare, Globe, Grid2x2, Hash,
   Headphones, Image, ImageDown, ImagePlus, Images, Languages, Layers, LayoutGrid, ListOrdered, Lock, LockOpen, MessagesSquare, Minimize2, NotebookPen,
   PanelTop, PenLine, PenTool, Presentation, Receipt, ReceiptIndianRupee, RotateCw, Scale, Scaling, ScanSearch, ScanText, Scissors, Sheet, ShieldOff,
@@ -16,7 +16,7 @@ export { CATEGORIES, TOOLS, toolBySlug, searchTools };
 export type { Category, ToolDef };
 
 export const ICONS: Record<string, LucideIcon> = {
-  Archive, ArrowLeftRight, BookOpen, BookText, Bookmark, Brush, Camera, ClipboardList, Code, Columns2, Combine, Contrast, Crop, Eraser, EyeOff,
+  Archive, ArrowLeftRight, BookOpen, BookText, Bookmark, Brush, Camera, ClipboardList, Code, Columns2, Combine, Contrast, Crop, Eraser, Eye, EyeOff,
   FileArchive, FileCode, FileCode2, FileCog, FileSpreadsheet, FileText, FileType, Fingerprint, FlipHorizontal2, GitCompare, Globe, Grid2x2, Hash,
   Headphones, Image, ImageDown, ImagePlus, Images, Languages, Layers, LayoutGrid, ListOrdered, Lock, LockOpen, MessagesSquare, Minimize2, NotebookPen,
   PanelTop, PenLine, PenTool, Presentation, Receipt, ReceiptIndianRupee, RotateCw, Scale, Scaling, ScanSearch, ScanText, Scissors, Sheet, ShieldOff,
@@ -47,6 +47,7 @@ const TOOL_SWATCH: Record<string, Swatch> = {
   "markdown-to-pdf": "ink", "csv-to-pdf": "green", "ebook-to-pdf": "orange", "pdf-to-html": "orange", "pdf-to-epub": "pink", "pdf-to-csv": "green",
   "extract-text": "sky", "extract-images": "teal", "remove-restrictions": "emerald", "auto-redact-pii": "red", "privacy-scanner": "indigo",
   "file-fingerprint": "violet", "thumbmark-maker": "blue", "chat-with-pdf": "violet", "pdf-to-audio": "pink", "gst-invoice": "orange",
+  "document-viewer": "lime",
 };
 
 const LETTER: Record<string, { letter: string; swatch: Swatch }> = {

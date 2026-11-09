@@ -1,6 +1,9 @@
 package expo.modules.fodownloads
 
 import android.content.ContentValues
+import android.content.Intent
+import android.provider.OpenableColumns
+import android.webkit.MimeTypeMap
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
@@ -23,6 +26,61 @@ class FoDownloadsModule : Module() {
   // PdfRenderer handles one page at a time per document; keep renders in line.
   private val pdfLock = Any()
 
+  // "Open with" / "Share" from another app: the newest intent not yet handed to JS.
+  private var pendingIntent: Intent? = null
+  private var handledIntent: Intent? = null
+
+  /** content:// or file:// addresses an intent carries: VIEW data, or SEND / SEND_MULTIPLE streams. */
+  @Suppress("DEPRECATION")
+  private fun urisOf(intent: Intent): List<Uri> =
+    when (intent.action) {
+      Intent.ACTION_VIEW -> listOfNotNull(intent.data)
+      Intent.ACTION_SEND -> listOfNotNull(intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM) ?: intent.clipData?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.uri)
+      Intent.ACTION_SEND_MULTIPLE -> intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)?.toList()
+        ?: intent.clipData?.let { c -> (0 until c.itemCount).mapNotNull { c.getItemAt(it).uri } }
+        ?: emptyList()
+      else -> emptyList()
+    }.filter { it.scheme == "content" || it.scheme == "file" }
+
+  /** Copies an incoming file into the app's cache so the viewer and tools can read it like any picked file. */
+  private fun copyIn(uri: Uri, intentType: String?): Map<String, Any?>? {
+    val context = appContext.reactContext ?: return null
+    val resolver = context.contentResolver
+    var name: String? = null
+    var size: Long? = null
+    if (uri.scheme == "content") {
+      try {
+        resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE), null, null, null)?.use { c ->
+          if (c.moveToFirst()) {
+            val n = c.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            val s = c.getColumnIndex(OpenableColumns.SIZE)
+            if (n >= 0 && !c.isNull(n)) name = c.getString(n)
+            if (s >= 0 && !c.isNull(s)) size = c.getLong(s)
+          }
+        }
+      } catch (_: Exception) {
+        // Some providers don't answer queries; fall back to the address.
+      }
+    }
+    val mime = (if (uri.scheme == "content") resolver.getType(uri) else null)
+      ?: intentType?.takeIf { !it.contains('*') }
+      ?: MimeTypeMap.getSingleton().getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(uri.toString()).lowercase())
+      ?: "application/octet-stream"
+    var display = (name ?: uri.lastPathSegment?.substringAfterLast('/') ?: "file").replace(Regex("[\\\\/:*?\"<>|\u0000-\u001f]"), "_").take(120)
+    if (!display.contains('.')) MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)?.let { display = "$display.$it" }
+
+    val dir = File(context.cacheDir, "fo-incoming").apply { mkdirs() }
+    // Clear out files from earlier visits (over a day old).
+    dir.listFiles()?.forEach { f -> if (System.currentTimeMillis() - f.lastModified() > 86_400_000L) f.deleteRecursively() }
+    val slot = File(dir, System.nanoTime().toString()).apply { mkdirs() }
+    val out = File(slot, display)
+    val input = if (uri.scheme == "file") File(uri.path ?: return null).inputStream() else resolver.openInputStream(uri) ?: return null
+    input.use { inp -> out.outputStream().use { inp.copyTo(it) } }
+    return mapOf("uri" to Uri.fromFile(out).toString(), "name" to display, "size" to (size ?: out.length()).toDouble(), "mimeType" to mime)
+  }
+
+  private fun opensFiles(intent: Intent?) = intent != null && urisOf(intent).isNotEmpty()
+
   private fun openPdf(uri: String): Pair<ParcelFileDescriptor, PdfRenderer> {
     val path = Uri.parse(uri).path ?: throw CodedException("ERR_BAD_URI", "Bad file address.", null)
     val fd = ParcelFileDescriptor.open(File(path), ParcelFileDescriptor.MODE_READ_ONLY)
@@ -37,6 +95,37 @@ class FoDownloadsModule : Module() {
 
   override fun definition() = ModuleDefinition {
     Name("FoDownloads")
+
+    Events("onIncoming")
+
+    // The app was already open: a new file arrives through onNewIntent.
+    OnNewIntent { intent ->
+      if (opensFiles(intent)) {
+        pendingIntent = intent
+        sendEvent("onIncoming", mapOf<String, Any?>())
+      }
+    }
+
+    /**
+     * Files another app asked us to open ("Open with") or shared to us, copied
+     * into the cache. Each intent is handed over once; empty when there's none.
+     */
+    AsyncFunction("takeIncoming") {
+      val launch = appContext.currentActivity?.intent
+      // Reopening the app from Recents replays the old launch intent: ignore it.
+      val fresh = launch?.takeIf { (it.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0 }
+      val intent = pendingIntent ?: fresh
+      pendingIntent = null
+      if (intent == null || intent === handledIntent || !opensFiles(intent)) return@AsyncFunction emptyList<Map<String, Any?>>()
+      handledIntent = intent
+      urisOf(intent).mapNotNull { uri ->
+        try {
+          copyIn(uri, intent.type)
+        } catch (_: Exception) {
+          null
+        }
+      }
+    }
 
     /** Page sizes of a PDF (in points), for laying out the in-app viewer before pages are drawn. */
     AsyncFunction("pdfPages") { uri: String ->

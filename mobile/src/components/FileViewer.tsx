@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert, Dimensions, Image, Modal, PixelRatio, Platform, View } from "react-native";
+import { ActivityIndicator, Alert, Dimensions, Image, Modal, PixelRatio, Platform, View } from "react-native";
 import { WebView } from "react-native-webview";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Download, Share2, X } from "lucide-react-native";
 import { C } from "@/theme";
-import { formatBytes, openWithApp, saveToDevice, shareFile, viewableInApp, type SavedFile } from "@/lib/files";
+import { formatBytes, openWithApp, saveToDevice, shareFile, shownBySite, viewableInApp, type SavedFile } from "@/lib/files";
+import { WEB_URL } from "@/lib/tools";
+import { useOffline } from "@/lib/network";
+import { File } from "expo-file-system";
 import { PressScale, T } from "./ui";
 import { pdfPages, renderPdfPage } from "../../modules/fo-downloads";
 
@@ -59,7 +62,9 @@ function FileViewer({ file, onClose, onDownload, onShare, onFail }: { file: Save
               <Share2 size={19} color={C.onAccent} />
             </PressScale>
           </View>
-          {file.mimeType.startsWith("image/") ? (
+          {shownBySite(file) ? (
+            <SiteDoc file={file} onFail={() => onFail(file)} />
+          ) : file.mimeType.startsWith("image/") ? (
             <Image source={{ uri: file.uri }} resizeMode="contain" style={{ flex: 1 }} accessibilityLabel={file.name} />
           ) : file.mimeType === "application/pdf" && Platform.OS === "android" ? (
             <AndroidPdf uri={file.uri} onFail={() => onFail(file)} />
@@ -69,6 +74,69 @@ function FileViewer({ file, onClose, onDownload, onShare, onFail }: { file: Save
         </View>
       )}
     </Modal>
+  );
+}
+
+/** Files bigger than this aren't handed to the web viewer (the bridge copies the whole file as text). */
+const SITE_MAX_BYTES = 30 * 1024 * 1024;
+
+/**
+ * Word, Excel, PowerPoint, CSV and Markdown: the website's document viewer in
+ * a web view, in app mode (no site header). The file's bytes are handed to the
+ * page directly, so it isn't uploaded. Needs a connection to load the viewer.
+ */
+function SiteDoc({ file, onFail }: { file: SavedFile; onFail: () => void }) {
+  const web = useRef<WebView>(null);
+  const offline = useOffline();
+  const [ready, setReady] = useState(false);
+  const sent = useRef(false);
+  const tooBig = file.size > SITE_MAX_BYTES;
+
+  const send = () => {
+    if (sent.current) return;
+    sent.current = true;
+    (async () => {
+      try {
+        const b64 = await new File(file.uri).base64();
+        const args = [file.name, file.mimeType, b64].map((a) => JSON.stringify(a)).join(",");
+        web.current?.injectJavaScript(`(function go(n){ if (window.__foViewerOpen) window.__foViewerOpen(${args}); else if (n < 200) setTimeout(function(){ go(n + 1); }, 100); })(0); true;`);
+      } catch {
+        onFail();
+      }
+      setReady(true);
+    })();
+  };
+
+  if (offline || tooBig)
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 28, gap: 14 }}>
+        <T weight="semibold" style={{ fontSize: 16, textAlign: "center" }}>{tooBig ? "This file is too large to show in the app" : "You're offline"}</T>
+        <T style={{ fontSize: 14, color: C.fgMuted, textAlign: "center" }}>
+          {tooBig ? "Open it in another app on your phone instead." : "Word, Excel and PowerPoint files need a connection to show here. PDFs and images open offline."}
+        </T>
+        <PressScale onPress={onFail} style={{ height: 46, paddingHorizontal: 20, borderRadius: 23, backgroundColor: C.accent, justifyContent: "center" }}>
+          <T weight="bold" style={{ color: C.onAccent, fontSize: 14.5 }}>Open in another app</T>
+        </PressScale>
+      </View>
+    );
+  return (
+    <View style={{ flex: 1 }}>
+      <WebView
+        ref={web}
+        source={{ uri: `${WEB_URL}/viewer?app=1` }}
+        originWhitelist={["https://*"]}
+        onLoadEnd={send}
+        onError={onFail}
+        setBuiltInZoomControls
+        setDisplayZoomControls={false}
+        style={{ flex: 1, backgroundColor: "#0a0c11" }}
+      />
+      {!ready && (
+        <View pointerEvents="none" style={{ position: "absolute", inset: 0, alignItems: "center", justifyContent: "center", backgroundColor: "#05060a" }}>
+          <ActivityIndicator color={C.fgMuted} />
+        </View>
+      )}
+    </View>
   );
 }
 

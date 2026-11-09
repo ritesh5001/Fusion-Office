@@ -5,6 +5,7 @@ import { NATIVE } from "@/lib/native";
 import { toolBySlug } from "@/lib/tools";
 import { ToolRunnerScreen } from "@/components/ToolRunnerScreen";
 import { WebTool } from "@/components/WebTool";
+import { ViewerTool } from "@/components/ViewerTool";
 import { BackHeader, Screen } from "@/components/Screen";
 import { T } from "@/components/ui";
 
@@ -24,6 +25,7 @@ export default function ToolScreen() {
         </View>
       </Screen>
     );
+  if (tool.slug === "document-viewer") return <ViewerTool tool={tool} />;
   const native = NATIVE[tool.slug];
   return native ? <ToolRunnerScreen tool={tool} native={native} useStaged={staged === "1"} /> : <WebTool tool={tool} />;
 }
