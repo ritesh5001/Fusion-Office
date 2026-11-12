@@ -37,7 +37,8 @@ export const CATEGORIES: { id: Category; label: string }[] = [
 const PDF = "application/pdf,.pdf";
 const IMAGES = "image/png,image/jpeg,image/webp";
 /** Anything the browser may decode, plus iPhone HEIC (opens where the browser supports it). */
-const ANY_IMAGE = "image/*,.heic,.heif,.avif";
+const ANY_IMAGE = "image/*,.heic,.heif,.avif,.tif,.tiff";
+const HEIC = ".heic,.heif,image/heic,image/heif";
 
 export const TOOLS: ToolDef[] = [
   // Viewer (full-screen app): open and read any document, no sign-in
@@ -59,11 +60,23 @@ export const TOOLS: ToolDef[] = [
   { slug: "split-by-bookmarks", name: "Split by bookmarks", description: "Turn each chapter or bookmarked section into its own PDF.", category: "organize", icon: "Bookmark", accept: PDF, multiple: false, runs: "browser", status: "ready" },
   { slug: "split-by-text", name: "Split by text", description: "Start a new file at every page containing a phrase you choose.", category: "organize", icon: "TextSearch", accept: PDF, multiple: false, runs: "browser", status: "ready" },
   { slug: "pdf-to-zip", name: "PDF to ZIP", description: "Bundle several PDFs into one compressed ZIP file.", category: "organize", icon: "FileArchive", accept: PDF, multiple: true, runs: "browser", status: "ready" },
+  { slug: "delete-pdf-pages", name: "Delete pages", description: "Remove the pages you don't need from a PDF, by number or range.", category: "organize", icon: "FileX2", accept: PDF, multiple: false, runs: "browser", status: "ready" },
+  { slug: "extract-pdf-pages", name: "Extract pages", description: "Pull chosen pages out into a new PDF, or one file per page.", category: "organize", icon: "FileOutput", accept: PDF, multiple: false, runs: "browser", status: "ready" },
+  { slug: "add-blank-pages", name: "Add blank pages", description: "Insert blank pages at the start, the end, or after any page.", category: "organize", icon: "FilePlus2", accept: PDF, multiple: true, runs: "browser", status: "ready" },
+  { slug: "reverse-pdf", name: "Reverse PDF", description: "Flip the page order so the last page comes first.", category: "organize", icon: "ArrowDownUp", accept: PDF, multiple: true, runs: "browser", status: "ready" },
+  { slug: "booklet-pdf", name: "Booklet maker", description: "Arrange pages so a double-sided print folds into a booklet.", category: "organize", icon: "BookCopy", accept: PDF, multiple: true, runs: "browser", status: "ready" },
+  { slug: "poster-pdf", name: "Poster maker", description: "Enlarge a page across several sheets that tape together into a poster.", category: "organize", icon: "Grid3x3", accept: PDF, multiple: false, runs: "browser", status: "ready" },
   // Optimize
   { slug: "compress-pdf", name: "Compress PDF", description: "Shrink file size while text stays sharp and selectable.", category: "optimize", icon: "Minimize2", accept: PDF, multiple: true, runs: "browser", status: "ready", chainable: true },
   { slug: "repair-pdf", name: "Repair PDF", description: "Recover pages from damaged or truncated PDFs.", category: "optimize", icon: "Wrench", accept: PDF, multiple: true, runs: "browser", status: "ready", chainable: true },
   { slug: "ocr-pdf", name: "OCR PDF", description: "Make scanned PDFs searchable and selectable.", category: "optimize", icon: "ScanText", accept: PDF, multiple: false, runs: "browser", status: "ready", chainable: true },
   { slug: "gst-filing-prep", name: "GST filing prep", description: "Compress and split a PDF to fit portal upload limits, for SCN replies and appeals.", category: "optimize", icon: "Receipt", accept: PDF, multiple: false, runs: "browser", status: "ready" },
+  { slug: "compress-pdf-to-size", name: "Compress PDF to size", description: "Bring a PDF under an exact size like 100 KB, 200 KB or 1 MB for upload forms.", category: "optimize", icon: "Target", accept: PDF, multiple: true, runs: "browser", status: "ready" },
+  { slug: "remove-blank-pages", name: "Remove blank pages", description: "Find and delete empty pages, including blank sides of scans.", category: "optimize", icon: "FileMinus2", accept: PDF, multiple: true, runs: "browser", status: "ready" },
+  { slug: "deskew-pdf", name: "Straighten PDF", description: "Fix crooked scans: tilted pages are measured and turned upright.", category: "optimize", icon: "Ruler", accept: PDF, multiple: true, runs: "browser", status: "ready" },
+  { slug: "trim-pdf-margins", name: "Trim margins", description: "Crop the white margins off every page automatically.", category: "optimize", icon: "Shrink", accept: PDF, multiple: true, runs: "browser", status: "ready" },
+  { slug: "resize-pdf-pages", name: "Resize pages", description: "Change the page size to A4, Letter, Legal, A3 or A5, scaled to fit.", category: "optimize", icon: "Proportions", accept: PDF, multiple: true, runs: "browser", status: "ready" },
+  { slug: "grayscale-pdf", name: "Grayscale PDF", description: "Turn a colour PDF into black and white to save ink.", category: "optimize", icon: "Palette", accept: PDF, multiple: true, runs: "browser", status: "ready" },
   // Convert to PDF
   { slug: "jpg-to-pdf", name: "JPG to PDF", description: "Turn JPG, PNG and WEBP images into a PDF.", category: "convert-to", icon: "ImagePlus", accept: IMAGES, multiple: true, runs: "browser", status: "ready" },
   { slug: "scan-to-pdf", name: "Scan to PDF", description: "Use your camera to scan paper into a clean PDF.", category: "convert-to", icon: "Camera", accept: IMAGES, multiple: true, runs: "browser", status: "ready" },
@@ -74,6 +87,8 @@ export const TOOLS: ToolDef[] = [
   { slug: "markdown-to-pdf", name: "Markdown to PDF", description: "Turn Markdown into a clean PDF with headings, tables and code blocks.", category: "convert-to", icon: "FileCode2", accept: ".md,.markdown,.txt,text/markdown", multiple: true, runs: "server", status: "ready" },
   { slug: "csv-to-pdf", name: "CSV to PDF", description: "Turn a CSV spreadsheet into a neat, printable table.", category: "convert-to", icon: "Table", accept: ".csv,.tsv,text/csv", multiple: true, runs: "server", status: "ready" },
   { slug: "cdr-converter", name: "CDR Converter", description: "Convert CorelDRAW .cdr files to PDF, PNG, JPG or SVG.", category: "convert-to", icon: "PenTool", accept: ".cdr", multiple: true, runs: "server", status: "ready" },
+  { slug: "id-card-to-pdf", name: "ID card to PDF", description: "Put the front and back of an Aadhaar, PAN or other ID card on one A4 page.", category: "convert-to", icon: "IdCard", accept: ANY_IMAGE, multiple: true, runs: "browser", status: "ready" },
+  { slug: "heic-to-pdf", name: "HEIC to PDF", description: "Turn iPhone HEIC photos into a PDF, one photo per page.", category: "convert-to", icon: "Smartphone", accept: HEIC, multiple: true, runs: "browser", status: "ready" },
   { slug: "ebook-to-pdf", name: "eBook to PDF", description: "Convert EPUB books, text and HTML files into typeset PDFs.", category: "convert-to", icon: "BookOpen", accept: ".epub,.txt,.html,.htm,.xhtml", multiple: true, runs: "server", status: "ready" },
   // Convert from PDF
   { slug: "pdf-to-jpg", name: "PDF to JPG", description: "Turn pages into images, or pull out the photos inside.", category: "convert-from", icon: "Image", accept: PDF, multiple: false, runs: "browser", status: "ready" },
@@ -87,6 +102,7 @@ export const TOOLS: ToolDef[] = [
   { slug: "pdf-to-csv", name: "PDF to CSV", description: "Pull tables and columns out of a PDF into CSV.", category: "convert-from", icon: "Sheet", accept: PDF, multiple: false, runs: "browser", status: "ready" },
   { slug: "extract-text", name: "Extract text", description: "All the text of a PDF as a plain .txt file.", category: "convert-from", icon: "FileType", accept: PDF, multiple: false, runs: "browser", status: "ready" },
   { slug: "extract-images", name: "Extract images", description: "Pull the photos and graphics out of a PDF at original quality.", category: "convert-from", icon: "Images", accept: PDF, multiple: true, runs: "browser", status: "ready" },
+  { slug: "bank-statement-to-excel", name: "Bank statement to Excel", description: "Turn a bank statement PDF into a clean sheet of dated transactions with debit, credit and balance.", category: "convert-from", icon: "Landmark", accept: PDF, multiple: true, runs: "browser", status: "ready" },
   // Edit
   { slug: "edit-pdf", name: "Edit PDF", description: "Change existing text, add text, images, shapes and drawings.", category: "edit", icon: "PenLine", accept: PDF, multiple: false, runs: "browser", href: "/editor", status: "ready" },
   { slug: "sign-pdf", name: "Sign PDF", description: "Draw, type or upload your signature.", category: "edit", icon: "Signature", accept: PDF, multiple: false, runs: "browser", href: "/editor", status: "ready" },
@@ -103,6 +119,16 @@ export const TOOLS: ToolDef[] = [
   { slug: "text-to-handwriting", name: "Text to handwriting", description: "Type or paste text and get realistic handwritten pages.", category: "edit", icon: "PenTool", accept: "", multiple: false, runs: "browser", status: "ready" },
   { slug: "pdf-to-handwriting", name: "PDF to handwriting", description: "Turn the text of a PDF into handwritten notes.", category: "edit", icon: "NotebookPen", accept: PDF, multiple: false, runs: "browser", status: "ready" },
   { slug: "gst-invoice", name: "GST invoice", description: "Create a GST tax invoice with CGST, SGST or IGST, HSN codes and amount in words.", category: "edit", icon: "ReceiptIndianRupee", accept: "", multiple: false, runs: "browser", status: "ready" },
+  { slug: "quotation-maker", name: "Quotation maker", description: "Create a price quotation with GST, HSN codes and a validity date.", category: "edit", icon: "FileSignature", accept: "", multiple: false, runs: "browser", status: "ready" },
+  { slug: "proforma-invoice", name: "Proforma invoice", description: "Create a proforma invoice with GST for advance payments and order confirmation.", category: "edit", icon: "FileClock", accept: "", multiple: false, runs: "browser", status: "ready" },
+  { slug: "delivery-challan", name: "Delivery challan", description: "Create a GST delivery challan with consignee, transport and vehicle details.", category: "edit", icon: "Truck", accept: "", multiple: false, runs: "browser", status: "ready" },
+  { slug: "rent-receipt", name: "Rent receipt", description: "Make monthly rent receipts for HRA claims, with landlord PAN and revenue stamp box.", category: "edit", icon: "House", accept: "", multiple: false, runs: "browser", status: "ready" },
+  { slug: "salary-slip", name: "Salary slip", description: "Create a salary slip with earnings, deductions and net pay in words.", category: "edit", icon: "Banknote", accept: "", multiple: false, runs: "browser", status: "ready" },
+  { slug: "stamp-pdf", name: "Stamp PDF", description: "Stamp Paid, Approved, Received, Confidential or your own text on a PDF.", category: "edit", icon: "BadgeCheck", accept: PDF, multiple: true, runs: "browser", status: "ready" },
+  { slug: "qr-code-pdf", name: "QR code on PDF", description: "Print a QR code for a link, a UPI ID or a verification page on your PDF.", category: "edit", icon: "QrCode", accept: PDF, multiple: true, runs: "browser", status: "ready" },
+  { slug: "pdf-bookmarks", name: "Bookmarks editor", description: "Add, edit, nest and remove the bookmarks (table of contents) of a PDF.", category: "edit", icon: "ListTree", accept: PDF, multiple: false, runs: "browser", status: "ready" },
+  { slug: "pdf-attachments", name: "PDF attachments", description: "Extract the files embedded in a PDF, attach new ones, or remove them all.", category: "edit", icon: "Paperclip", accept: "*/*", multiple: true, runs: "browser", status: "ready" },
+  { slug: "remove-annotations", name: "Remove annotations", description: "Delete comments, highlights, stamps and drawings added on top of a PDF.", category: "edit", icon: "MessageSquareOff", accept: PDF, multiple: true, runs: "browser", status: "ready" },
   // Security
   { slug: "protect-pdf", name: "Protect PDF", description: "Add a password with AES-256 encryption.", category: "security", icon: "Lock", accept: PDF, multiple: true, runs: "browser", status: "ready", chainable: true },
   { slug: "unlock-pdf", name: "Unlock PDF", description: "Remove the password from a PDF you can open.", category: "security", icon: "Unlock", accept: PDF, multiple: false, runs: "browser", status: "ready" },
@@ -127,7 +153,18 @@ export const TOOLS: ToolDef[] = [
   { slug: "jpg-to-svg", name: "JPG to SVG", description: "Turn JPG and PNG images into editable vectors for CorelDRAW, Illustrator and Figma.", category: "image", icon: "PenTool", accept: "image/png,image/jpeg,image/webp,image/bmp,image/gif", multiple: true, runs: "browser", status: "ready" },
   { slug: "rotate-image", name: "Rotate image", description: "Turn or mirror many images at once.", category: "image", icon: "FlipHorizontal2", accept: ANY_IMAGE, multiple: true, runs: "browser", status: "ready" },
   { slug: "thumbmark-maker", name: "Thumbmark maker", description: "Photograph your thumbprint and get a clean transparent PNG for forms.", category: "image", icon: "Fingerprint", accept: ANY_IMAGE, multiple: false, runs: "browser", status: "ready" },
+  { slug: "remove-background", name: "Remove background", description: "Erase a plain background from a photo, logo or signature: transparent PNG, white or any colour.", category: "image", icon: "ImageOff", accept: ANY_IMAGE, multiple: true, runs: "browser", status: "ready" },
+  { slug: "passport-photo-maker", name: "Passport photo maker", description: "Crop to passport size, whiten the background and print several on one sheet.", category: "image", icon: "SquareUser", accept: ANY_IMAGE, multiple: false, runs: "browser", status: "ready" },
+  { slug: "exam-photo-resizer", name: "Exam photo & signature resizer", description: "Photo and signature in the exact pixels and KB for SSC, UPSC, IBPS, SBI, RRB, NEET, JEE, PAN and passport forms.", category: "image", icon: "GraduationCap", accept: ANY_IMAGE, multiple: true, runs: "browser", status: "ready" },
+  { slug: "heic-to-jpg", name: "HEIC to JPG", description: "Convert iPhone HEIC photos to JPG in any browser.", category: "image", icon: "Smartphone", accept: HEIC, multiple: true, runs: "browser", status: "ready" },
+  { slug: "webp-to-jpg", name: "WEBP to JPG", description: "Convert WEBP images to JPG that open everywhere.", category: "image", icon: "FileImage", accept: "image/webp,.webp", multiple: true, runs: "browser", status: "ready" },
+  { slug: "png-to-jpg", name: "PNG to JPG", description: "Convert PNG images to smaller JPG files.", category: "image", icon: "FileImage", accept: "image/png,.png", multiple: true, runs: "browser", status: "ready" },
+  { slug: "jpg-to-png", name: "JPG to PNG", description: "Convert JPG images to lossless PNG.", category: "image", icon: "FileImage", accept: "image/jpeg,.jpg,.jpeg", multiple: true, runs: "browser", status: "ready" },
+  { slug: "tiff-to-jpg", name: "TIFF to JPG", description: "Convert TIFF scans and photos to JPG.", category: "image", icon: "FileImage", accept: ".tif,.tiff,image/tiff", multiple: true, runs: "browser", status: "ready" },
 ];
+
+/** How many tools people can use today. Every page and the app show this one number. */
+export const TOOL_COUNT = TOOLS.filter((t) => t.status === "ready").length;
 
 export const toolBySlug = (slug: string) => TOOLS.find((t) => t.slug === slug);
 

@@ -7,12 +7,13 @@ import {
   FileArchive, FileCode, FileCode2, FileCog, FileSpreadsheet, FileText, FileType, Fingerprint, FlipHorizontal2, GitCompare, Globe, Grid2x2, Hash,
   Headphones, Image, ImageDown, ImagePlus, Images, Languages, Layers, LayoutGrid, ListOrdered, Lock, LockOpen, MessagesSquare, Minimize2, NotebookPen,
   PanelTop, PenLine, PenTool, Presentation, Receipt, ReceiptIndianRupee, RotateCw, Scale, Scaling, ScanSearch, ScanText, Scissors, Sheet, ShieldOff,
-  Shuffle, Signature, SlidersHorizontal, Sparkles, Stamp, Table, TextSearch, Unlock, Workflow, Wrench, type LucideIcon,
+  Shuffle, Signature, SlidersHorizontal, Sparkles, Stamp, Table, TextSearch, Unlock, Workflow, Wrench,
+  ArrowDownUp, BadgeCheck, Banknote, BookCopy, FileClock, FileImage, FileMinus2, FileOutput, FilePlus2, FileSignature, FileX2, GraduationCap, Grid3x3, House, IdCard, ImageOff, Landmark, ListTree, MessageSquareOff, Palette, Paperclip, Proportions, QrCode, Ruler, Shrink, Smartphone, SquareUser, Target, Truck, type LucideIcon,
 } from "lucide-react-native";
-import { CATEGORIES, TOOLS, toolBySlug, type Category, type ToolDef } from "@shared/registry";
+import { CATEGORIES, TOOLS, TOOL_COUNT, toolBySlug, type Category, type ToolDef } from "@shared/registry";
 import { searchTools } from "@shared/search";
 
-export { CATEGORIES, TOOLS, toolBySlug, searchTools };
+export { CATEGORIES, TOOLS, TOOL_COUNT, toolBySlug, searchTools };
 export type { Category, ToolDef };
 
 export const ICONS: Record<string, LucideIcon> = {
@@ -21,6 +22,7 @@ export const ICONS: Record<string, LucideIcon> = {
   Headphones, Image, ImageDown, ImagePlus, Images, Languages, Layers, LayoutGrid, ListOrdered, Lock, LockOpen, MessagesSquare, Minimize2, NotebookPen,
   PanelTop, PenLine, PenTool, Presentation, Receipt, ReceiptIndianRupee, RotateCw, Scale, Scaling, ScanSearch, ScanText, Scissors, Sheet, ShieldOff,
   Shuffle, Signature, SlidersHorizontal, Sparkles, Stamp, Table, TextSearch, Unlock, Workflow, Wrench,
+  ArrowDownUp, BadgeCheck, Banknote, BookCopy, FileClock, FileImage, FileMinus2, FileOutput, FilePlus2, FileSignature, FileX2, GraduationCap, Grid3x3, House, IdCard, ImageOff, Landmark, ListTree, MessageSquareOff, Palette, Paperclip, Proportions, QrCode, Ruler, Shrink, Smartphone, SquareUser, Target, Truck,
 };
 
 /** Tile colours, as on the website (components/tools/icons.tsx). */
@@ -48,6 +50,12 @@ const TOOL_SWATCH: Record<string, Swatch> = {
   "extract-text": "sky", "extract-images": "teal", "remove-restrictions": "emerald", "auto-redact-pii": "red", "privacy-scanner": "indigo",
   "file-fingerprint": "violet", "thumbmark-maker": "blue", "chat-with-pdf": "violet", "pdf-to-audio": "pink", "gst-invoice": "orange",
   "document-viewer": "lime",
+  "delete-pdf-pages": "red", "extract-pdf-pages": "sky", "add-blank-pages": "ink", "reverse-pdf": "amber", "booklet-pdf": "indigo", "poster-pdf": "pink",
+  "compress-pdf-to-size": "lime", "remove-blank-pages": "rose", "deskew-pdf": "teal", "trim-pdf-margins": "orange", "resize-pdf-pages": "sky", "grayscale-pdf": "ink",
+  "id-card-to-pdf": "blue", "heic-to-pdf": "orange", "bank-statement-to-excel": "green", "quotation-maker": "sky", "proforma-invoice": "amber", "delivery-challan": "teal",
+  "rent-receipt": "emerald", "salary-slip": "green", "stamp-pdf": "red", "qr-code-pdf": "ink", "pdf-bookmarks": "indigo", "pdf-attachments": "amber",
+  "remove-annotations": "rose", "remove-background": "pink", "passport-photo-maker": "blue", "exam-photo-resizer": "amber", "heic-to-jpg": "orange", "webp-to-jpg": "green",
+  "png-to-jpg": "sky", "jpg-to-png": "violet", "tiff-to-jpg": "ink",
 };
 
 const LETTER: Record<string, { letter: string; swatch: Swatch }> = {
@@ -83,7 +91,7 @@ export type FileKind = "pdf" | "document" | "image";
 export function kindOf(name: string, mime?: string | null): FileKind {
   const n = name.toLowerCase();
   if (mime === "application/pdf" || n.endsWith(".pdf")) return "pdf";
-  if (mime?.startsWith("image/") || /\.(jpe?g|png|webp|heic|heif|gif|bmp|avif)$/.test(n)) return "image";
+  if (mime?.startsWith("image/") || /\.(jpe?g|png|webp|heic|heif|gif|bmp|avif|tiff?)$/.test(n)) return "image";
   return "document";
 }
 

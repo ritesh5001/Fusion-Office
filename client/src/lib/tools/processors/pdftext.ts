@@ -41,6 +41,33 @@ export async function bookmarkParts(bytes: Uint8Array): Promise<Part[]> {
   }
 }
 
+/** Every bookmark with its page (1-based) and nesting level, in document order. */
+export async function readBookmarks(bytes: Uint8Array): Promise<{ title: string; page: number; level: number }[]> {
+  const pdf = await openPdf(bytes);
+  try {
+    type Item = { title: string; dest: string | unknown[] | null; items?: Item[] };
+    const out: { title: string; page: number; level: number }[] = [];
+    const walk = async (items: Item[], level: number) => {
+      for (const item of items) {
+        let page = 0;
+        try {
+          const dest = typeof item.dest === "string" ? await pdf.getDestination(item.dest) : item.dest;
+          if (dest?.[0] !== undefined && dest[0] !== null) page = (typeof dest[0] === "number" ? dest[0] : await pdf.getPageIndex(dest[0] as never)) + 1;
+        } catch {
+          /* bookmark without a usable destination */
+        }
+        // A bookmark that points nowhere stays in the list, on its parent's page.
+        out.push({ title: item.title.replace(/\s+/g, " ").trim() || "Untitled", page: page || out[out.length - 1]?.page || 1, level: Math.min(level, 8) });
+        if (item.items?.length && level < 8) await walk(item.items, level + 1);
+      }
+    };
+    await walk(((await pdf.getOutline()) ?? []) as Item[], 0);
+    return out;
+  } finally {
+    await pdf.destroy();
+  }
+}
+
 /** Pages whose text contains `phrase` (case-insensitive, spacing-tolerant). */
 export async function pagesContaining(bytes: Uint8Array, phrase: string, progress?: Progress): Promise<number[]> {
   const needle = phrase.toLowerCase().replace(/\s+/g, " ").trim();

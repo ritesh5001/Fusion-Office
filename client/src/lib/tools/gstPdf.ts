@@ -4,7 +4,7 @@
  * header repeated.
  */
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
-import { STATES, computeInvoice, inr, rupeesInWords, type InvoiceItem } from "./gst";
+import { DOC_KINDS, STATES, computeInvoice, inr, rupeesInWords, type DocKind, type InvoiceItem } from "./gst";
 
 export interface Party {
   name: string;
@@ -28,6 +28,10 @@ export interface InvoiceData {
   bank: { name: string; account: string; ifsc: string; branch: string };
   notes: string;
   signatory: string;
+  /** Quotation, proforma invoice or delivery challan instead of a tax invoice. */
+  kind?: DocKind;
+  /** More rows for the box at the top right (transport details on a challan). */
+  extra?: [string, string][];
 }
 
 const W = 595.28;
@@ -47,6 +51,7 @@ export async function invoicePdf(d: InvoiceData): Promise<Uint8Array> {
   const reg = await doc.embedFont(StandardFonts.Helvetica);
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
   const t = computeInvoice(d.items, d.seller.stateCode, d.placeOfSupplyCode);
+  const L = DOC_KINDS[d.kind ?? "invoice"];
 
   // Standard fonts only cover Western characters; keep what they can show.
   const clean = (font: PDFFont, s: string) =>
@@ -86,7 +91,7 @@ export async function invoicePdf(d: InvoiceData): Promise<Uint8Array> {
 
   // ── Header ──
   text(d.seller.name || "Your business", M, y - 14, 16, bold);
-  right(d.title || "TAX INVOICE", W - M, y - 12, 14, bold, BRAND);
+  right(d.title || L.title, W - M, y - 12, 14, bold, BRAND);
   y -= 22;
   const sellerLines = [
     ...wrap(d.seller.address, 300, 8.5),
@@ -95,11 +100,12 @@ export async function invoicePdf(d: InvoiceData): Promise<Uint8Array> {
     d.seller.stateCode && `State: ${STATES[d.seller.stateCode] ?? ""} (${d.seller.stateCode})`,
   ].filter(Boolean) as string[];
   const metaRows: [string, string][] = [
-    ["Invoice no.", d.number],
-    ["Invoice date", d.date],
-    ...(d.dueDate ? ([["Due date", d.dueDate]] as [string, string][]) : []),
+    [L.number, d.number],
+    [L.date, d.date],
+    ...(d.dueDate ? ([[L.due, d.dueDate]] as [string, string][]) : []),
     ["Place of supply", d.placeOfSupplyCode ? `${STATES[d.placeOfSupplyCode] ?? ""} (${d.placeOfSupplyCode})` : "-"],
-    ["Reverse charge", d.reverseCharge ? "Yes" : "No"],
+    ...(d.kind && d.kind !== "invoice" ? [] : ([["Reverse charge", d.reverseCharge ? "Yes" : "No"]] as [string, string][])),
+    ...(d.extra ?? []).filter(([, v]) => v.trim()),
   ];
   let ly = y - 4;
   for (const l of sellerLines) {
@@ -117,7 +123,7 @@ export async function invoicePdf(d: InvoiceData): Promise<Uint8Array> {
 
   // ── Bill to ──
   y -= 16;
-  text("BILL TO", M, y, 7.5, bold, SOFT);
+  text(L.billTo, M, y, 7.5, bold, SOFT);
   y -= 13;
   text(d.buyer.name || "Customer", M, y, 10.5, bold);
   y -= 12;
@@ -168,7 +174,7 @@ export async function invoicePdf(d: InvoiceData): Promise<Uint8Array> {
       right("Continued on next page", W - M, y - 12, 8, reg, SOFT);
       page = doc.addPage([W, H]);
       y = H - M;
-      text(`${d.title || "TAX INVOICE"} ${d.number} (continued)`, M, y - 10, 10, bold);
+      text(`${d.title || L.title} ${d.number} (continued)`, M, y - 10, 10, bold);
       y -= 24;
       header();
     }
@@ -267,7 +273,7 @@ export async function invoicePdf(d: InvoiceData): Promise<Uint8Array> {
   // Footer on every page.
   const pages = doc.getPages();
   pages.forEach((p, i) => {
-    p.drawText(clean(reg, "This is a computer-generated invoice."), { x: M, y: 22, size: 7.5, font: reg, color: SOFT });
+    p.drawText(clean(reg, L.footer), { x: M, y: 22, size: 7.5, font: reg, color: SOFT });
     const label = `Page ${i + 1} of ${pages.length}`;
     p.drawText(label, { x: W - M - reg.widthOfTextAtSize(label, 7.5), y: 22, size: 7.5, font: reg, color: SOFT });
   });

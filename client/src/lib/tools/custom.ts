@@ -16,6 +16,9 @@ export const CUSTOM_TOOLS = [
   "chat-with-pdf",
   "pdf-to-audio",
   "gst-invoice",
+  "quotation-maker",
+  "proforma-invoice",
+  "delivery-challan",
 ] as const;
 
 export type CustomTool = (typeof CUSTOM_TOOLS)[number];

@@ -15,7 +15,48 @@ export interface Decoded extends Size {
   close: () => void;
 }
 
-/** Decode an image file (JPG, PNG, WEBP, GIF, BMP, AVIF, SVG; HEIC where the browser supports it). */
+/** iPhone photos: an ISO media file whose brand is one of the HEIF family. */
+export function isHeic(file: Pick<ToolFile, "bytes" | "type" | "name">): boolean {
+  const b = file.bytes;
+  if (b.length > 12 && b[4] === 0x66 && b[5] === 0x74 && b[6] === 0x79 && b[7] === 0x70) {
+    const brand = String.fromCharCode(b[8], b[9], b[10], b[11]);
+    if (/^(heic|heix|heim|heis|hevc|hevm|hevs|hevx|mif1|msf1)$/.test(brand)) return true;
+  }
+  return /\.(heic|heif)$/i.test(file.name) || /hei[cf]/.test(file.type);
+}
+
+export const isTiff = (file: Pick<ToolFile, "bytes" | "type" | "name">) => {
+  const b = file.bytes;
+  return (b[0] === 0x49 && b[1] === 0x49 && b[2] === 0x2a && b[3] === 0) || (b[0] === 0x4d && b[1] === 0x4d && b[2] === 0 && b[3] === 0x2a);
+};
+
+/**
+ * Formats most browsers can't open by themselves, decoded on this device:
+ * HEIC / HEIF (libheif, loaded only when needed) and TIFF.
+ */
+async function decodeSpecial(file: Pick<ToolFile, "bytes" | "type" | "name">): Promise<Decoded | null> {
+  if (isHeic(file)) {
+    const { heicTo } = await import("heic-to/csp");
+    const bmp = await heicTo({ blob: new Blob([file.bytes as BlobPart], { type: "image/heic" }), type: "bitmap" });
+    return { source: bmp, width: bmp.width, height: bmp.height, close: () => bmp.close() };
+  }
+  if (isTiff(file)) {
+    const UTIF = await import("utif2");
+    const buffer = file.bytes.slice().buffer;
+    const ifds = UTIF.decode(buffer);
+    // The first full image (some files start with a thumbnail).
+    const ifd = ifds.find((d) => !("t254" in d) || (d.t254 as number[])[0] === 0) ?? ifds[0];
+    if (!ifd) return null;
+    UTIF.decodeImage(buffer, ifd);
+    if (!ifd.width || !ifd.height) return null;
+    const canvas = newCanvas(ifd.width, ifd.height);
+    canvas.getContext("2d")!.putImageData(new ImageData(new Uint8ClampedArray(UTIF.toRGBA8(ifd)), ifd.width, ifd.height), 0, 0);
+    return { source: canvas, width: canvas.width, height: canvas.height, close: () => {} };
+  }
+  return null;
+}
+
+/** Decode an image file (JPG, PNG, WEBP, GIF, BMP, AVIF, SVG, HEIC / HEIF and TIFF). */
 export async function decodeImage(file: Pick<ToolFile, "bytes" | "type" | "name">): Promise<Decoded> {
   const blob = new Blob([file.bytes as BlobPart], { type: file.type });
   try {
@@ -34,12 +75,9 @@ export async function decodeImage(file: Pick<ToolFile, "bytes" | "type" | "name"
       return { source: img, width, height, close: () => URL.revokeObjectURL(url) };
     } catch {
       URL.revokeObjectURL(url);
-      const heic = /\.(heic|heif)$/i.test(file.name) || /hei[cf]/.test(file.type);
-      throw new Error(
-        heic
-          ? `${file.name}: this browser can't open HEIC photos. Open it in Safari, or set your iPhone camera to "Most Compatible" (JPG).`
-          : `${file.name} isn't an image this browser can open.`,
-      );
+      const special = await decodeSpecial(file).catch(() => null);
+      if (special) return special;
+      throw new Error(isHeic(file) ? `${file.name} couldn't be opened. The HEIC file may be damaged, or a kind this tool doesn't read yet (a Live Photo or a burst).` : `${file.name} isn't an image this browser can open.`);
     }
   }
 }

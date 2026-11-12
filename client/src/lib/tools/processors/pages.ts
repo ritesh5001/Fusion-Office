@@ -63,14 +63,26 @@ const SHEETS = { a4: [595.28, 841.89], letter: [612, 792] } as const;
 const GRID: Record<NupOptions["perSheet"], [number, number]> = { 2: [2, 1], 4: [2, 2], 6: [3, 2], 9: [3, 3], 16: [4, 4] };
 
 /** Size of a page as it is displayed (after /Rotate). */
-const shown = (p: PDFPage) => {
+export const shown = (p: PDFPage) => {
   const { width, height } = p.getSize();
   const r = ((p.getRotation().angle % 360) + 360) % 360;
   return r === 90 || r === 270 ? { width: height, height: width, rotation: r } : { width, height, rotation: r };
 };
 
+/**
+ * Embed pages for drawing on another sheet. A page with nothing on it (no
+ * content stream at all) can't be embedded; it comes back as null and is
+ * simply left blank.
+ */
+export async function embedAll(out: PDFDocument, pages: PDFPage[]): Promise<(PDFEmbeddedPage | null)[]> {
+  const drawable = pages.filter((p) => p.node.Contents() !== undefined);
+  const embedded = drawable.length ? await out.embedPages(drawable) : [];
+  let k = 0;
+  return pages.map((p) => (p.node.Contents() !== undefined ? embedded[k++] : null));
+}
+
 /** Draw an embedded page into a box, scaled to fit, keeping its displayed orientation. */
-function drawFitted(sheet: PDFPage, emb: PDFEmbeddedPage, rotation: number, box: { x: number; y: number; w: number; h: number }) {
+export function drawFitted(sheet: PDFPage, emb: PDFEmbeddedPage, rotation: number, box: { x: number; y: number; w: number; h: number }) {
   const turned = rotation === 90 || rotation === 270;
   const w = turned ? emb.height : emb.width;
   const h = turned ? emb.width : emb.height;
@@ -90,7 +102,7 @@ export async function pagesPerSheet(bytes: Uint8Array, opts: NupOptions): Promis
   const src = await loadPdf(bytes);
   const out = await PDFDocument.create();
   const pages = src.getPages();
-  const embedded = await out.embedPages(pages);
+  const embedded = await embedAll(out, pages);
   const first = shown(pages[0]);
   let [cols, rows] = GRID[opts.perSheet];
   // Sheet orientation follows the page shape: 2 portrait pages sit side by side on a landscape sheet.
@@ -110,7 +122,9 @@ export async function pagesPerSheet(bytes: Uint8Array, opts: NupOptions): Promis
       const col = opts.order === "rows" ? k % cols : Math.floor(k / rows);
       const row = opts.order === "rows" ? Math.floor(k / cols) : k % rows;
       const box = { x: margin + col * (cw + gap), y: sh - margin - (row + 1) * ch - row * gap, w: cw, h: ch };
-      const drawn = drawFitted(sheet, embedded[start + k], shown(pages[start + k]).rotation, box);
+      const emb = embedded[start + k];
+      if (!emb) continue; // an empty page leaves its place blank
+      const drawn = drawFitted(sheet, emb, shown(pages[start + k]).rotation, box);
       if (opts.border) sheet.drawRectangle({ x: drawn.x, y: drawn.y, width: drawn.w, height: drawn.h, borderColor: rgb(0.7, 0.72, 0.76), borderWidth: 0.6 });
     }
   }

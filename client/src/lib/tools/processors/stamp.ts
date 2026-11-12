@@ -13,7 +13,7 @@ export function place(pos: Position, W: number, H: number, w: number, h: number,
 }
 
 /** Run `draw` in view space (y-up, origin bottom-left of the page as displayed). */
-function inView(page: PDFPage, draw: (viewHeight: number, viewWidth: number) => void) {
+export function inView(page: PDFPage, draw: (viewHeight: number, viewWidth: number) => void) {
   const v = pageView(page);
   page.pushOperators(pushGraphicsState(), concatTransformationMatrix(...v.matrix));
   draw(v.height, v.width);

@@ -6,9 +6,10 @@ import { Logo } from "../Logo";
 import { FlowIn, FlowOut } from "../home/FlowArt";
 import { isReducedMotion } from "@/lib/motion";
 import { cn } from "@/lib/cn";
+import { TOOL_COUNT } from "@/lib/tools/registry";
 
 const FEATURES = [
-  { icon: FileStack, text: "74 tools for PDFs, Office files and images" },
+  { icon: FileStack, text: `${TOOL_COUNT} tools for PDFs, Office files and images` },
   { icon: Cpu, text: "Most tools run on your device" },
   { icon: UserX, text: "No sign-up, no watermarks" },
   { icon: Sparkles, text: "AI that reads your PDFs" },

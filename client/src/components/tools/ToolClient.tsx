@@ -21,6 +21,9 @@ const CUSTOM: Record<CustomTool, React.ComponentType> = {
   "chat-with-pdf": dynamic(() => import("./custom/ChatPdfTool").then((m) => m.ChatPdfTool), { ssr: false }),
   "pdf-to-audio": dynamic(() => import("./custom/ReadAloudTool").then((m) => m.ReadAloudTool), { ssr: false }),
   "gst-invoice": dynamic(() => import("./custom/GstInvoiceTool").then((m) => m.GstInvoiceTool), { ssr: false }),
+  "quotation-maker": dynamic(() => import("./custom/GstInvoiceTool").then((m) => () => <m.GstInvoiceTool kind="quotation" />), { ssr: false }),
+  "proforma-invoice": dynamic(() => import("./custom/GstInvoiceTool").then((m) => () => <m.GstInvoiceTool kind="proforma" />), { ssr: false }),
+  "delivery-challan": dynamic(() => import("./custom/GstInvoiceTool").then((m) => () => <m.GstInvoiceTool kind="challan" />), { ssr: false }),
 };
 
 export function ToolClient({ slug }: { slug: string }) {

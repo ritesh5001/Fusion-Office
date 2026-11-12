@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Download, Loader2, Plus, Trash2, XCircle } from "lucide-react";
-import { GST_RATES, STATES, checkGstin, computeInvoice, inr, rupeesInWords, type InvoiceItem } from "@/lib/tools/gst";
+import { DOC_KINDS, GST_RATES, STATES, checkGstin, computeInvoice, inr, rupeesInWords, type DocKind, type InvoiceItem } from "@/lib/tools/gst";
 import type { InvoiceData, Party } from "@/lib/tools/gstPdf";
 import { downloadFile } from "@/lib/tools/files";
 import { cn } from "@/lib/cn";
@@ -78,10 +78,17 @@ function PartyForm({ title, party, set, optionalGstin }: { title: string; party:
   );
 }
 
-export function GstInvoiceTool() {
+const TRANSPORT_REASONS = ["Supply", "Job work", "Sale on approval", "Branch transfer", "Exhibition or fair", "Returnable", "Others"];
+
+/** The GST invoice, and its siblings on the same form: quotation, proforma invoice and delivery challan. */
+export function GstInvoiceTool({ kind = "invoice" }: { kind?: DocKind }) {
+  const L = DOC_KINDS[kind];
+  // Each document keeps its own numbering; your business details are shared between them.
+  const store = kind === "invoice" ? STORE : `${STORE}.${kind}`;
   const [seller, setSeller] = useState<Party>(blankParty);
   const [buyer, setBuyer] = useState<Party>(blankParty);
-  const [meta, setMeta] = useState({ title: "TAX INVOICE", number: "INV-0001", date: today(), dueDate: "", placeOfSupplyCode: "", reverseCharge: false, notes: "Payment due within 15 days. Thank you for your business.", signatory: "" });
+  const [meta, setMeta] = useState({ title: L.title, number: L.first, date: today(), dueDate: "", placeOfSupplyCode: "", reverseCharge: false, notes: L.notes, signatory: "" });
+  const [transport, setTransport] = useState({ reason: "Supply", mode: "Road", vehicle: "", transporter: "" });
   const [bank, setBank] = useState({ name: "", account: "", ifsc: "", branch: "" });
   const [items, setItems] = useState<InvoiceItem[]>([blankItem()]);
   const [busy, setBusy] = useState(false);
@@ -90,13 +97,15 @@ export function GstInvoiceTool() {
   // Remember the business, bank and numbering on this device.
   useEffect(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem(STORE) ?? "null");
-      if (saved?.seller) setSeller(saved.seller);
-      if (saved?.bank) setBank(saved.bank);
+      const shared = JSON.parse(localStorage.getItem(STORE) ?? "null");
+      const saved = kind === "invoice" ? shared : JSON.parse(localStorage.getItem(store) ?? "null");
+      if (saved?.seller ?? shared?.seller) setSeller(saved?.seller ?? shared.seller);
+      if (saved?.bank ?? shared?.bank) setBank(saved?.bank ?? shared.bank);
       if (saved?.number || saved?.signatory || saved?.notes) setMeta((m) => ({ ...m, number: saved.number ?? m.number, signatory: saved.signatory ?? m.signatory, notes: saved.notes ?? m.notes }));
     } catch {
       /* nothing saved */
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Place of supply follows the customer's state unless set by hand.
@@ -122,11 +131,12 @@ export function GstInvoiceTool() {
     setBusy(true);
     try {
       const { invoicePdf } = await import("@/lib/tools/gstPdf");
-      const data: InvoiceData = { ...meta, placeOfSupplyCode: place, seller, buyer, items, bank };
+      const extra: [string, string][] = kind === "challan" ? [["Reason", transport.reason], ["Transport", transport.mode], ["Vehicle no.", transport.vehicle.toUpperCase()], ["Transporter", transport.transporter]] : [];
+      const data: InvoiceData = { ...meta, placeOfSupplyCode: place, seller, buyer, items, bank, kind, extra };
       const bytes = await invoicePdf(data);
-      downloadFile({ name: `${meta.number.replace(/[\\/:*?"<>|]+/g, "-") || "invoice"}.pdf`, bytes, type: "application/pdf" });
+      downloadFile({ name: `${meta.number.replace(/[\\/:*?"<>|]+/g, "-") || L.file}.pdf`, bytes, type: "application/pdf" });
       const next = nextNumber(meta.number);
-      localStorage.setItem(STORE, JSON.stringify({ seller, bank, number: next, signatory: meta.signatory, notes: meta.notes }));
+      localStorage.setItem(store, JSON.stringify({ seller, bank, number: next, signatory: meta.signatory, notes: meta.notes }));
       setMeta((m) => ({ ...m, number: next }));
     } catch (e) {
       setError((e as Error).message);
@@ -140,17 +150,17 @@ export function GstInvoiceTool() {
       <div className="min-w-0 space-y-5">
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           <PartyForm title="Your business" party={seller} set={(p) => setSeller((s) => ({ ...s, ...p }))} />
-          <PartyForm title="Bill to" party={buyer} set={(p) => setBuyer((s) => ({ ...s, ...p }))} optionalGstin />
+          <PartyForm title={kind === "challan" ? "Consignee (deliver to)" : kind === "quotation" ? "Quotation for" : "Bill to"} party={buyer} set={(p) => setBuyer((s) => ({ ...s, ...p }))} optionalGstin />
         </div>
 
         <section className="grid gap-3 rounded-2xl bg-surface p-5 ring-1 ring-line sm:grid-cols-2 lg:grid-cols-4">
-          <Field label="Invoice no.">
+          <Field label={L.number}>
             <input className={input} value={meta.number} onChange={(e) => setMeta({ ...meta, number: e.target.value })} />
           </Field>
-          <Field label="Invoice date">
+          <Field label={L.date}>
             <input className={input} value={meta.date} onChange={(e) => setMeta({ ...meta, date: e.target.value })} />
           </Field>
-          <Field label="Due date (optional)">
+          <Field label={`${L.due} (optional)`}>
             <input className={input} value={meta.dueDate} placeholder="e.g. 17 Oct 2026" onChange={(e) => setMeta({ ...meta, dueDate: e.target.value })} />
           </Field>
           <Field label="Place of supply">
@@ -163,10 +173,36 @@ export function GstInvoiceTool() {
               ))}
             </select>
           </Field>
-          <label className="flex items-center gap-2 text-[13px] sm:col-span-2">
-            <input type="checkbox" checked={meta.reverseCharge} onChange={(e) => setMeta({ ...meta, reverseCharge: e.target.checked })} className="h-4 w-4 accent-brand-500" />
-            Tax payable on reverse charge
-          </label>
+          {kind === "invoice" && (
+            <label className="flex items-center gap-2 text-[13px] sm:col-span-2">
+              <input type="checkbox" checked={meta.reverseCharge} onChange={(e) => setMeta({ ...meta, reverseCharge: e.target.checked })} className="h-4 w-4 accent-brand-500" />
+              Tax payable on reverse charge
+            </label>
+          )}
+          {kind === "challan" && (
+            <>
+              <Field label="Reason for transport">
+                <select className={input} value={transport.reason} onChange={(e) => setTransport({ ...transport, reason: e.target.value })}>
+                  {TRANSPORT_REASONS.map((r) => (
+                    <option key={r}>{r}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Mode of transport">
+                <select className={input} value={transport.mode} onChange={(e) => setTransport({ ...transport, mode: e.target.value })}>
+                  {["Road", "Rail", "Air", "Ship", "By hand"].map((r) => (
+                    <option key={r}>{r}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Vehicle no. (optional)">
+                <input className={cn(input, "uppercase")} value={transport.vehicle} placeholder="MH12AB1234" onChange={(e) => setTransport({ ...transport, vehicle: e.target.value })} />
+              </Field>
+              <Field label="Transporter (optional)">
+                <input className={input} value={transport.transporter} onChange={(e) => setTransport({ ...transport, transporter: e.target.value })} />
+              </Field>
+            </>
+          )}
         </section>
 
         <section className="min-w-0 rounded-2xl bg-surface p-5 ring-1 ring-line">
@@ -322,9 +358,9 @@ export function GstInvoiceTool() {
           disabled={busy}
           className="btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-accent text-[15px] font-semibold text-on-accent hover:bg-accent-hover disabled:opacity-70"
         >
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} Download invoice PDF
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} {L.action}
         </button>
-        <p className="text-[12px] leading-relaxed text-fg-muted">Made on your device. Your business and bank details are remembered in this browser for next time, and the invoice number moves up after each download.</p>
+        <p className="text-[12px] leading-relaxed text-fg-muted">Made on your device. Your business and bank details are remembered in this browser for next time, and the number moves up after each download.</p>
       </aside>
     </div>
   );

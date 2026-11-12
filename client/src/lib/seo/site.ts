@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { TOOLS } from "@/lib/tools/registry";
+import { TOOL_COUNT } from "@/lib/tools/registry";
 
 /**
  * Canonical origin: every canonical URL, sitemap entry and structured-data
@@ -11,7 +11,7 @@ export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.fusion
 export const SITE_NAME = "Fusion Office";
 export const SITE_TAGLINE = "Free online PDF, Office and image tools";
 /** Number of tools people can use today (excludes "coming soon"). */
-export const TOOL_COUNT = TOOLS.filter((t) => t.status === "ready").length;
+export { TOOL_COUNT };
 export const SITE_DESCRIPTION =
   `Fusion Office is a free workspace of ${TOOL_COUNT} online tools to edit, convert, compress, merge, split, sign and protect PDFs, edit Word, Excel and PowerPoint files, and resize or compress images. No sign-up, and most tools run in your browser so files stay on your device.`;
 

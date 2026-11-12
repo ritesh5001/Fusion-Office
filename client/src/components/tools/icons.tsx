@@ -2,7 +2,8 @@ import {
   Archive, ArrowLeftRight, BadgeCheck, Brush, Camera, ClipboardList, Combine, Crop, Eraser, Eye, EyeOff, FileCode, FileSpreadsheet, FileText, FlipHorizontal2, GitCompare,
   Globe, Image, ImageDown, ImagePlus, Languages, LayoutGrid, ListOrdered, Lock, Minimize2, PenLine, Presentation, RotateCw, Scaling,
   MonitorSmartphone, ScanText, Scissors, ShieldCheck, Signature, SlidersHorizontal, Sparkles, Stamp, Unlock, Workflow, Wrench,
-  Bookmark, BookOpen, BookText, Code, Headphones, MessagesSquare, ReceiptIndianRupee, Columns2, Contrast, FileArchive, FileCode2, FileCog, FileType, Fingerprint, Grid2x2, Hash, Images, Layers, LockOpen, NotebookPen, PanelTop, PenTool, Receipt, Scale, ScanSearch, Sheet, ShieldOff, Shuffle, Table, TextSearch, type LucideIcon,
+  Bookmark, BookOpen, BookText, Code, Headphones, MessagesSquare, ReceiptIndianRupee, Columns2, Contrast, FileArchive, FileCode2, FileCog, FileType, Fingerprint, Grid2x2, Hash, Images, Layers, LockOpen, NotebookPen, PanelTop, PenTool, Receipt, Scale, ScanSearch, Sheet, ShieldOff, Shuffle, Table, TextSearch,
+  ArrowDownUp, Banknote, BookCopy, FileClock, FileImage, FileMinus2, FileOutput, FilePlus2, FileSignature, FileX2, GraduationCap, Grid3x3, House, IdCard, ImageOff, Landmark, ListTree, MessageSquareOff, Palette, Paperclip, Proportions, QrCode, Ruler, Shrink, Smartphone, SquareUser, Target, Truck, type LucideIcon,
 } from "lucide-react";
 import type { Category, ToolDef } from "@/lib/tools/registry";
 import { cn } from "@/lib/cn";
@@ -12,6 +13,7 @@ const ICONS: Record<string, LucideIcon> = {
   Globe, Image, ImageDown, ImagePlus, Languages, LayoutGrid, ListOrdered, Lock, Minimize2, PenLine, Presentation, RotateCw, Scaling,
   MonitorSmartphone, ScanText, Scissors, ShieldCheck, Signature, SlidersHorizontal, Sparkles, Stamp, Unlock, Workflow, Wrench,
   Bookmark, BookOpen, BookText, Code, Headphones, MessagesSquare, ReceiptIndianRupee, Columns2, Contrast, FileArchive, FileCode2, FileCog, FileType, Fingerprint, Grid2x2, Hash, Images, Layers, LockOpen, NotebookPen, PanelTop, PenTool, Receipt, Scale, ScanSearch, Sheet, ShieldOff, Shuffle, Table, TextSearch,
+  ArrowDownUp, Banknote, BookCopy, FileClock, FileImage, FileMinus2, FileOutput, FilePlus2, FileSignature, FileX2, GraduationCap, Grid3x3, House, IdCard, ImageOff, Landmark, ListTree, MessageSquareOff, Palette, Paperclip, Proportions, QrCode, Ruler, Shrink, Smartphone, SquareUser, Target, Truck,
 };
 
 /** One muted accent per category (small inline marks). */
@@ -144,6 +146,39 @@ const TOOL_SWATCH: Record<string, Swatch> = {
   "chat-with-pdf": "violet",
   "pdf-to-audio": "pink",
   "gst-invoice": "orange",
+  "delete-pdf-pages": "red",
+  "extract-pdf-pages": "sky",
+  "add-blank-pages": "ink",
+  "reverse-pdf": "amber",
+  "booklet-pdf": "indigo",
+  "poster-pdf": "pink",
+  "compress-pdf-to-size": "lime",
+  "remove-blank-pages": "rose",
+  "deskew-pdf": "teal",
+  "trim-pdf-margins": "orange",
+  "resize-pdf-pages": "sky",
+  "grayscale-pdf": "ink",
+  "id-card-to-pdf": "blue",
+  "heic-to-pdf": "orange",
+  "bank-statement-to-excel": "green",
+  "quotation-maker": "sky",
+  "proforma-invoice": "amber",
+  "delivery-challan": "teal",
+  "rent-receipt": "emerald",
+  "salary-slip": "green",
+  "stamp-pdf": "red",
+  "qr-code-pdf": "ink",
+  "pdf-bookmarks": "indigo",
+  "pdf-attachments": "amber",
+  "remove-annotations": "rose",
+  "remove-background": "pink",
+  "passport-photo-maker": "blue",
+  "exam-photo-resizer": "amber",
+  "heic-to-jpg": "orange",
+  "webp-to-jpg": "green",
+  "png-to-jpg": "sky",
+  "jpg-to-png": "violet",
+  "tiff-to-jpg": "ink",
 };
 
 /** Word, Excel and PowerPoint get their familiar letter marks. */

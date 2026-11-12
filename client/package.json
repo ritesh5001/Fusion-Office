@@ -30,6 +30,7 @@
     "exceljs": "^4.4.0",
     "fabric": "^6.9.1",
     "fflate": "^0.8.3",
+    "heic-to": "^1.6.7",
     "imagetracerjs": "^1.2.6",
     "lucide-react": "^0.577.0",
     "mammoth": "^1.13.0",
@@ -39,9 +40,11 @@
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^4.10.38",
     "pptxgenjs": "^4.0.1",
+    "qrcode-generator": "^2.0.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "tesseract.js": "^7.0.0",
+    "utif2": "^4.1.0",
     "zustand": "^5.0.15"
   },
   "devDependencies": {

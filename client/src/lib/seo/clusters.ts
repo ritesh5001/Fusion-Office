@@ -195,7 +195,7 @@ export const CLUSTERS: Cluster[] = [
       ],
       [
         "Can I open iPhone HEIC photos?",
-        "Yes, where your browser can decode HEIC (Safari does). Convert image turns them into JPG, PNG or WEBP.",
+        "Yes, in any browser. HEIC to JPG and Convert image decode iPhone photos on your device and turn them into JPG, PNG or WEBP.",
       ],
     ],
     guides: ["how-to-reduce-image-file-size", "how-to-convert-jpg-to-pdf"],

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { ArrowRight, ArrowUpRight, ChevronRight, Download, RotateCcw, X, Zap } from "lucide-react";
-import { TOOLS, toolBySlug, type ToolDef } from "@/lib/tools/registry";
+import { TOOLS, toolBySlug, type ToolDef, TOOL_COUNT } from "@/lib/tools/registry";
 import { appPath, handFiles, KIND_ACCEPT, kindOf, toolPath, type FileKind } from "@/lib/tools/handoff";
 import { canPreview, downloadFile, formatBytes, openFile, stem, toToolFile, zipFiles, type ToolFile } from "@/lib/tools/files";
 import type { LoadedFile, ToolSpec } from "../tools/ToolRunner";
@@ -497,7 +497,7 @@ function Ready({ inline, matches, staged, onRun }: { inline: { slug: string; ver
       )}
       {!matches.length && (
         <p className="rounded-xl bg-[#ebe9f2] px-3.5 py-3 text-[13.5px] text-[#4a4c66]">
-          No tool opens this kind of file yet. PDFs, Word, Excel, PowerPoint, Markdown, CSV, eBooks and images are supported. ({TOOLS.length} tools in all.)
+          No tool opens this kind of file yet. PDFs, Word, Excel, PowerPoint, Markdown, CSV, eBooks and images are supported. ({TOOL_COUNT} tools in all.)
         </p>
       )}
     </div>

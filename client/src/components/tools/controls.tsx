@@ -89,6 +89,48 @@ export function TextInput({
   );
 }
 
+export function Select<T extends string>({
+  label,
+  hint,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  hint?: string;
+  value: T;
+  onChange: (v: T) => void;
+  /** Options with the same `group` are listed together under that heading. */
+  options: { value: T; label: string; group?: string }[];
+}) {
+  const groups = [...new Set(options.map((o) => o.group ?? ""))];
+  return (
+    <label className="block space-y-1.5">
+      <Label hint={hint}>{label}</Label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value as T)}
+        className="h-10 w-full rounded-lg bg-sunken px-2.5 text-[14px] text-fg ring-1 ring-line-strong outline-none focus:ring-2 focus:ring-brand-500"
+      >
+        {groups.map((g) => {
+          const items = options.filter((o) => (o.group ?? "") === g).map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ));
+          return g ? (
+            <optgroup key={g} label={g}>
+              {items}
+            </optgroup>
+          ) : (
+            items
+          );
+        })}
+      </select>
+    </label>
+  );
+}
+
 export function TextArea({
   label,
   hint,

@@ -28,6 +28,8 @@ export function guessType(name: string): string {
     svg: "image/svg+xml",
     heic: "image/heic",
     heif: "image/heif",
+    tif: "image/tiff",
+    tiff: "image/tiff",
     md: "text/markdown",
     txt: "text/plain",
     zip: "application/zip",

@@ -7,7 +7,7 @@ import Svg, { Path } from "react-native-svg";
 import { C, F } from "@/theme";
 import { useReduced } from "@/lib/motion";
 import { useColumns } from "@/lib/layout";
-import { TOOLS, toolBySlug, type ToolDef } from "@/lib/tools";
+import { toolBySlug, type ToolDef, TOOL_COUNT } from "@/lib/tools";
 import { BrandHeader, Screen } from "@/components/Screen";
 import { DropStage, openTool } from "@/components/DropStage";
 import { QuickActions } from "@/components/QuickActions";
@@ -65,14 +65,14 @@ export default function Home() {
 
       <View style={{ marginTop: 32 }}>
         <T weight="display" header style={{ fontSize: 22, letterSpacing: -0.6 }}>Choose your next move</T>
-        <T style={{ marginTop: 4, fontSize: 13.5, color: C.fgMuted }}>{TOOLS.length} tools for PDFs, Office files and images. Long-press a tool for a preview.</T>
+        <T style={{ marginTop: 4, fontSize: 13.5, color: C.fgMuted }}>{TOOL_COUNT} tools for PDFs, Office files and images. Long-press a tool for a preview.</T>
         <View style={{ marginTop: 14, flexDirection: "row", flexWrap: "wrap", gap }}>
           {popular.map((t, i) => (
             <ToolCard key={t.slug} tool={t} index={i} width={cardWidth} onPress={() => openTool(t.slug)} onLongPress={() => setPreview(t)} />
           ))}
         </View>
         <PressScale onPress={() => router.navigate("/tools")} style={{ marginTop: 14, height: 50, borderRadius: 16, borderWidth: 1, borderColor: C.lineStrong, backgroundColor: C.surface, alignItems: "center", justifyContent: "center" }}>
-          <T weight="semibold" style={{ fontSize: 15 }}>View all {TOOLS.length} tools</T>
+          <T weight="semibold" style={{ fontSize: 15 }}>View all {TOOL_COUNT} tools</T>
         </PressScale>
       </View>
 

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronRight, Files, Image as ImageIcon, ShieldCheck, Shrink } from "lucide-react";
-import { TOOLS, toolBySlug, type ToolDef } from "@/lib/tools/registry";
+import { TOOLS, toolBySlug, type ToolDef, TOOL_COUNT } from "@/lib/tools/registry";
 import { appPath, handFiles, kindOf, toolPath, type FileKind } from "@/lib/tools/handoff";
 import { ToolTile } from "../tools/icons";
 import { ToolsHub, fitsFiles } from "../tools/ToolsHub";
@@ -102,7 +102,7 @@ export function HomeWorkspace() {
       <div className="px-4 pb-20 sm:px-6 lg:px-8">
         <ToolsHub
           title="Choose your next move"
-          subtitle={staged?.length ? undefined : `${TOOLS.length} tools for PDFs, Office files and images.`}
+          subtitle={staged?.length ? undefined : `${TOOL_COUNT} tools for PDFs, Office files and images.`}
           staged={staged}
           onClearStaged={() => setStaged(null)}
         />

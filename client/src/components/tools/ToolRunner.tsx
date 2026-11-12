@@ -56,12 +56,20 @@ async function describe(file: ToolFile): Promise<LoadedFile> {
       base.pages = doc.numPages;
       base.thumb = canvas.toDataURL("image/jpeg", 0.7);
       await doc.destroy();
-    } else if (file.type.startsWith("image/") || /\.(heic|heif|avif|svg|bmp|gif)$/i.test(file.name)) {
-      base.thumb = URL.createObjectURL(new Blob([file.bytes as BlobPart], { type: file.type }));
-      const { decodeImage } = await import("@/lib/image/canvas");
+    } else if (file.type.startsWith("image/") || /\.(heic|heif|avif|svg|bmp|gif|tiff?)$/i.test(file.name)) {
+      const { decodeImage, isHeic, isTiff, previewOf } = await import("@/lib/image/canvas");
       const img = await decodeImage(file);
       base.width = img.width;
       base.height = img.height;
+      if (isHeic(file) || isTiff(file)) {
+        // Browsers can't show these in an <img>, so the preview is drawn from the decoded picture.
+        const small = previewOf(img, 480);
+        const c = document.createElement("canvas");
+        c.width = small.width;
+        c.height = small.height;
+        c.getContext("2d")!.drawImage(small.source, 0, 0, c.width, c.height);
+        base.thumb = c.toDataURL("image/jpeg", 0.8);
+      } else base.thumb = URL.createObjectURL(new Blob([file.bytes as BlobPart], { type: file.type }));
       img.close();
     }
   } catch {

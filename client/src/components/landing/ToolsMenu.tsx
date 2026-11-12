@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { ToolIcon, ToolTile } from "../tools/icons";
 import { CATEGORY_META } from "../site/categories";
-import { CATEGORIES, TOOLS, type Category } from "@/lib/tools/registry";
+import { CATEGORIES, TOOLS, type Category, TOOL_COUNT } from "@/lib/tools/registry";
 import { cn } from "@/lib/cn";
 import { categoryHref } from "@/lib/seo/clusters";
 
@@ -67,7 +67,7 @@ export function ToolsMenu({ onNavigate }: { onNavigate: () => void }) {
           })}
         </div>
         <Link href="/tools" onClick={onNavigate} className="mt-auto flex items-center justify-between rounded-lg px-3 pt-4 text-[13px] font-semibold text-brand-300 hover:text-brand-200">
-          Browse all {TOOLS.length} tools <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          Browse all {TOOL_COUNT} tools <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </div>
 

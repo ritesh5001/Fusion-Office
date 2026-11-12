@@ -24,7 +24,7 @@ interface Row {
 }
 
 /** Decode each image, run `fn`, and collect results plus a before/after summary. */
-async function eachImage(files: LoadedFile[], progress: ProgressFn, fn: (img: Decoded, f: LoadedFile) => Promise<Exported & { note?: string }>) {
+export async function eachImage(files: LoadedFile[], progress: ProgressFn, fn: (img: Decoded, f: LoadedFile) => Promise<Exported & { note?: string }>) {
   const { decodeImage } = await canvasLib();
   const out: Exported[] = [];
   const rows: Row[] = [];
@@ -63,7 +63,7 @@ function SizeSummary({ rows }: { rows: Row[] }) {
   );
 }
 
-const FORMAT_OPTIONS = (keepLabel = "Same as original") => [
+export const FORMAT_OPTIONS = (keepLabel = "Same as original") => [
   { value: "keep" as const, label: "Keep", hint: keepLabel },
   { value: "jpeg" as const, label: "JPG", hint: "Photos, smallest" },
   { value: "png" as const, label: "PNG", hint: "Sharp graphics, transparency" },
@@ -71,13 +71,13 @@ const FORMAT_OPTIONS = (keepLabel = "Same as original") => [
 ];
 
 /** Target file size input with quick picks. */
-export function TargetSize({ value, onChange, label = "Target size" }: { value: string; onChange: (v: string) => void; label?: string }) {
+export function TargetSize({ value, onChange, label = "Target size", picks = ["20", "50", "100", "200", "500", "1 MB"] }: { value: string; onChange: (v: string) => void; label?: string; picks?: string[] }) {
   const bytes = parseSize(value);
   return (
     <div className="space-y-2">
       <TextInput label={label} hint="In KB (e.g. 50) or MB (e.g. 1.5 MB). The file will be this size or smaller." value={value} onChange={onChange} placeholder="50" />
       <div className="flex flex-wrap gap-1.5">
-        {["20", "50", "100", "200", "500", "1 MB"].map((p) => (
+        {picks.map((p) => (
           <button
             key={p}
             type="button"

@@ -64,6 +64,26 @@ Word (`/write`), Excel (`/sheets`) and PowerPoint (`/slides`) editors open and s
 
 Code: `client/src/lib/image/` (pure math in `geometry.ts`, `pixels.ts`, `encode.ts`, tested in `client/tests/image.test.mts`; canvas pipeline in `canvas.ts`).
 
+### Third wave (all in the browser)
+
+| Group | Tools | Code |
+| --- | --- | --- |
+| Page tools | Delete pages, Extract pages, Add blank pages, Reverse, Booklet, Poster, Resize pages, Stamp, QR code, Bookmarks editor, Attachments, Remove annotations | `processors/pageOps.ts` (pure, tested in `tests/pageOps.test.mts`) |
+| Scan clean-up | Compress to a target size, Remove blank pages, Straighten, Trim margins, Grayscale | `scanMath.ts` (pure: blank detection, content box, skew, size search) + `processors/scanClean.ts` (browser) |
+| Photos for forms | Exam photo & signature resizer, Passport photo maker, Remove background, ID card to PDF | `photoPresets.ts` (sizes, layouts, PDFs), `lib/image/matte.ts` + `background.ts` |
+| Business documents | Quotation, Proforma invoice, Delivery challan (the GST invoice form with a `kind`), Rent receipt, Salary slip, Bank statement to Excel | `gst.ts` (`DOC_KINDS`), `receipts.ts`, `bankStatement.ts` |
+| Converters | HEIC → JPG / PDF, TIFF → JPG, WEBP → JPG, PNG ↔ JPG | `decodeImage` in `lib/image/canvas.ts` (HEIC and TIFF now open in every image tool) |
+
+Screens are in `components/tools/pdfSpecs3.tsx`, `photoSpecs.tsx` and `docSpecs.tsx`; page content in `lib/seo/content/wave3.ts`. Pure parts are tested in `tests/newTools.test.mts`.
+
+Known limits, stated on each tool page:
+
+- **Remove background** separates by colour from the picture's edges, so it needs a plain background. It is not a subject-recognition model.
+- **Exam presets** come from recent official notices and are editable in the tool; notices change.
+- **Compress to size** turns pages into pictures when re-encoding images isn't enough, which makes text unselectable.
+- **Bank statement** needs a text PDF; layouts it misreads show up as balance mismatches in the result.
+- **OCR is still English only.** The invisible text layer uses a Latin font, so Hindi needs a Unicode font embedded first.
+
 Not in scope for the web app now (roadmap): desktop and mobile apps, signature *requests* to other people (Fusion Sign),
 business/teams plans.
 

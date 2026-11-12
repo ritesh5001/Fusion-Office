@@ -139,3 +139,43 @@ export function inr(n: number): string {
   const rest = int.slice(0, -3).replace(/\B(?=(\d{2})+(?!\d))/g, ",");
   return `${n < 0 ? "-" : ""}${rest ? `${rest},` : ""}${last3}.${dec}`;
 }
+
+// ─── Sibling documents built on the invoice ───────────────────────
+
+export type DocKind = "invoice" | "quotation" | "proforma" | "challan";
+
+export interface DocLabels {
+  title: string;
+  /** Label of the document number, e.g. "Invoice no.". */
+  number: string;
+  date: string;
+  due: string;
+  billTo: string;
+  footer: string;
+  /** First number offered, e.g. "INV-0001". */
+  first: string;
+  /** Download button. */
+  action: string;
+  notes: string;
+  /** File name when the number is empty. */
+  file: string;
+}
+
+export const DOC_KINDS: Record<DocKind, DocLabels> = {
+  invoice: {
+    title: "TAX INVOICE", number: "Invoice no.", date: "Invoice date", due: "Due date", billTo: "BILL TO", footer: "This is a computer-generated invoice.",
+    first: "INV-0001", action: "Download invoice PDF", notes: "Payment due within 15 days. Thank you for your business.", file: "invoice",
+  },
+  quotation: {
+    title: "QUOTATION", number: "Quotation no.", date: "Date", due: "Valid until", billTo: "QUOTATION FOR", footer: "This is a quotation, not a tax invoice.",
+    first: "QTN-0001", action: "Download quotation PDF", notes: "Prices are valid for 15 days from the date of this quotation. Taxes as applicable at the time of supply.", file: "quotation",
+  },
+  proforma: {
+    title: "PROFORMA INVOICE", number: "Proforma no.", date: "Date", due: "Valid until", billTo: "BILL TO", footer: "This is a proforma invoice, not a tax invoice. A tax invoice follows on supply.",
+    first: "PI-0001", action: "Download proforma PDF", notes: "Please pay the amount above to confirm the order. A tax invoice will be issued on supply.", file: "proforma-invoice",
+  },
+  challan: {
+    title: "DELIVERY CHALLAN", number: "Challan no.", date: "Date", due: "Delivery date", billTo: "CONSIGNEE", footer: "This is a delivery challan, not a tax invoice.",
+    first: "DC-0001", action: "Download challan PDF", notes: "Goods sent as described above. Please check and acknowledge receipt.", file: "delivery-challan",
+  },
+};

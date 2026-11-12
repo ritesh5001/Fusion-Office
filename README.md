@@ -52,7 +52,7 @@ Keyboard shortcuts are listed in the editor under **Help → Keyboard shortcuts*
 
 ## PDF and image tools (`/tools`)
 
-37 single-purpose tools (the iLovePDF-style PDF catalogue plus image tools) share one upload → options → result flow. Most run **entirely in the browser**, so the file never leaves the device. Plan and details: [docs/TOOLS_PLAN.md](docs/TOOLS_PLAN.md).
+109 single-purpose tools (the iLovePDF-style PDF catalogue, image tools and India-specific document makers) share one upload → options → result flow. Most run **entirely in the browser**, so the file never leaves the device. Plan and details: [docs/TOOLS_PLAN.md](docs/TOOLS_PLAN.md).
 
 | Runs | Tools |
 | --- | --- |
@@ -61,6 +61,11 @@ Keyboard shortcuts are listed in the editor under **Help → Keyboard shortcuts*
 | AI (server + Groq) | AI Summarizer, Translate PDF (Word + Markdown output), Chat with PDF. Needs `GROQ_API_KEY` |
 | In the editor | Edit PDF, Sign PDF |
 | Images (in the browser) | **Image editor** (crop with shapes incl. passport 35×45, rotate, flip, straighten, 10 adjustments, 10 filters, text with fonts/colours/outline/box, undo/redo, resize and save with a KB limit), Compress image (by quality or to a target like 50 KB), Resize image (by %, pixels, print size in cm/mm/in with DPI, optional KB limit), Crop image, Convert image (JPG/PNG/WEBP, incl. HEIC where the browser can open it, GIF, BMP, SVG), Rotate image |
+| Page tools (in the browser) | Delete pages, Extract pages, Add blank pages, Reverse, Booklet maker, Poster maker (tile print), Resize pages (A4 ↔ Letter…), Stamp (Paid, Approved…), QR code on PDF, Bookmarks editor, Attachments (extract / add / remove), Remove annotations |
+| Scan clean-up (in the browser) | Compress PDF to a target size (100 KB, 200 KB, 1 MB…), Remove blank pages, Straighten (deskew), Trim margins, Grayscale |
+| Forms and IDs (in the browser) | Exam photo & signature resizer (SSC, UPSC, IBPS, SBI, RRB, NEET, JEE, CUET, PAN, passport sizes: exact pixels and a KB range), Passport photo maker (background to white, A4 or 4 × 6 print sheet), Remove background (plain backgrounds), ID card front and back on one A4 page |
+| Business documents (in the browser) | GST invoice, Quotation, Proforma invoice, Delivery challan (one form, `GstInvoiceTool` with a `kind`), Rent receipt, Salary slip, Bank statement PDF → Excel / CSV with a running-balance check |
+| More converters (in the browser) | HEIC → JPG / PDF (libheif via `heic-to`, any browser), TIFF → JPG (`utif2`), WEBP → JPG, PNG ↔ JPG |
 | Coming soon | PDF → PDF/A (Ghostscript) |
 
 Running the server tools locally: install LibreOffice (`brew install --cask libreoffice`) so `soffice` is on your PATH; Chrome is found automatically. Without them those tools say they aren't available.
@@ -113,7 +118,7 @@ client/src/
 │                             docx/ (read, write, TipTap schema), sheets/ (formulas, formats, xlsx, ops, store),
 │                             slides/ (pptx read/write, model, store)
 ├── components/office/        OfficeShell (header, start screen, autosave), write/, sheets/, slides/
-├── lib/image/                Image tools: geometry.ts (resize/crop/units), pixels.ts (adjustments, filters),
+├── lib/image/                Image tools: geometry.ts (resize/crop/units), pixels.ts (adjustments, filters), matte.ts (background removal),
 │                             encode.ts (fit-under-KB search, DPI tags), canvas.ts (decode, edit pipeline, export)
 └── lib/cloudConfig.ts        Asks the server which cloud features are on
 

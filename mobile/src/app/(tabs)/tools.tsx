@@ -7,7 +7,7 @@ import { C } from "@/theme";
 import { useReduced } from "@/lib/motion";
 import { useSession } from "@/lib/session";
 import { useRecents } from "@/lib/recents";
-import { CATEGORIES, CATEGORY_META, TOOLS, accepts, searchTools, toolBySlug, type Category, type ToolDef } from "@/lib/tools";
+import { CATEGORIES, CATEGORY_META, TOOLS, TOOL_COUNT, accepts, searchTools, toolBySlug, type Category, type ToolDef } from "@/lib/tools";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TAB_BAR_SPACE } from "@/components/TabBar";
 import { MAX_CONTENT, useColumns } from "@/lib/layout";
@@ -131,7 +131,7 @@ export default function Tools() {
       <View style={{ paddingTop: insets.top + 6, paddingHorizontal: 16, width: "100%", maxWidth: MAX_CONTENT, alignSelf: "center" }}>
         <T weight="display" header style={{ marginTop: 8, fontSize: 26, letterSpacing: -0.8 }}>{fitMode ? "Tools for your file" : "What do you want to do?"}</T>
         <T style={{ marginTop: 2, fontSize: 13.5, color: C.fgMuted }}>
-          {fitMode ? `${pool.length} tools can open ${staged!.length === 1 ? staged![0].name : `${staged!.length} files`}.` : `${TOOLS.length} tools for PDFs, Office files and images.`}
+          {fitMode ? `${pool.length} tools can open ${staged!.length === 1 ? staged![0].name : `${staged!.length} files`}.` : `${TOOL_COUNT} tools for PDFs, Office files and images.`}
         </T>
         <SearchBox inputRef={input} onSearch={setQuery} onSubmit={submit} />
         <Chips value={cat} onChange={setCat} counts={(c) => (c === "all" ? pool.length : pool.filter((t) => t.category === c).length)} />
