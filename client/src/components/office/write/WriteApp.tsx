@@ -6,8 +6,9 @@ import { generateJSON, type JSONContent } from "@tiptap/core";
 import {
   AlignCenter, AlignJustify, AlignLeft, AlignRight, Baseline, Bold, ChevronDown, ChevronUp, Download, FileText, Highlighter, ImagePlus, Indent, Italic,
   Link2, List, ListOrdered, Loader2, Minus, Outdent, Printer, Quote, Redo2, RemoveFormatting, Search, SeparatorHorizontal, Strikethrough, Subscript,
-  Superscript, Table2, Trash2, Underline, Undo2, X,
+  Sparkles, Superscript, Table2, Trash2, Underline, Undo2, X,
 } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 import { wordExtensions, findMatches } from "@/lib/office/docx/extensions";
 import { readDocx } from "@/lib/office/docx/read";
 import { writeDocx } from "@/lib/office/docx/write";
@@ -112,7 +113,7 @@ function DocPreview({ id }: { id: string }) {
   const line = (w: string, extra = "") => <span className={cn("block h-1 rounded-full bg-line-strong", extra)} style={{ width: w }} />;
   return (
     <span className="paper mx-auto my-3 flex w-[58%] flex-col gap-1.5 p-3 shadow-sm">
-      {id === "blank" ? null : id === "letter" ? (
+      {id === "blank" ? null : ["letter", "leave", "resignation", "offer", "experience", "noc"].includes(id) ? (
         <>
           {line("40%", "bg-slate-500")}
           {line("55%")}
@@ -143,6 +144,41 @@ function WriteEditor({ session, onExit, onOpen }: { session: Session; onExit: ()
   const [snapshot, setSnapshot] = useState<WordDoc>(session.doc);
   const [warnings, setWarnings] = useState(session.warnings);
   const [find, setFind] = useState<null | { replace: boolean }>(null);
+  const [aiBusy, setAiBusy] = useState<string | null>(null);
+
+  /**
+   * Rewrite the selection (or the paragraph the cursor is in) with AI. The new
+   * text replaces it in one step, so Undo brings the original back.
+   */
+  async function rewrite(mode: string, label: string) {
+    if (aiBusy || !editor) return;
+    const ed = editor;
+    const { state } = ed;
+    let { from, to } = state.selection;
+    if (from === to) {
+      const $from = state.selection.$from;
+      from = $from.start();
+      to = $from.end();
+    }
+    const text = state.doc.textBetween(from, to, "\n\n").trim();
+    if (!text) return toast("Select the text to rewrite, or put the cursor in a paragraph.", "error");
+    if (text.length > 12_000) return toast("Select at most about 12,000 characters at a time.", "error");
+    setAiBusy(label);
+    try {
+      const res = await apiFetch("/api/ai/rewrite", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text, mode }) });
+      const data = (await res.json().catch(() => ({}))) as { text?: string; error?: string };
+      if (!res.ok || !data.text) throw new Error(data.error ?? (res.status === 503 ? "AI tools aren't available on this server yet." : "The AI couldn't rewrite this. Please try again."));
+      const paragraphs = data.text.split(/\n{2,}/).map((para) => ({ type: "paragraph", content: para.split("\n").flatMap((line, i) => [...(i ? [{ type: "hardBreak" }] : []), ...(line ? [{ type: "text", text: line }] : [])]) }));
+      // Within one paragraph, keep it inline rather than splitting the paragraph.
+      const content = paragraphs.length === 1 ? paragraphs[0].content : paragraphs;
+      ed.chain().focus().insertContentAt({ from, to }, content).run();
+      toast(`${label}: done. Undo (${MOD}Z) brings the original back.`, "success");
+    } catch (e) {
+      toast((e as Error).message, "error");
+    } finally {
+      setAiBusy(null);
+    }
+  }
   const [linkOpen, setLinkOpen] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -302,6 +338,18 @@ function WriteEditor({ session, onExit, onOpen }: { session: Session; onExit: ()
       ],
     },
     {
+      label: "AI",
+      items: [
+        { label: "Proofread (fix spelling & grammar)", onSelect: () => rewrite("proofread", "Proofread") },
+        "divider" as const,
+        { label: "Make it formal", onSelect: () => rewrite("formal", "Made formal") },
+        { label: "Make it friendly", onSelect: () => rewrite("friendly", "Made friendly") },
+        { label: "Make it shorter", onSelect: () => rewrite("shorter", "Shortened") },
+        { label: "Simplify the language", onSelect: () => rewrite("simpler", "Simplified") },
+        { label: "Expand with more detail", onSelect: () => rewrite("expand", "Expanded") },
+      ],
+    },
+    {
       label: "Format",
       items: [
         { label: "Bold", shortcut: `${MOD}B`, onSelect: () => c().toggleBold().run() },
@@ -328,6 +376,9 @@ function WriteEditor({ session, onExit, onOpen }: { session: Session; onExit: ()
           menus={menus}
           actions={
             <>
+              <TB label={aiBusy ? `${aiBusy}…` : "AI proofread the selection (more in the AI menu)"} onClick={() => rewrite("proofread", "Proofread")}>
+                {aiBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              </TB>
               <TB label="Find and replace" shortcut={`${MOD}F`} onClick={() => setFind({ replace: true })}>
                 <Search className="h-4 w-4" />
               </TB>

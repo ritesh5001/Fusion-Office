@@ -58,12 +58,17 @@ const SIZES = { a4: [595.28, 841.89], letter: [612, 792] } as const;
 async function normalize(file: ToolFile): Promise<{ bytes: Uint8Array; kind: "png" | "jpg" }> {
   if (file.type === "image/jpeg") return { bytes: file.bytes, kind: "jpg" };
   if (file.type === "image/png") return { bytes: file.bytes, kind: "png" };
-  const bmp = await createImageBitmap(new Blob([file.bytes as BlobPart], { type: file.type }));
-  const c = document.createElement("canvas");
-  c.width = bmp.width;
-  c.height = bmp.height;
-  c.getContext("2d")!.drawImage(bmp, 0, 0);
-  return { bytes: await canvasToBytes(c, "image/png"), kind: "png" };
+  // Everything else (WEBP, GIF, AVIF, HEIC, TIFF…) through the shared decoder.
+  const { decodeImage, render, EMPTY_EDIT } = await import("../../image/canvas");
+  const img = await decodeImage(file);
+  try {
+    const c = render(img, EMPTY_EDIT);
+    // Photos as JPEG keep the PDF small; graphics with transparency stay PNG.
+    const photo = /hei[cf]|tiff?|jpe?g|avif/i.test(file.type + file.name);
+    return photo ? { bytes: await canvasToBytes(c, "image/jpeg", 0.9), kind: "jpg" } : { bytes: await canvasToBytes(c, "image/png"), kind: "png" };
+  } finally {
+    img.close();
+  }
 }
 
 /** One image per page. */

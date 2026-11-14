@@ -8,7 +8,7 @@
 import { PDFDocument, concatTransformationMatrix, popGraphicsState, pushGraphicsState } from "pdf-lib";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 import { canvasToBytes, openPdf, renderToCanvas } from "../pdfjs";
-import { contentBox, estimateSkew, fitRaster, isBlankPage, rotationAbout, toGray, type BlankSensitivity, type Gray } from "../scanMath";
+import { contentBox, encodeTiff, enhancePixels, estimateSkew, fitRaster, groupsBySeparators, isBlankPage, nameFromCode, rotationAbout, toGray, type BlankSensitivity, type EnhanceMode, type Gray, type TiffPage } from "../scanMath";
 import { loadPdf, pageView, save } from "./common";
 import type { CompressLevel } from "./compress";
 
@@ -209,4 +209,120 @@ export async function compressPdfToSize(bytes: Uint8Array, target: number, opts:
   } finally {
     await pdf.destroy();
   }
+}
+
+// ─── Improve scan quality ─────────────────────────────────────────
+
+/** Re-render every page and clean it up: white paper, darker ink, optional grey or black and white. */
+export async function enhanceScanPdf(bytes: Uint8Array, o: { mode: EnhanceMode; dpi: number }, progress?: Progress): Promise<Uint8Array> {
+  const pdf = await openPdf(bytes);
+  const out = await PDFDocument.create();
+  try {
+    for (let i = 0; i < pdf.numPages; i++) {
+      progress?.(`Cleaning page ${i + 1} of ${pdf.numPages}…`, i / pdf.numPages);
+      const vp = (await pdf.getPage(i + 1)).getViewport({ scale: 1 });
+      const canvas = await renderToCanvas(pdf, i, o.dpi / 72);
+      const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
+      const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      enhancePixels(img.data, canvas.width, canvas.height, o.mode);
+      ctx.putImageData(img, 0, 0);
+      // Black and white compresses best as PNG; photos and grey as JPEG.
+      const png = o.mode === "bw";
+      const data = await canvasToBytes(canvas, png ? "image/png" : "image/jpeg", 0.82);
+      const embedded = png ? await out.embedPng(data) : await out.embedJpg(data);
+      out.addPage([vp.width, vp.height]).drawImage(embedded, { x: 0, y: 0, width: vp.width, height: vp.height });
+    }
+  } finally {
+    await pdf.destroy();
+  }
+  return out.save({ useObjectStreams: true });
+}
+
+// ─── Split at separator pages ─────────────────────────────────────
+
+export type SeparatorMode = "blank" | "qr";
+
+/** Find separator sheets (blank pages, or pages with a QR code) and split the PDF there. */
+export async function splitAtSeparators(
+  bytes: Uint8Array,
+  o: { mode: SeparatorMode; keep: boolean; match: string; sensitivity: BlankSensitivity },
+  progress?: Progress,
+): Promise<{ parts: { name: string; bytes: Uint8Array; pages: number[] }[]; separators: number[] }> {
+  const pdf = await openPdf(bytes);
+  const separators: number[] = [];
+  const codes = new Map<number, string>();
+  const jsQR = o.mode === "qr" ? (await import("jsqr")).default : null;
+  try {
+    for (let i = 0; i < pdf.numPages; i++) {
+      progress?.(`Checking page ${i + 1} of ${pdf.numPages}…`, (i / pdf.numPages) * 0.85);
+      if (o.mode === "blank") {
+        if (isBlankPage(await grayPage(pdf, i, 500), o.sensitivity)) separators.push(i);
+        continue;
+      }
+      // QR codes: a sharp render, then a smaller one (big, blurry codes read better scaled down).
+      const page = await pdf.getPage(i + 1);
+      const vp = page.getViewport({ scale: 1 });
+      let code: string | null = null;
+      for (const side of [1600, 900]) {
+        const canvas = await renderToCanvas(pdf, i, side / Math.max(vp.width, vp.height));
+        const img = canvas.getContext("2d", { willReadFrequently: true })!.getImageData(0, 0, canvas.width, canvas.height);
+        const found = jsQR!(img.data, img.width, img.height, { inversionAttempts: "attemptBoth" });
+        if (found?.data) {
+          code = found.data;
+          break;
+        }
+      }
+      if (code !== null && (!o.match.trim() || code.toLowerCase().includes(o.match.trim().toLowerCase()))) {
+        separators.push(i);
+        codes.set(i, code);
+      }
+    }
+  } finally {
+    await pdf.destroy();
+  }
+  if (!separators.length) throw new Error(o.mode === "blank" ? "No blank separator pages were found." : o.match.trim() ? `No QR code containing “${o.match.trim()}” was found.` : "No QR codes were found on any page.");
+  const groups = groupsBySeparators(pdf.numPages, separators, o.keep);
+  if (!groups.length) throw new Error("Every page is a separator, so there's nothing to split.");
+  progress?.("Writing the parts…", 0.9);
+  const src = await loadPdf(bytes);
+  const parts: { name: string; bytes: Uint8Array; pages: number[] }[] = [];
+  const used = new Set<string>();
+  for (const [k, g] of groups.entries()) {
+    const out = await PDFDocument.create();
+    (await out.copyPages(src, g)).forEach((p) => out.addPage(p));
+    // A part named after the QR code that started it.
+    const sepBefore = o.keep ? g[0] : Math.max(-1, ...separators.filter((s) => s < g[0]));
+    let name = codes.has(sepBefore) ? nameFromCode(codes.get(sepBefore)!, `part-${k + 1}`) : `part-${k + 1}`;
+    for (let n = 2; used.has(name); n++) name = `${name}-${n}`;
+    used.add(name);
+    parts.push({ name, bytes: await save(out), pages: g });
+  }
+  return { parts, separators };
+}
+
+// ─── PDF → TIFF ───────────────────────────────────────────────────
+
+/** Pages as a multi-page TIFF (or one file per page), deflate-compressed. */
+export async function pdfToTiff(bytes: Uint8Array, o: { dpi: number; gray: boolean; pages: number[]; together: boolean }, progress?: Progress): Promise<Uint8Array[]> {
+  const { zlibSync } = await import("fflate");
+  const pdf = await openPdf(bytes);
+  const pages: TiffPage[] = [];
+  try {
+    for (const [k, i] of o.pages.entries()) {
+      progress?.(`Rendering page ${i + 1}…`, k / o.pages.length);
+      const canvas = await renderToCanvas(pdf, i, o.dpi / 72);
+      const { data, width, height } = canvas.getContext("2d", { willReadFrequently: true })!.getImageData(0, 0, canvas.width, canvas.height);
+      const channels = o.gray ? 1 : 3;
+      const pixels = new Uint8Array(width * height * channels);
+      for (let p = 0, j = 0; p < width * height; p++, j += 4) {
+        if (o.gray) pixels[p] = (data[j] * 299 + data[j + 1] * 587 + data[j + 2] * 114) / 1000;
+        else (pixels[p * 3] = data[j]), (pixels[p * 3 + 1] = data[j + 1]), (pixels[p * 3 + 2] = data[j + 2]);
+      }
+      pages.push({ width, height, pixels, channels: channels as 1 | 3, dpi: o.dpi });
+    }
+  } finally {
+    await pdf.destroy();
+  }
+  const deflate = (d: Uint8Array) => zlibSync(d, { level: 6 });
+  return o.together ? [encodeTiff(pages, deflate)] : pages.map((p) => encodeTiff([p], deflate));
 }

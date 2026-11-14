@@ -50,7 +50,7 @@ export const OPTIMIZE: Record<string, ToolSeo> = {
   },
   "ocr-pdf": {
     title: "OCR PDF Online – Make Scanned PDFs Searchable",
-    description: "Add a hidden, selectable text layer to scanned PDFs so you can search, copy and convert them. Free OCR that runs on your device for English text.",
+    description: "Add a hidden, selectable text layer to scanned PDFs so you can search, copy and convert them. Free OCR on your device for English and Hindi text.",
     intent: ["ocr pdf", "make pdf searchable", "scanned pdf to text", "ocr online free", "convert scanned pdf to searchable pdf"],
     anchor: "Make a scanned PDF searchable",
     howTo: "make a scanned PDF searchable",

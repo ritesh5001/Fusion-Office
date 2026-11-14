@@ -227,6 +227,9 @@ export function orient(img: Decoded, t: Transform, scale = 1): HTMLCanvasElement
   const dw = img.width * scale;
   const dh = img.height * scale;
   c.drawImage(source, 0, 0, sw, sh, -dw / 2, -dh / 2, dw, dh);
+  // Leave the context untransformed: later steps (text layers, watermarks, blur boxes) draw
+  // on this same canvas in plain pixel coordinates.
+  c.setTransform(1, 0, 0, 1, 0, 0);
   return canvas;
 }
 

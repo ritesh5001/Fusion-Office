@@ -2,6 +2,7 @@ import express, { Router } from "express";
 import { HttpError } from "../lib/http.js";
 import { checkTarget, officeConvert, officeFormat } from "../lib/office.js";
 import { documentToPdf, htmlToPdf } from "../lib/html.js";
+import { SVG_MAX_PAGES, isLinearized, isPdfaLevel, linearize, pdfToSvg, toPdfA } from "../lib/engines.js";
 
 export const convert = Router();
 
@@ -13,7 +14,30 @@ const MIME = {
   xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   svg: "image/svg+xml",
+  odt: "application/vnd.oasis.opendocument.text",
+  ods: "application/vnd.oasis.opendocument.spreadsheet",
+  odp: "application/vnd.oasis.opendocument.presentation",
+  rtf: "application/rtf",
+  txt: "text/plain; charset=utf-8",
+  csv: "text/csv; charset=utf-8",
+  doc: "application/msword",
+  xls: "application/vnd.ms-excel",
+  ppt: "application/vnd.ms-powerpoint",
 };
+
+/** A raw PDF body and its name, for the PDF engines. */
+const rawPdf = express.raw({ type: () => true, limit: `${MAX_MB}mb` });
+function pdfBody(req: express.Request): { bytes: Uint8Array; name: string } {
+  let name = "document.pdf";
+  try {
+    name = decodeURIComponent(req.get("x-filename") ?? "").slice(0, 200) || name;
+  } catch {
+    throw new HttpError(400, "Invalid file name.");
+  }
+  const body = req.body as Buffer | undefined;
+  if (!Buffer.isBuffer(body) || !body.length) throw new HttpError(400, "No file was sent.");
+  return { bytes: new Uint8Array(body.buffer, body.byteOffset, body.byteLength), name: name.replace(/\.[^.]+$/, "") };
+}
 
 const sendPdf = (res: express.Response, bytes: Uint8Array, name: string) => sendFile(res, bytes, name, MIME.pdf);
 
@@ -45,6 +69,41 @@ convert.post("/office", express.raw({ type: () => true, limit: `${MAX_MB}mb` }),
     const to = checkTarget(ext, typeof req.query.to === "string" ? req.query.to : "pdf");
     const out = await officeConvert(bytes, ext, to);
     sendFile(res, out, name.replace(/\.[^.]+$/, "") + "." + to, MIME[to]);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/** PDF → PDF/A (Ghostscript). Query level=1b|2b|3b (default 2b). Body: the raw PDF. */
+convert.post("/pdfa", rawPdf, async (req, res, next) => {
+  try {
+    const { bytes, name } = pdfBody(req);
+    const level = isPdfaLevel(req.query.level) ? req.query.level : "2b";
+    sendPdf(res, await toPdfA(bytes, level), `${name}-pdfa.pdf`);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/** Web-optimized (linearized) PDF with qpdf. Body: the raw PDF. Header X-Already-Linearized says whether it was before. */
+convert.post("/linearize", rawPdf, async (req, res, next) => {
+  try {
+    const { bytes, name } = pdfBody(req);
+    const already = await isLinearized(bytes).catch(() => false);
+    res.setHeader("X-Already-Linearized", already ? "1" : "0");
+    sendPdf(res, await linearize(bytes), `${name}-web.pdf`);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/** PDF → SVG, one per page (Poppler). Query first, last (1-based). → { pages: string[] }. */
+convert.post("/svg", rawPdf, async (req, res, next) => {
+  try {
+    const { bytes } = pdfBody(req);
+    const first = Math.max(1, Math.floor(Number(req.query.first) || 1));
+    const last = Math.max(first, Math.floor(Number(req.query.last) || first + SVG_MAX_PAGES - 1));
+    res.json({ pages: await pdfToSvg(bytes, first, Math.min(last, first + SVG_MAX_PAGES - 1)) });
   } catch (err) {
     next(err);
   }

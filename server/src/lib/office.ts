@@ -64,7 +64,7 @@ export function officeFormat(filename: string, bytes: Uint8Array): string {
 // LibreOffice is memory hungry; convert one or two files at a time.
 const queue = semaphore(Number(process.env.CONVERT_CONCURRENCY) || 1);
 
-export type OfficeTarget = "pdf" | "docx" | "xlsx" | "pptx" | "svg";
+export type OfficeTarget = "pdf" | "docx" | "xlsx" | "pptx" | "svg" | "odt" | "ods" | "odp" | "rtf" | "txt" | "csv" | "doc" | "xls" | "ppt";
 
 /** Which inputs can become which editable format (PDF works from all of them). */
 const EDITABLE_FROM: Record<Exclude<OfficeTarget, "pdf">, string[]> = {
@@ -73,6 +73,28 @@ const EDITABLE_FROM: Record<Exclude<OfficeTarget, "pdf">, string[]> = {
   pptx: ["ppt", "pptx", "odp"],
   // Drawings keep their vectors as SVG.
   svg: ["cdr"],
+  // OpenDocument, RTF, plain text and the older Office formats (Office format converter).
+  odt: ["doc", "docx", "odt", "rtf"],
+  ods: ["xls", "xlsx", "ods", "csv"],
+  odp: ["ppt", "pptx", "odp"],
+  rtf: ["doc", "docx", "odt", "rtf"],
+  txt: ["doc", "docx", "odt", "rtf"],
+  csv: ["xls", "xlsx", "ods"],
+  doc: ["docx", "odt", "rtf"],
+  xls: ["xlsx", "ods", "csv"],
+  ppt: ["pptx", "odp"],
+};
+
+/**
+ * LibreOffice's --convert-to argument. Text and CSV name an export filter so
+ * the output is UTF-8 (and CSV uses commas and double quotes).
+ */
+const FILTER: Partial<Record<OfficeTarget, string>> = {
+  txt: "txt:Text (encoded):UTF8",
+  csv: "csv:Text - txt - csv (StarCalc):44,34,76,1",
+  doc: "doc:MS Word 97",
+  xls: "xls:MS Excel 97",
+  ppt: "ppt:MS PowerPoint 97",
 };
 
 export function checkTarget(ext: string, to: string): OfficeTarget {
@@ -105,7 +127,7 @@ export function officeConvert(bytes: Uint8Array, ext: string, to: OfficeTarget):
         "--nolockcheck",
         "--nodefault",
         "--convert-to",
-        to,
+        FILTER[to] ?? to,
         "--outdir",
         outDir,
         input,

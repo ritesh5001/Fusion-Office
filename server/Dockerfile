@@ -1,5 +1,5 @@
 # Backend image for Render: Node API + LibreOffice (Office → PDF) + Chromium
-# (HTML → PDF) + fonts for Latin, Indic, CJK and Arabic scripts.
+# (HTML → PDF) + Ghostscript (PDF/A) + qpdf (web-optimized PDF) + Poppler (PDF → SVG) + fonts for Latin, Indic, CJK and Arabic scripts.
 # Build context is the repo root (npm workspaces share one lockfile):
 #   docker build -f server/Dockerfile -t fusion-office-server .
 FROM node:22-bookworm-slim
@@ -9,6 +9,7 @@ RUN apt-get update \
       ca-certificates openssl \
       libreoffice-writer-nogui libreoffice-calc-nogui libreoffice-impress-nogui libreoffice-draw-nogui \
       chromium \
+      ghostscript qpdf poppler-utils \
       fonts-dejavu-core fonts-liberation2 fonts-crosextra-carlito fonts-crosextra-caladea \
       fonts-noto-core fonts-noto-cjk \
  && rm -rf /var/lib/apt/lists/*

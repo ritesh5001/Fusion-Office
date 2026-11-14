@@ -14,6 +14,16 @@ interface Turn {
   text: string;
 }
 
+const MULTI_STARTERS = [
+  "Compare these documents: what's different?",
+  "Which file mentions the deadline, and what is it?",
+  "Summarize each document in 3 points",
+  "Do the amounts match across the files?",
+];
+
+/** Most files one chat reads at once. */
+const MAX_FILES = 10;
+
 const STARTERS = [
   "Summarize this document in 5 points",
   "What are the key dates and deadlines?",
@@ -25,7 +35,8 @@ const STARTERS = [
 const MAX_TURNS = 39;
 
 export function ChatPdfTool() {
-  const [file, setFile] = useState<{ name: string; pages: string[] } | null>(null);
+  // One or several PDFs; with several, every page is labelled with its file so answers can say where a fact is.
+  const [file, setFile] = useState<{ name: string; pages: string[]; labels?: string[]; files: number } | null>(null);
   const [reading, setReading] = useState<string | null>(null);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState("");
@@ -40,13 +51,22 @@ export function ChatPdfTool() {
   }, [turns, busy]);
 
   const open = async (files: File[]) => {
-    const f = files[0];
-    if (!f) return;
+    const list = files.slice(0, MAX_FILES);
+    if (!list.length) return;
     setError(null);
-    setReading("Reading your PDF…");
+    setReading(list.length > 1 ? `Reading ${list.length} PDFs…` : "Reading your PDF…");
     try {
-      const pages = await documentText(new Uint8Array(await f.arrayBuffer()), (m) => setReading(m));
-      setFile({ name: f.name, pages });
+      const pages: string[] = [];
+      const labels: string[] = [];
+      for (const [i, f] of list.entries()) {
+        const p = await documentText(new Uint8Array(await f.arrayBuffer()), (m) => setReading(list.length > 1 ? `${f.name} (${i + 1} of ${list.length}): ${m}` : m));
+        p.forEach((text, k) => {
+          pages.push(text);
+          labels.push(`${f.name.replace(/[,"<>]/g, " ").slice(0, 120)}, p. ${k + 1}`);
+        });
+      }
+      setFile(list.length > 1 ? { name: `${list.length} documents`, pages, labels, files: list.length } : { name: list[0].name, pages, files: 1 });
+      if (files.length > MAX_FILES) setError(`Only the first ${MAX_FILES} files were added.`);
       setTurns([]);
       setTimeout(() => input.current?.focus(), 50);
     } catch (e) {
@@ -70,7 +90,7 @@ export function ChatPdfTool() {
       const res = await apiFetch("/api/ai/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ pages: file.pages, messages: history }),
+        body: JSON.stringify({ pages: file.pages, messages: history, ...(file.labels ? { labels: file.labels } : {}) }),
       });
       const data = (await res.json().catch(() => ({}))) as { answer?: string; error?: string };
       if (!res.ok || !data.answer) throw new Error(data.error ?? (res.status === 503 ? "Chat isn't available on this server yet." : "The AI couldn't answer. Please try again."));
@@ -93,7 +113,8 @@ export function ChatPdfTool() {
       </div>
     ) : (
       <>
-        <Dropzone accept="application/pdf,.pdf" multiple={false} onFiles={open} label="Choose a PDF" />
+        <Dropzone accept="application/pdf,.pdf" multiple onFiles={open} label="Choose PDFs" />
+        <p className="mt-3 text-center text-[13px] text-fg-muted">Choose one PDF, or up to {MAX_FILES} to ask across all of them and compare.</p>
         {error && (
           <p role="alert" className="mt-4 rounded-xl bg-red-500/10 px-4 py-3 text-center text-[14px] text-red-300">
             {error}
@@ -114,7 +135,7 @@ export function ChatPdfTool() {
         <div className="min-w-0 flex-1">
           <p className="truncate text-[14px] font-semibold">{file.name}</p>
           <p className="text-[12px] text-fg-muted">
-            {file.pages.length} page{file.pages.length === 1 ? "" : "s"} · {chars.toLocaleString("en")} characters
+            {file.files > 1 ? `${file.files} files · ` : ""}{file.pages.length} page{file.pages.length === 1 ? "" : "s"} · {chars.toLocaleString("en")} characters
           </p>
         </div>
         {turns.length > 0 && (
@@ -132,10 +153,10 @@ export function ChatPdfTool() {
         {turns.length === 0 && (
           <div className="mx-auto max-w-[520px] pt-4 text-center">
             <Mascot mood="happy" size={84} />
-            <p className="mt-3 text-[17px] font-semibold">Ask me anything about this document</p>
+            <p className="mt-3 text-[17px] font-semibold">{file.files > 1 ? "Ask anything across these documents" : "Ask me anything about this document"}</p>
             <p className="mt-1 text-[13px] text-fg-muted">Answers come from the document only, with the pages they&apos;re on.</p>
             <div className="mt-5 grid gap-2 sm:grid-cols-2">
-              {STARTERS.map((s) => (
+              {(file.files > 1 ? MULTI_STARTERS : STARTERS).map((s) => (
                 <button key={s} type="button" onClick={() => ask(s)} className="rounded-xl bg-raised px-3 py-2.5 text-left text-[13px] text-fg ring-1 ring-line transition hover:ring-brand-600 hover:text-brand-300">
                   {s}
                 </button>

@@ -29,6 +29,7 @@ const LAUNCH: Record<string, { accept: string; label: string; open: string }> = 
   "document-viewer": { accept: VIEWER_ACCEPT, label: "Choose a document to view", open: "Open the document viewer" },
   "edit-pdf": { accept: "application/pdf,.pdf,image/png,image/jpeg,image/webp", label: "Choose a PDF to edit", open: "Open the PDF editor" },
   "sign-pdf": { accept: "application/pdf,.pdf", label: "Choose a PDF to sign", open: "Open the PDF editor" },
+  "annotate-pdf": { accept: "application/pdf,.pdf", label: "Choose a PDF to annotate", open: "Open the PDF editor" },
   "word-editor": { accept: ".docx,.doc,.odt,.rtf", label: "Choose a Word document", open: "Open the Word editor" },
   "excel-editor": { accept: ".xlsx,.xlsm,.xls,.ods,.csv,.tsv,.txt", label: "Choose a spreadsheet", open: "Open the Excel editor" },
   "powerpoint-editor": { accept: ".pptx,.ppt,.odp", label: "Choose a presentation", open: "Open the PowerPoint editor" },

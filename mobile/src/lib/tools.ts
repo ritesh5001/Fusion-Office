@@ -8,7 +8,7 @@ import {
   Headphones, Image, ImageDown, ImagePlus, Images, Languages, Layers, LayoutGrid, ListOrdered, Lock, LockOpen, MessagesSquare, Minimize2, NotebookPen,
   PanelTop, PenLine, PenTool, Presentation, Receipt, ReceiptIndianRupee, RotateCw, Scale, Scaling, ScanSearch, ScanText, Scissors, Sheet, ShieldOff,
   Shuffle, Signature, SlidersHorizontal, Sparkles, Stamp, Table, TextSearch, Unlock, Workflow, Wrench,
-  ArrowDownUp, BadgeCheck, Banknote, BookCopy, FileClock, FileImage, FileMinus2, FileOutput, FilePlus2, FileSignature, FileX2, GraduationCap, Grid3x3, House, IdCard, ImageOff, Landmark, ListTree, MessageSquareOff, Palette, Paperclip, Proportions, QrCode, Ruler, Shrink, Smartphone, SquareUser, Target, Truck, type LucideIcon,
+  ArrowDownUp, BadgeCheck, Banknote, BookCopy, FileClock, FileImage, FileMinus2, FileOutput, FilePlus2, FileSignature, FileX2, GraduationCap, Grid3x3, House, IdCard, ImageOff, Landmark, ListTree, MessageSquareOff, Palette, Paperclip, Proportions, QrCode, Ruler, Shrink, Smartphone, SquareUser, Target, Truck, Blend, Braces, Copyright, Droplets, FileCheck, FileKey, FileUser, Highlighter, Layers2, LayoutDashboard, ListChecks, Mail, MonitorPlay, NotebookText, Repeat, ScanLine, ScanQrCode, ShieldCheck, Spline, Split, SquareStack, TableProperties, TextCursor, Type, UserCheck, WandSparkles, Zap, type LucideIcon,
 } from "lucide-react-native";
 import { CATEGORIES, TOOLS, TOOL_COUNT, toolBySlug, type Category, type ToolDef } from "@shared/registry";
 import { searchTools } from "@shared/search";
@@ -23,6 +23,7 @@ export const ICONS: Record<string, LucideIcon> = {
   PanelTop, PenLine, PenTool, Presentation, Receipt, ReceiptIndianRupee, RotateCw, Scale, Scaling, ScanSearch, ScanText, Scissors, Sheet, ShieldOff,
   Shuffle, Signature, SlidersHorizontal, Sparkles, Stamp, Table, TextSearch, Unlock, Workflow, Wrench,
   ArrowDownUp, BadgeCheck, Banknote, BookCopy, FileClock, FileImage, FileMinus2, FileOutput, FilePlus2, FileSignature, FileX2, GraduationCap, Grid3x3, House, IdCard, ImageOff, Landmark, ListTree, MessageSquareOff, Palette, Paperclip, Proportions, QrCode, Ruler, Shrink, Smartphone, SquareUser, Target, Truck,
+  Blend, Braces, Copyright, Droplets, FileCheck, FileKey, FileUser, Highlighter, Layers2, LayoutDashboard, ListChecks, Mail, MonitorPlay, NotebookText, Repeat, ScanLine, ScanQrCode, ShieldCheck, Spline, Split, SquareStack, TableProperties, TextCursor, Type, UserCheck, WandSparkles, Zap,
 };
 
 /** Tile colours, as on the website (components/tools/icons.tsx). */
@@ -56,6 +57,11 @@ const TOOL_SWATCH: Record<string, Swatch> = {
   "rent-receipt": "emerald", "salary-slip": "green", "stamp-pdf": "red", "qr-code-pdf": "ink", "pdf-bookmarks": "indigo", "pdf-attachments": "amber",
   "remove-annotations": "rose", "remove-background": "pink", "passport-photo-maker": "blue", "exam-photo-resizer": "amber", "heic-to-jpg": "orange", "webp-to-jpg": "green",
   "png-to-jpg": "sky", "jpg-to-png": "violet", "tiff-to-jpg": "ink",
+  "split-by-separator": "pink", "web-optimize-pdf": "amber", "enhance-scan": "teal", "hindi-ocr": "orange", "email-to-pdf": "sky", "pdf-to-png": "violet",
+  "pdf-to-tiff": "ink", "pdf-to-svg": "indigo", "pdf-to-json": "ink", "office-converter": "blue", "resume-builder": "emerald", "markdown-editor": "ink",
+  "unicode-to-krutidev": "orange", "krutidev-to-unicode": "amber", "annotate-pdf": "lime", "overlay-pdf": "sky", "sanitize-pdf": "emerald", "sign-pdf-certificate": "indigo",
+  "verify-pdf-signature": "green", "quiz-generator": "violet", "flashcard-maker": "pink", "ai-data-extraction": "green", "pdf-to-presentation-ai": "orange", "ats-resume-checker": "blue",
+  "image-to-text": "amber", "watermark-image": "sky", "blur-image": "indigo", "photo-collage": "rose", "batch-rename": "ink", "qr-code-generator": "lime",
 };
 
 const LETTER: Record<string, { letter: string; swatch: Swatch }> = {

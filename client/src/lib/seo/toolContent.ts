@@ -6,6 +6,7 @@ import { CONVERT_TO, CONVERT_FROM } from "./content/convert";
 import { SECURITY, AI } from "./content/security-ai";
 import { IMAGE, OFFICE } from "./content/image-office";
 import { WAVE3 } from "./content/wave3";
+import { WAVE4 } from "./content/wave4";
 
 export type { ToolSeo };
 
@@ -33,6 +34,7 @@ export const TOOL_CONTENT: Record<string, ToolSeo> = {
   ...AI,
   ...IMAGE,
   ...WAVE3,
+  ...WAVE4,
 };
 
 export function contentFor(tool: Pick<ToolDef, "slug" | "name" | "description">): ToolSeo {

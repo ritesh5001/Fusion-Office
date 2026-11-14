@@ -23,6 +23,8 @@ const CUSTOM: Record<CustomTool, React.ComponentType> = {
   "gst-invoice": dynamic(() => import("./custom/GstInvoiceTool").then((m) => m.GstInvoiceTool), { ssr: false }),
   "quotation-maker": dynamic(() => import("./custom/GstInvoiceTool").then((m) => () => <m.GstInvoiceTool kind="quotation" />), { ssr: false }),
   "proforma-invoice": dynamic(() => import("./custom/GstInvoiceTool").then((m) => () => <m.GstInvoiceTool kind="proforma" />), { ssr: false }),
+  "blur-image": dynamic(() => import("./custom/BlurImageTool").then((m) => m.BlurImageTool), { ssr: false }),
+  "markdown-editor": dynamic(() => import("./custom/MarkdownEditorTool").then((m) => m.MarkdownEditorTool), { ssr: false }),
   "delivery-challan": dynamic(() => import("./custom/GstInvoiceTool").then((m) => () => <m.GstInvoiceTool kind="challan" />), { ssr: false }),
 };
 

@@ -84,6 +84,19 @@ Known limits, stated on each tool page:
 - **Bank statement** needs a text PDF; layouts it misreads show up as balance mismatches in the result.
 - **OCR is still English only.** The invisible text layer uses a Latin font, so Hindi needs a Unicode font embedded first.
 
+### Fourth wave
+
+| Group | Tools | Code |
+| --- | --- | --- |
+| Hindi | Hindi OCR (OCR PDF with a language choice), Image to text, Unicode ↔ Kruti Dev | `processors/ocr.ts` (Noto Sans Devanagari text layer, written unshaped so copy and search keep reading order), `krutidev.ts` |
+| Signatures & safety | Digital signature with a .pfx/.p12 certificate, Verify PDF signature, Sanitize PDF, PDF → JSON | `signature.ts` (node-forge; checked against OpenSSL in tests), `processors/inspect.ts` |
+| Convert | PDF/A, Web optimize, PDF → SVG (server); PDF → TIFF / PNG, Email (.eml/.msg) → PDF, Office format converter | `server/src/lib/engines.ts`, `scanMath.ts` (`encodeTiff`), `mail.ts` |
+| Scans | Improve scan quality, Split at blank or QR separator pages | `scanMath.ts` (whitening, adaptive threshold), `processors/scanClean.ts` (jsQR) |
+| AI | Quiz & flashcards, invoice/table extraction to Excel, PDF → PowerPoint, ATS resume checker, rewrite in the Word editor, Chat with up to 10 PDFs | `server/src/lib/ai.ts` (JSON mode, results normalised), `components/tools/aiSpecs.tsx` |
+| Office & images | Resume builder (PDF + Word), Markdown editor (Markdown/Word/PDF/HTML), six new Word templates, PDF overlay, Annotate PDF, watermark / blur images, collage, batch rename, QR generator | `resume.ts`, `markdownDocx.ts`, `qr.ts`, `custom/BlurImageTool.tsx`, `custom/MarkdownEditorTool.tsx` |
+
+Not built (need accounts, keys or a product decision): multi-party e-sign requests, Google Drive / Dropbox / OneDrive, sharing links, public API, Chrome extension, offline PWA, Hindi interface, form/survey builder, AI image upscaling (needs a model), AI form auto-fill.
+
 Not in scope for the web app now (roadmap): desktop and mobile apps, signature *requests* to other people (Fusion Sign),
 business/teams plans.
 
@@ -117,8 +130,7 @@ single tools, **workflows** (chains of processors), and unit tests.
 2. **Done.** Server engines: LibreOffice and Chromium conversions (Docker image
    on Render), AI summarize, translate and Chat with PDF on Groq. The AI tools
    need `GROQ_API_KEY` on the server; without it they answer "not available".
-3. **Next.** Archival and deep repair: Ghostscript for PDF/A and heavy repair.
-   PDF/A shows as "Coming soon" until then.
+3. **Done.** PDF/A (Ghostscript), web optimization (qpdf) and PDF → SVG (Poppler) in `server/src/lib/engines.ts`, tested in `server/tests/engines.test.ts`. Deep repair with Ghostscript is still open.
 
 ### Server tool safeguards
 

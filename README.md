@@ -52,13 +52,13 @@ Keyboard shortcuts are listed in the editor under **Help → Keyboard shortcuts*
 
 ## PDF and image tools (`/tools`)
 
-109 single-purpose tools (the iLovePDF-style PDF catalogue, image tools and India-specific document makers) share one upload → options → result flow. Most run **entirely in the browser**, so the file never leaves the device. Plan and details: [docs/TOOLS_PLAN.md](docs/TOOLS_PLAN.md).
+140 single-purpose tools (the iLovePDF-style PDF catalogue, image tools, AI study and business tools, and India-specific document makers) share one upload → options → result flow. Most run **entirely in the browser**, so the file never leaves the device. Plan and details: [docs/TOOLS_PLAN.md](docs/TOOLS_PLAN.md).
 
 | Runs | Tools |
 | --- | --- |
 | In the browser | Merge, Split, Organize, Rotate, Compress, Repair, OCR (Tesseract.js, self-hosted), JPG → PDF, Scan to PDF (camera), PDF → JPG / Word / PowerPoint / Excel / Markdown, Watermark, Page numbers, Crop, Forms, Protect, Unlock, Redact, Compare, Workflows (chain tools and save the recipe) |
-| On the server | Word / PowerPoint / Excel → PDF (LibreOffice), HTML → PDF (headless Chromium) |
-| AI (server + Groq) | AI Summarizer, Translate PDF (Word + Markdown output), Chat with PDF. Needs `GROQ_API_KEY` |
+| On the server | Word / PowerPoint / Excel → PDF and the Office format converter (LibreOffice), HTML → PDF and Email → PDF (headless Chromium), PDF → PDF/A (Ghostscript), Web optimize (qpdf), PDF → SVG (Poppler) |
+| AI (server + Groq) | AI Summarizer, Translate PDF (Word + Markdown output), Chat with PDF (up to 10 files, answers cite file and page), Quiz & flashcards, Invoice & table extraction to Excel, PDF to PowerPoint, ATS resume checker, AI rewrite in the Word editor. Needs `GROQ_API_KEY` |
 | In the editor | Edit PDF, Sign PDF |
 | Images (in the browser) | **Image editor** (crop with shapes incl. passport 35×45, rotate, flip, straighten, 10 adjustments, 10 filters, text with fonts/colours/outline/box, undo/redo, resize and save with a KB limit), Compress image (by quality or to a target like 50 KB), Resize image (by %, pixels, print size in cm/mm/in with DPI, optional KB limit), Crop image, Convert image (JPG/PNG/WEBP, incl. HEIC where the browser can open it, GIF, BMP, SVG), Rotate image |
 | Page tools (in the browser) | Delete pages, Extract pages, Add blank pages, Reverse, Booklet maker, Poster maker (tile print), Resize pages (A4 ↔ Letter…), Stamp (Paid, Approved…), QR code on PDF, Bookmarks editor, Attachments (extract / add / remove), Remove annotations |
@@ -66,9 +66,9 @@ Keyboard shortcuts are listed in the editor under **Help → Keyboard shortcuts*
 | Forms and IDs (in the browser) | Exam photo & signature resizer (SSC, UPSC, IBPS, SBI, RRB, NEET, JEE, CUET, PAN, passport sizes: exact pixels and a KB range), Passport photo maker (background to white, A4 or 4 × 6 print sheet), Remove background (plain backgrounds), ID card front and back on one A4 page |
 | Business documents (in the browser) | GST invoice, Quotation, Proforma invoice, Delivery challan (one form, `GstInvoiceTool` with a `kind`), Rent receipt, Salary slip, Bank statement PDF → Excel / CSV with a running-balance check |
 | More converters (in the browser) | HEIC → JPG / PDF (libheif via `heic-to`, any browser), TIFF → JPG (`utif2`), WEBP → JPG, PNG ↔ JPG |
-| Coming soon | PDF → PDF/A (Ghostscript) |
+| Fourth wave (in the browser) | Hindi OCR and Image to text (English / Hindi), Unicode ↔ Kruti Dev, Resume builder (PDF + Word), Markdown editor, Digital signature with a .pfx/.p12 certificate and signature checking, Sanitize PDF, PDF overlay (letterhead), PDF → JSON / TIFF / PNG, Improve scan quality, Split at blank or QR-code separator pages, Watermark / blur images, Photo collage, Batch rename, QR code generator (UPI, Wi-Fi, contact), Annotate PDF (editor) |
 
-Running the server tools locally: install LibreOffice (`brew install --cask libreoffice`) so `soffice` is on your PATH; Chrome is found automatically. Without them those tools say they aren't available.
+Running the server tools locally: install LibreOffice (`brew install --cask libreoffice`) so `soffice` is on your PATH, and `brew install ghostscript qpdf poppler` for PDF/A, web optimization and PDF → SVG; Chrome is found automatically. Without them those tools say they aren't available. `GS_PATH`, `QPDF_PATH`, `PDFTOCAIRO_PATH` and `GS_ICC_PROFILE` override the defaults.
 
 **AI tools** run on [Groq](https://console.groq.com) with `openai/gpt-oss-120b` (set `AI_MODEL` for another model). Groq's free plan allows about 8,000 tokens a minute, roughly 8–10 pages per request: rate limits are waited out automatically, and longer documents get a "try fewer pages" message. The Developer plan raises the limits.
 
@@ -135,7 +135,7 @@ server/src/
 server/prisma/schema.prisma   Users, accounts, documents, versions
 ```
 
-**API** (all under `/api`): `GET /config`, `GET /health`, `/auth/*` (Auth.js), `GET|POST /documents`, `GET|PUT|DELETE /documents/:id`, `GET|POST /documents/:id/versions`, `POST /convert/office?to=pdf|docx|xlsx|pptx` (raw file body + `X-Filename`), `POST /convert/html`, `POST /ai/summarize`, `POST /ai/translate`.
+**API** (all under `/api`): `GET /config`, `GET /health`, `/auth/*` (Auth.js), `GET|POST /documents`, `GET|PUT|DELETE /documents/:id`, `GET|POST /documents/:id/versions`, `POST /convert/office?to=pdf|docx|xlsx|pptx|odt|ods|odp|rtf|txt|csv|doc|xls|ppt` (raw file body + `X-Filename`), `POST /convert/pdfa?level=1b|2b|3b`, `POST /convert/linearize`, `POST /convert/svg?first&last`, `POST /convert/html`, `POST /ai/summarize`, `POST /ai/translate`, `POST /ai/chat` (optional `labels` for several files), `POST /ai/quiz`, `POST /ai/extract`, `POST /ai/slides`, `POST /ai/ats`, `POST /ai/rewrite`.
 
 **Key design decisions**
 
@@ -199,7 +199,8 @@ By default the browser calls `/api/*` on the site itself and Next proxies it to 
 - **Editing existing text** works line by line on PDFs with a text layer. The original glyphs are removed from the page's content stream on export (`client/src/lib/pdf/textRemoval.ts`); lines the engine can't measure safely (Type3 fonts, unusual encodings, text inside form XObjects) are covered with the sampled background colour instead. Replacement text uses the standard fonts matched by family and weight, not the document's embedded font, and is left-aligned at the original position.
 - **Export uses the standard PDF fonts** (Helvetica/Times/Courier, Latin characters). Characters outside that set are replaced (`₹` becomes `Rs.`). Embedding a Unicode font (e.g. Noto Sans via `@pdf-lib/fontkit`) fixes this.
 - Redacted pages become images on export, so their text is no longer selectable. That's the trade-off for real removal.
-- In the editor: image cropping, form-field creation and find & replace are not built yet (password-protected PDFs, OCR and form filling are available as tools under `/tools`). PDF/A is not built yet.
+- In the editor: image cropping, form-field creation and find & replace are not built yet (password-protected PDFs, OCR and form filling are available as tools under `/tools`).
+- Certificate signing works with .pfx/.p12 files (RSA). USB-token DSCs can't be reached from a web page, and a PDF that is already signed is refused rather than re-saved (that would break the first signature).
 - Translate PDF returns the translation as Word and Markdown; it doesn't rebuild the original page layout.
 - The Docker image couldn't be built on the development machine (no Docker installed); its first real build happens on Render.
 - Pinned to stable majors: Next 15, Fabric 6, PDF.js 4, Prisma 6, Express 5. Fabric 6 has advisories that only affect its SVG export (`toSVG`), which this app doesn't use. Upgrade to Fabric 7 when convenient.

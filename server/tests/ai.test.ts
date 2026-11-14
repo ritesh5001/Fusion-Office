@@ -123,3 +123,80 @@ test("speak explains the one-time terms step and rate limits plainly", async () 
   queue.push({ status: 429, body: { error: { message: "slow down" } } });
   await assert.rejects((await ai()).speak("Hi.", "troy"), (e: { status?: number }) => e.status === 429);
 });
+
+// ─── Structured tools: quiz, extraction, slides, resume check, rewrite ────
+
+test("JSON replies are read even when wrapped in prose or a code fence", async () => {
+  const { parseJsonReply } = await ai();
+  assert.deepEqual(parseJsonReply('{"a":1}'), { a: 1 });
+  assert.deepEqual(parseJsonReply('Here you go:\n```json\n{"a":2}\n```'), { a: 2 });
+  assert.deepEqual(parseJsonReply('Sure! {"a":3} Hope it helps.'), { a: 3 });
+  assert.throws(() => parseJsonReply("no json here"), /couldn't be read/);
+});
+
+test("quiz: JSON mode is requested, malformed questions are dropped, pages are checked", async () => {
+  seen.length = 0;
+  queue.push(
+    answer(
+      JSON.stringify({
+        items: [
+          { question: "Capital of India?", options: ["Mumbai", "New Delhi", "Pune", "Agra"], answer: 1, explanation: "Stated on p. 1", page: 1 },
+          { question: "Bad answer index", options: ["a", "b"], answer: 5, page: 1 },
+          { question: "Only one option", options: ["a"], answer: 0 },
+          { question: "Page out of range", options: ["x", "y", "z", "w"], answer: 0, page: 99 },
+        ],
+      }),
+    ),
+  );
+  const items = await (await ai()).makeQuiz(["New Delhi is the capital.", "More text."], "mcq", 5, "easy");
+  assert.equal(items.length, 2);
+  assert.deepEqual(items[0], { kind: "mcq", question: "Capital of India?", options: ["Mumbai", "New Delhi", "Pune", "Agra"], answer: 1, explanation: "Stated on p. 1", page: 1 });
+  assert.equal(items[1].page, null);
+  assert.deepEqual(seen[0].body.response_format, { type: "json_object" });
+  queue.push(answer(JSON.stringify({ items: [{ front: "GST", back: "Goods and Services Tax", page: 1 }, { front: "", back: "x" }] })));
+  assert.deepEqual(await (await ai()).makeQuiz(["GST text"], "flashcards", 3, "medium"), [{ kind: "flashcards", front: "GST", back: "Goods and Services Tax", page: 1 }]);
+  queue.push(answer(JSON.stringify({ items: [] })));
+  await assert.rejects((await ai()).makeQuiz(["x"], "truefalse", 3, "hard"), /usable questions/);
+});
+
+test("extraction keeps only known invoice fields and item columns", async () => {
+  queue.push(
+    answer(
+      JSON.stringify({
+        documents: [{ fields: { seller_name: "Acme", total: 1180, invented_field: "x", buyer_gstin: "" }, items: [{ description: "Chairs", quantity: "2", amount: "1000", colour: "red" }, {}] }],
+      }),
+    ),
+  );
+  const out = await (await ai()).extractData(["INVOICE Acme total 1180"], "invoice");
+  assert.deepEqual(out, { kind: "invoice", documents: [{ fields: { seller_name: "Acme", total: "1180" }, items: [{ description: "Chairs", quantity: "2", amount: "1000" }] }] });
+  queue.push(answer(JSON.stringify({ tables: [{ title: "Marks", page: 1, columns: ["Name", "Marks"], rows: [["Asha", "91"], ["", ""]] }] })));
+  const t = await (await ai()).extractData(["Name Marks"], "tables");
+  assert.deepEqual(t, { kind: "tables", tables: [{ title: "Marks", page: 1, columns: ["Name", "Marks"], rows: [["Asha", "91"]] }] });
+  queue.push(answer(JSON.stringify({ documents: [] })));
+  await assert.rejects((await ai()).extractData(["nothing"], "receipt"), /No receipt data/);
+});
+
+test("slides and resume reports are cleaned up", async () => {
+  queue.push(answer(JSON.stringify({ title: "Q3 report", slides: [{ title: "Revenue", bullets: ["Up 12%", ""], notes: "Explain." }, { title: "Empty", bullets: [] }] })));
+  const deck = await (await ai()).makeSlides(["Revenue grew 12%"], 5, "the board");
+  assert.deepEqual(deck, { title: "Q3 report", subtitle: "", slides: [{ title: "Revenue", bullets: ["Up 12%"], notes: "Explain." }] });
+  queue.push(answer(JSON.stringify({ score: 140, verdict: "Strong.", matched: ["React"], missing: ["AWS"], sections: [{ name: "Skills", status: "great" }], formatting: [], suggestions: ["Add AWS projects"] })));
+  const rep = await (await ai()).checkResume(["React developer"], "Needs React and AWS");
+  assert.equal(rep.score, 100);
+  assert.deepEqual(rep.sections, [{ name: "Skills", status: "improve", note: "" }]);
+  assert.deepEqual(rep.missing, ["AWS"]);
+});
+
+test("rewrite returns the bare text, and chat cites files when pages are labelled", async () => {
+  seen.length = 0;
+  queue.push(answer('"Hello, team. The meeting is at 3 pm."'));
+  assert.equal(await (await ai()).rewriteText("hello team meeting at 3pm", "proofread"), "Hello, team. The meeting is at 3 pm.");
+  queue.push(answer("Both mention 3 pm (a.pdf, p. 1)."));
+  await (await ai()).chatWithDocument(["Meet at 3 pm", "Lunch"], [{ role: "user", text: "When?" }], ["a.pdf, p. 1", "b.pdf, p. 1"]);
+  const msgs = seen[1].body.messages as { role: string; content: string }[];
+  assert.match(msgs[1].content, /<page source="a\.pdf, p\. 1">/);
+  assert.match(msgs[0].content, /several files/);
+  const { parseLabels } = await ai();
+  assert.throws(() => parseLabels(["only one"], 2), /malformed/);
+  assert.equal(parseLabels(undefined, 2), undefined);
+});

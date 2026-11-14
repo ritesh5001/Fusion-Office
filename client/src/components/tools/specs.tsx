@@ -16,7 +16,12 @@ import { MORE_SPECS } from "./moreSpecs";
 import { PDF_SPECS_3 } from "./pdfSpecs3";
 import { PHOTO_SPECS } from "./photoSpecs";
 import { DOC_SPECS } from "./docSpecs";
+import { PDF_SPECS_4 } from "./pdfSpecs4";
+import { AI_SPECS } from "./aiSpecs";
+import { IMAGE_SPECS_4 } from "./imageSpecs4";
+import { TEXT_SPECS } from "./textSpecs";
 import { documentText } from "@/lib/tools/documentText";
+import { OCR_LANGUAGES } from "@/lib/tools/ocrLanguages";
 
 const pdfOut = (name: string, bytes: Uint8Array): ToolFile => ({ name, bytes, type: PDF });
 
@@ -177,20 +182,24 @@ const repair: ToolSpec<Record<string, never>> = {
   },
 };
 
-const ocr: ToolSpec<{ skipTextPages: boolean }> = {
+type OcrOpts = { skipTextPages: boolean; language: string };
+const ocrSpec = (language: string): ToolSpec<OcrOpts> => ({
   action: "Make searchable",
-  defaults: { skipTextPages: true },
+  defaults: { skipTextPages: true, language },
   Options: ({ options: o, set }) => (
     <>
+      <Segmented label="Language of the text" value={o.language} onChange={(language) => set({ language })} options={OCR_LANGUAGES} />
       <Toggle label="Skip pages that already have text" checked={o.skipTextPages} onChange={(skipTextPages) => set({ skipTextPages })} />
       <p className="text-[12px] leading-relaxed text-fg-muted">
-        Recognises English text. The first run downloads the recognition engine (about 15 MB) from this site; after that it's cached.
+        {o.language.includes("hin")
+          ? "Recognises Hindi (Devanagari) text, also used for Marathi and Sanskrit words. The first run downloads the recognition engine and Hindi data (about 20 MB) from this site; after that it's cached."
+          : "Recognises English text. The first run downloads the recognition engine (about 15 MB) from this site; after that it's cached."}
       </p>
     </>
   ),
   run: async ([f], o, progress) => {
     const { ocrPdf } = await import("@/lib/tools/processors/ocr");
-    const r = await ocrPdf(f.bytes, { language: "eng", skipTextPages: o.skipTextPages }, (m, frac) => progress(m, frac));
+    const r = await ocrPdf(f.bytes, { language: o.language, skipTextPages: o.skipTextPages }, (m, frac) => progress(m, frac));
     return {
       files: [pdfOut(derived(f.name, "ocr"), r.bytes)],
       summary:
@@ -199,7 +208,8 @@ const ocr: ToolSpec<{ skipTextPages: boolean }> = {
           : `Recognised ${r.words.toLocaleString()} words on ${r.pagesProcessed} page${r.pagesProcessed === 1 ? "" : "s"}${r.pagesSkipped ? ` (${r.pagesSkipped} already had text)` : ""}. The text is now searchable and selectable.`,
     };
   },
-};
+});
+const ocr = ocrSpec("eng");
 
 // ─── Convert ────────────────────────────────────────────────────────
 
@@ -611,6 +621,7 @@ export const SPECS: Record<string, ToolSpec<never>> = {
   "compress-pdf": compress,
   "repair-pdf": repair,
   "ocr-pdf": ocr,
+  "hindi-ocr": ocrSpec("hin+eng"),
   "jpg-to-pdf": jpgToPdf,
   "pdf-to-jpg": pdfToJpg,
   "pdf-to-word": officeFrom("word"),
@@ -634,6 +645,10 @@ export const SPECS: Record<string, ToolSpec<never>> = {
   ...PDF_SPECS_3,
   ...PHOTO_SPECS,
   ...DOC_SPECS,
+  ...PDF_SPECS_4,
+  ...AI_SPECS,
+  ...IMAGE_SPECS_4,
+  ...TEXT_SPECS,
 } as unknown as Record<string, ToolSpec<never>>;
 
 export type { ToolResult };

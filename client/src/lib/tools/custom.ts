@@ -19,6 +19,8 @@ export const CUSTOM_TOOLS = [
   "quotation-maker",
   "proforma-invoice",
   "delivery-challan",
+  "blur-image",
+  "markdown-editor",
 ] as const;
 
 export type CustomTool = (typeof CUSTOM_TOOLS)[number];

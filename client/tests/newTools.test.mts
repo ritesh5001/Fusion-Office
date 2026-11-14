@@ -299,3 +299,72 @@ test("statement without a header: amount and balance from the row, side from Dr/
   assert.deepEqual([s.reconciled, s.checked, s.totalDebit, s.totalCredit], [3, 3, 500, 50]);
   assert.deepEqual(s.txns.slice(1).map((t) => [t.debit, t.credit, t.balance]), [[200, null, 800], [null, 50, 850], [300, null, 550]]);
 });
+
+// ─── Scan enhancement, separators, TIFF ────────────────────────────
+import { adaptiveThreshold, encodeTiff, enhancePixels, groupsBySeparators, nameFromCode, whitenBackground } from "../src/lib/tools/scanMath.ts";
+import { zlibSync } from "fflate";
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+
+/** A "photo of a page": grey, darker towards one corner, with a black bar of ink. */
+function shadowedPage(w = 200, h = 160) {
+  const px = new Uint8ClampedArray(w * h * 4);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const paper = 210 - (x + y) * 0.35; // uneven light
+      const ink = y > 70 && y < 78 && x > 30 && x < 170;
+      const v = ink ? paper * 0.25 : paper;
+      px.set([v, v * 0.97, v * 0.9, 255], (y * w + x) * 4);
+    }
+  return px;
+}
+const lum = (px: Uint8ClampedArray, w: number, x: number, y: number) => px[(y * w + x) * 4];
+
+test("whitening evens out shadows and keeps ink dark", () => {
+  const px = shadowedPage();
+  whitenBackground(px, 200, 160, 16);
+  assert.ok(lum(px, 200, 5, 5) > 240 && lum(px, 200, 190, 150) > 240, `paper ${lum(px, 200, 5, 5)} / ${lum(px, 200, 190, 150)}`);
+  assert.ok(lum(px, 200, 100, 74) < 90, `ink ${lum(px, 200, 100, 74)}`);
+});
+
+test("black and white keeps the text and clears the shadow", () => {
+  const px = shadowedPage();
+  adaptiveThreshold(px, 200, 160);
+  assert.equal(lum(px, 200, 100, 74), 0);
+  assert.equal(lum(px, 200, 190, 150), 255);
+  assert.equal(lum(px, 200, 5, 5), 255);
+  const auto = shadowedPage();
+  enhancePixels(auto, 200, 160, "auto");
+  assert.ok(lum(auto, 200, 190, 150) > 245 && lum(auto, 200, 100, 74) < 60);
+});
+
+test("separator pages split documents; QR text becomes a file name", () => {
+  assert.deepEqual(groupsBySeparators(7, [2, 5], false), [[0, 1], [3, 4], [6]]);
+  assert.deepEqual(groupsBySeparators(7, [0, 3], true), [[0, 1, 2], [3, 4, 5, 6]]);
+  assert.deepEqual(groupsBySeparators(3, [0, 1, 2], false), []);
+  assert.equal(nameFromCode("https://erp.example.com/invoices/INV-2026-0042", "part-1"), "INV-2026-0042");
+  assert.equal(nameFromCode("Batch: A/7", "part-2"), "7".length >= 3 ? "7" : "Batch- A-7");
+  assert.equal(nameFromCode("   ", "part-3"), "part-3");
+});
+
+test("TIFF: two pages, plain and deflated, read back by the system image tools", { skip: process.platform !== "darwin" && "needs macOS sips" }, () => {
+  const rgb = new Uint8Array(40 * 30 * 3).map((_, i) => (i % 3 === 0 ? 220 : 40));
+  const gray = new Uint8Array(20 * 10).fill(128);
+  const pages = [
+    { width: 40, height: 30, pixels: rgb, channels: 3 as const, dpi: 150 },
+    { width: 20, height: 10, pixels: gray, channels: 1 as const, dpi: 300 },
+  ];
+  const dir = mkdtempSync(`${tmpdir()}/fo-tiff-`);
+  try {
+    for (const [name, data] of [["plain.tiff", encodeTiff(pages)], ["deflate.tiff", encodeTiff(pages, (d) => zlibSync(d))]] as const) {
+      writeFileSync(`${dir}/${name}`, data);
+      const r = spawnSync("sips", ["-g", "pixelWidth", "-g", "pixelHeight", "-g", "dpiWidth", `${dir}/${name}`]).stdout.toString();
+      assert.match(r, /pixelWidth: 40/, name);
+      assert.match(r, /pixelHeight: 30/, name);
+      assert.match(r, /dpiWidth: 150/, name);
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

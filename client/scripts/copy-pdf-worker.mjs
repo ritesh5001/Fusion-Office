@@ -31,7 +31,21 @@ try {
   // Only the LSTM builds are used (the default OCR engine); .wasm.js embeds the wasm.
   for (const f of readdirSync(core)) if (/lstm\.wasm\.js$/.test(f)) copyFileSync(join(core, f), join(out, "core", f));
   copyFileSync(join(lang, "4.0.0_best_int", "eng.traineddata.gz"), join(out, "lang", "eng.traineddata.gz"));
+  // Hindi (Devanagari) for OCR PDF and Image to text.
+  const hin = dirname(require.resolve("@tesseract.js-data/hin/package.json"));
+  copyFileSync(join(hin, "4.0.0_best_int", "hin.traineddata.gz"), join(out, "lang", "hin.traineddata.gz"));
   console.log("[fusion-office] copied tesseract engine + English data to public/tesseract");
 } catch (err) {
   console.warn("[fusion-office] could not copy tesseract assets:", err.message);
+}
+
+// A Unicode font for Hindi text written into PDFs (OCR text layers). SIL Open Font License.
+try {
+  const noto = dirname(require.resolve("@fontsource/noto-sans-devanagari/package.json"));
+  const out = join(process.cwd(), "public", "fonts");
+  mkdirSync(out, { recursive: true });
+  copyFileSync(join(noto, "files", "noto-sans-devanagari-devanagari-400-normal.woff"), join(out, "noto-sans-devanagari.woff"));
+  console.log("[fusion-office] copied the Devanagari font to public/fonts");
+} catch (err) {
+  console.warn("[fusion-office] could not copy the Devanagari font:", err.message);
 }
