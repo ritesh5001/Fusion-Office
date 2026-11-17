@@ -50,7 +50,7 @@ const TOOL_SWATCH: Record<string, Swatch> = {
   "markdown-to-pdf": "ink", "csv-to-pdf": "green", "ebook-to-pdf": "orange", "pdf-to-html": "orange", "pdf-to-epub": "pink", "pdf-to-csv": "green",
   "extract-text": "sky", "extract-images": "teal", "remove-restrictions": "emerald", "auto-redact-pii": "red", "privacy-scanner": "indigo",
   "file-fingerprint": "violet", "thumbmark-maker": "blue", "chat-with-pdf": "violet", "pdf-to-audio": "pink", "gst-invoice": "orange",
-  "document-viewer": "lime",
+  "document-viewer": "lime", "cdr-converter": "green", "jpg-to-svg": "violet",
   "delete-pdf-pages": "red", "extract-pdf-pages": "sky", "add-blank-pages": "ink", "reverse-pdf": "amber", "booklet-pdf": "indigo", "poster-pdf": "pink",
   "compress-pdf-to-size": "lime", "remove-blank-pages": "rose", "deskew-pdf": "teal", "trim-pdf-margins": "orange", "resize-pdf-pages": "sky", "grayscale-pdf": "ink",
   "id-card-to-pdf": "blue", "heic-to-pdf": "orange", "bank-statement-to-excel": "green", "quotation-maker": "sky", "proforma-invoice": "amber", "delivery-challan": "teal",
