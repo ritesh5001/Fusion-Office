@@ -11,7 +11,7 @@ import { Dropzone } from "./Dropzone";
  * the full-screen editor, or open the editor empty (blank documents, templates
  * and recent drafts live there).
  */
-export function AppLauncher({ href, accept, label, open }: { href: string; accept: string; label: string; open: string }) {
+export function AppLauncher({ href, accept, label, open, note = "Blank documents, templates and your recent files are in the editor." }: { href: string; accept: string; label: string; open: string; note?: string }) {
   const router = useRouter();
   return (
     <div>
@@ -28,7 +28,7 @@ export function AppLauncher({ href, accept, label, open }: { href: string; accep
         <Link href={href} className="btn btn-secondary">
           {open} <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
-        <span>Blank documents, templates and your recent files are in the editor.</span>
+        {note && <span>{note}</span>}
       </div>
     </div>
   );

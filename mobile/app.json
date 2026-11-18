@@ -171,6 +171,70 @@
             {
               "scheme": "file",
               "mimeType": "image/*"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "application/json"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "application/json"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "application/xml"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "application/xml"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "text/xml"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "text/xml"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "message/rfc822"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "message/rfc822"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "application/vnd.ms-outlook"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "application/vnd.ms-outlook"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "application/zip"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "application/zip"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "application/x-zip-compressed"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "application/x-zip-compressed"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "application/epub+zip"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "application/epub+zip"
             }
           ]
         },
@@ -230,6 +294,30 @@
             },
             {
               "mimeType": "image/*"
+            },
+            {
+              "mimeType": "application/json"
+            },
+            {
+              "mimeType": "application/xml"
+            },
+            {
+              "mimeType": "text/xml"
+            },
+            {
+              "mimeType": "message/rfc822"
+            },
+            {
+              "mimeType": "application/vnd.ms-outlook"
+            },
+            {
+              "mimeType": "application/zip"
+            },
+            {
+              "mimeType": "application/x-zip-compressed"
+            },
+            {
+              "mimeType": "application/epub+zip"
             }
           ]
         },

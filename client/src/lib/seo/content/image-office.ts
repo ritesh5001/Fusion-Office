@@ -167,10 +167,10 @@ export const OFFICE: Record<string, ToolSeo> = {
     howTo: "open a document online",
     intro: "One viewer for the files people send you. Open a PDF, Word document, spreadsheet, presentation, image or text file and read it right away, without an account.",
     steps: ["Choose a file, drop it on the page, or paste a link to it.", "Read it: scroll through pages, slides or sheets and zoom in.", "Open it in an editor or another tool if you want to change it."],
-    features: ["PDF pages, Word documents, every Excel sheet and every slide with notes.", "Images, Markdown, CSV, JSON and plain text.", "Password-protected PDFs.", "Files are read in your browser and never uploaded."],
+    features: ["PDF pages, Word documents, every Excel sheet and every slide with notes.", "Images including iPhone HEIC and multi-page TIFF.", "Emails (.eml, .msg), ZIP archives and EPUB eBooks.", "JSON as a searchable tree, Markdown, CSV, XML and plain text.", "Password-protected PDFs.", "Files are read in your browser and never uploaded."],
     uses: ["Read an attachment on a computer without Office.", "Check a spreadsheet or deck someone shared before replying."],
     limits: ["Old .doc, .xls and .ppt files are converted on our server to open them.", "Charts, animations and some advanced layout aren't shown exactly as in Office."],
-    related: ["word-editor", "excel-editor", "powerpoint-editor", "edit-pdf"],
+    related: ["pdf-viewer", "excel-viewer", "word-viewer", "email-viewer", "zip-viewer", "json-viewer"],
   },
   "word-editor": {
     title: "Online Word Editor – Edit DOCX Files Free in Your Browser",

@@ -37,6 +37,7 @@ export const breadcrumbs = (items: { name: string; path: string }[]) => ({
 });
 
 const APP_CATEGORY: Record<ToolDef["category"], string> = {
+  view: "UtilitiesApplication",
   office: "BusinessApplication",
   organize: "BusinessApplication",
   optimize: "BusinessApplication",

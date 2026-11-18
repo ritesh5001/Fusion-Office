@@ -3,7 +3,7 @@
  * Everything is read in the browser; only old Office formats (.doc, .xls,
  * .ppt, OpenDocument) are converted to the modern one on the server first.
  */
-export type ViewKind = "pdf" | "image" | "docx" | "xlsx" | "csv" | "pptx" | "markdown" | "text";
+export type ViewKind = "pdf" | "image" | "tiff" | "docx" | "xlsx" | "csv" | "pptx" | "markdown" | "json" | "email" | "zip" | "epub" | "text";
 
 const EXT_KIND: Record<string, ViewKind> = {
   pdf: "pdf",
@@ -13,7 +13,14 @@ const EXT_KIND: Record<string, ViewKind> = {
   csv: "csv", tsv: "csv",
   pptx: "pptx", ppt: "pptx", odp: "pptx",
   md: "markdown", markdown: "markdown",
-  txt: "text", log: "text", json: "text", xml: "text", yaml: "text", yml: "text", ini: "text", html: "text", htm: "text", css: "text", js: "text", ts: "text",
+  tif: "tiff", tiff: "tiff",
+  json: "json", geojson: "json",
+  eml: "email", msg: "email",
+  zip: "zip",
+  epub: "epub",
+  txt: "text", log: "text", xml: "text", yaml: "text", yml: "text", ini: "text", html: "text", htm: "text", css: "text", js: "text", ts: "text",
+  sql: "text", py: "text", java: "text", kt: "text", c: "text", cpp: "text", h: "text", cs: "text", go: "text", rs: "text", php: "text", rb: "text", sh: "text",
+  toml: "text", conf: "text", env: "text", srt: "text", vtt: "text", plist: "text", gpx: "text", kml: "text",
 };
 
 const MIME_KIND: Record<string, ViewKind> = {
@@ -31,7 +38,14 @@ const MIME_KIND: Record<string, ViewKind> = {
   "application/vnd.ms-powerpoint": "pptx",
   "application/vnd.oasis.opendocument.presentation": "pptx",
   "text/markdown": "markdown",
-  "application/json": "text",
+  "application/json": "json",
+  "image/tiff": "tiff",
+  "message/rfc822": "email",
+  "application/vnd.ms-outlook": "email",
+  "application/zip": "zip",
+  "application/x-zip-compressed": "zip",
+  "application/epub+zip": "epub",
+  "application/xml": "text",
 };
 
 export const extOf = (name: string) => (name.includes(".") ? (name.split(".").pop() ?? "").toLowerCase() : "");
@@ -56,11 +70,16 @@ export const VIEWER_ACCEPT = Object.keys(EXT_KIND)
 export const KIND_LABEL: Record<ViewKind, string> = {
   pdf: "PDF",
   image: "Image",
+  tiff: "TIFF image",
   docx: "Word document",
   xlsx: "Spreadsheet",
   csv: "CSV table",
   pptx: "Presentation",
   markdown: "Markdown",
+  json: "JSON",
+  email: "Email",
+  zip: "ZIP archive",
+  epub: "eBook",
   text: "Text",
 };
 

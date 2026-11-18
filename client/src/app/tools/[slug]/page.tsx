@@ -7,6 +7,7 @@ import { TOOLS, toolBySlug, type ToolDef } from "@/lib/tools/registry";
 import { contentFor, isIndexable } from "@/lib/seo/toolContent";
 import { pageMetadata } from "@/lib/seo/site";
 import { VIEWER_ACCEPT } from "@/lib/viewer/detect";
+import { VIEWER_PRESETS } from "@/lib/viewer/presets";
 
 // Every tool page is generated at build time; unknown slugs are a real 404.
 export const dynamicParams = false;
@@ -27,6 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 /** Editors run full-screen elsewhere; their tool page starts them, with a file or without. */
 const LAUNCH: Record<string, { accept: string; label: string; open: string }> = {
   "document-viewer": { accept: VIEWER_ACCEPT, label: "Choose a document to view", open: "Open the document viewer" },
+  ...Object.fromEntries(Object.entries(VIEWER_PRESETS).map(([slug, p]) => [slug, { accept: p.accept, label: p.label, open: "Open the viewer" }])),
   "edit-pdf": { accept: "application/pdf,.pdf,image/png,image/jpeg,image/webp", label: "Choose a PDF to edit", open: "Open the PDF editor" },
   "sign-pdf": { accept: "application/pdf,.pdf", label: "Choose a PDF to sign", open: "Open the PDF editor" },
   "annotate-pdf": { accept: "application/pdf,.pdf", label: "Choose a PDF to annotate", open: "Open the PDF editor" },
@@ -46,7 +48,8 @@ function Tool({ tool }: { tool: ToolDef }) {
   }
   if (tool.href) {
     const l = LAUNCH[tool.slug] ?? { accept: tool.accept, label: "Choose a file", open: `Open ${tool.name}` };
-    return <AppLauncher href={tool.href} {...l} />;
+    const viewer = tool.category === "view";
+    return <AppLauncher href={tool.href} {...l} note={viewer ? "The file is read on this device and never uploaded. You can also paste a link to a file in the viewer." : undefined} />;
   }
   return <ToolClient slug={tool.slug} />;
 }

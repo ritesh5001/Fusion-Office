@@ -2,6 +2,7 @@ import type { Category } from "@/lib/tools/registry";
 
 /** How each category is named and drawn in navigation (rail, menus, tabs). */
 export const CATEGORY_META: Record<Category, { short: string; title: string; icon: string }> = {
+  view: { short: "Viewers", title: "File viewers", icon: "Eye" },
   office: { short: "Office", title: "Word, Excel, PowerPoint", icon: "FileText" },
   organize: { short: "Organize", title: "Organize PDF", icon: "LayoutGrid" },
   optimize: { short: "Optimize", title: "Optimize PDF", icon: "Minimize2" },
@@ -15,6 +16,7 @@ export const CATEGORY_META: Record<Category, { short: string; title: string; ico
 
 /** Each category's colour (matches its icon tiles), for hover borders and glows. */
 export const CATEGORY_COLOR: Record<Category, string> = {
+  view: "#cdf564",
   office: "#80a6ff",
   organize: "#ffa365",
   optimize: "#62dbb2",

@@ -19,7 +19,8 @@ let pending: Pending | null = null;
 const TTL = 2 * 60 * 1000;
 
 export function handFiles(path: string, files: File[]) {
-  pending = files.length ? { path, files, at: Date.now() } : null;
+  // Matched against location.pathname, so any ?query (e.g. /viewer?v=pdf-viewer) is dropped.
+  pending = files.length ? { path: path.split(/[?#]/)[0], files, at: Date.now() } : null;
 }
 
 /** Files waiting for the current page, if any. Clears them. */

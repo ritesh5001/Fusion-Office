@@ -34,7 +34,7 @@ export const SWATCH = {
 type Swatch = keyof typeof SWATCH;
 
 const CATEGORY_SWATCH: Record<Category, Swatch> = {
-  office: "blue", organize: "orange", optimize: "emerald", "convert-to": "amber", "convert-from": "sky", edit: "violet", security: "ink", intelligence: "indigo", image: "teal",
+  view: "lime", office: "blue", organize: "orange", optimize: "emerald", "convert-to": "amber", "convert-from": "sky", edit: "violet", security: "ink", intelligence: "indigo", image: "teal",
 };
 
 const TOOL_SWATCH: Record<string, Swatch> = {
@@ -51,6 +51,9 @@ const TOOL_SWATCH: Record<string, Swatch> = {
   "extract-text": "sky", "extract-images": "teal", "remove-restrictions": "emerald", "auto-redact-pii": "red", "privacy-scanner": "indigo",
   "file-fingerprint": "violet", "thumbmark-maker": "blue", "chat-with-pdf": "violet", "pdf-to-audio": "pink", "gst-invoice": "orange",
   "document-viewer": "lime", "cdr-converter": "green", "jpg-to-svg": "violet",
+  "pdf-viewer": "red", "word-viewer": "blue", "excel-viewer": "green", "csv-viewer": "emerald", "powerpoint-viewer": "orange", "image-viewer": "teal",
+  "heic-viewer": "amber", "tiff-viewer": "ink", "json-viewer": "violet", "xml-viewer": "indigo", "email-viewer": "sky", "zip-viewer": "amber",
+  "epub-viewer": "pink", "markdown-viewer": "ink", "text-viewer": "lime",
   "delete-pdf-pages": "red", "extract-pdf-pages": "sky", "add-blank-pages": "ink", "reverse-pdf": "amber", "booklet-pdf": "indigo", "poster-pdf": "pink",
   "compress-pdf-to-size": "lime", "remove-blank-pages": "rose", "deskew-pdf": "teal", "trim-pdf-margins": "orange", "resize-pdf-pages": "sky", "grayscale-pdf": "ink",
   "id-card-to-pdf": "blue", "heic-to-pdf": "orange", "bank-statement-to-excel": "green", "quotation-maker": "sky", "proforma-invoice": "amber", "delivery-challan": "teal",
@@ -81,6 +84,7 @@ export function tileFor(t: Pick<ToolDef, "slug" | "category" | "icon">) {
 
 /** How categories are named and coloured in navigation (as on the website). */
 export const CATEGORY_META: Record<Category, { short: string; title: string; color: string }> = {
+  view: { short: "Viewers", title: "File viewers", color: "#cdf564" },
   office: { short: "Office", title: "Word, Excel, PowerPoint", color: "#80a6ff" },
   organize: { short: "Organize", title: "Organize PDF", color: "#ffa365" },
   optimize: { short: "Optimize", title: "Optimize PDF", color: "#62dbb2" },

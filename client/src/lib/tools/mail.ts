@@ -229,6 +229,8 @@ export function cleanMailHtml(html: string, attachments: MailAttachment[]): { ht
   const byCid = new Map(attachments.filter((a) => a.contentId).map((a) => [a.contentId.toLowerCase(), a]));
   let s = html
     .replace(/<!--[\s\S]*?-->/g, "")
+    // Elements whose content is code, not text: removed with what's inside them.
+    .replace(/<(script|noscript|iframe|object|embed|applet|frameset)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, "")
     .replace(/<(script|iframe|object|embed|form|frameset|frame|applet|base|meta|link)\b[\s\S]*?(<\/\1\s*>|\/?>)/gi, "")
     .replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "")
     .replace(/(href|src|action)\s*=\s*(["'])\s*javascript:[^"']*\2/gi, "$1=$2#$2");

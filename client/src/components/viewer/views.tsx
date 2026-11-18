@@ -11,14 +11,15 @@ import type { Deck } from "@/lib/office/slides/model";
 import type { WordDoc } from "@/lib/office/docx/model";
 import { renderSafeMarkdown } from "@/lib/tools/safeMarkdown";
 import { extOf, MAX_TEXT_BYTES } from "@/lib/viewer/detect";
+import { formatXml } from "@/lib/viewer/text";
 import { cn } from "../ui/primitives";
 
 /* ── Shared ────────────────────────────────────────────────────── */
 
-type Load<T> = { state: "loading"; note?: string } | { state: "ready"; value: T } | { state: "error"; message: string };
+export type Load<T> = { state: "loading"; note?: string } | { state: "ready"; value: T } | { state: "error"; message: string };
 
 /** Runs an async reader once per file; the result drives loading / error / ready. */
-function useLoad<T>(read: (setNote: (n: string) => void) => Promise<T>, deps: unknown[]): Load<T> {
+export function useLoad<T>(read: (setNote: (n: string) => void) => Promise<T>, deps: unknown[]): Load<T> {
   const [s, setS] = useState<Load<T>>({ state: "loading" });
   useEffect(() => {
     let live = true;
@@ -34,11 +35,11 @@ function useLoad<T>(read: (setNote: (n: string) => void) => Promise<T>, deps: un
   return s;
 }
 
-function Center({ children }: { children: ReactNode }) {
+export function Center({ children }: { children: ReactNode }) {
   return <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 px-6 text-center">{children}</div>;
 }
 
-function Loading({ note }: { note?: string }) {
+export function Loading({ note }: { note?: string }) {
   return (
     <Center>
       <Loader2 className="h-7 w-7 animate-spin text-fg-muted" aria-hidden="true" />
@@ -49,7 +50,7 @@ function Loading({ note }: { note?: string }) {
   );
 }
 
-function Failed({ message }: { message: string }) {
+export function Failed({ message }: { message: string }) {
   return (
     <Center>
       <TriangleAlert className="h-8 w-8 text-amber-300" aria-hidden="true" />
@@ -70,7 +71,7 @@ function Warnings({ items }: { items: string[] }) {
 }
 
 /** Width of an element, kept up to date. */
-function useWidth<T extends HTMLElement>() {
+export function useWidth<T extends HTMLElement>() {
   const ref = useRef<T>(null);
   const [width, setWidth] = useState(0);
   useEffect(() => {
@@ -95,7 +96,7 @@ async function officeBytes(file: File, modern: "docx" | "xlsx" | "pptx", setNote
 
 const ZOOMS = [0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 3];
 
-function ZoomBar({ zoom, setZoom, extra }: { zoom: number; setZoom: (z: number) => void; extra?: ReactNode }) {
+export function ZoomBar({ zoom, setZoom, extra }: { zoom: number; setZoom: (z: number) => void; extra?: ReactNode }) {
   const i = ZOOMS.findIndex((z) => z >= zoom - 0.001);
   return (
     <div className="pointer-events-none sticky bottom-4 z-10 flex justify-center">
@@ -239,24 +240,55 @@ function PdfPage({ pdf, index, width, size, count }: { pdf: PDFDocumentProxy; in
 
 /* ── Image ─────────────────────────────────────────────────────── */
 
+/** Formats the browser can't draw (HEIC on most browsers), decoded on this device into a PNG. */
+async function decodedImageUrl(file: File): Promise<string> {
+  const { decodeImage } = await import("@/lib/image/canvas");
+  const img = await decodeImage({ bytes: new Uint8Array(await file.arrayBuffer()), type: file.type, name: file.name });
+  const canvas = document.createElement("canvas");
+  canvas.width = img.width;
+  canvas.height = img.height;
+  canvas.getContext("2d")!.drawImage(img.source, 0, 0);
+  img.close();
+  const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/png"));
+  if (!blob) throw new Error("decode");
+  return URL.createObjectURL(blob);
+}
+
 export function ImageView({ file }: { file: File }) {
-  const url = useMemo(() => URL.createObjectURL(file), [file]);
-  useEffect(() => () => URL.revokeObjectURL(url), [url]);
+  const direct = useMemo(() => URL.createObjectURL(file), [file]);
+  const [url, setUrl] = useState(direct);
+  const [size, setSize] = useState<{ w: number; h: number } | null>(null);
   const [actual, setActual] = useState(false);
-  const [broken, setBroken] = useState(false);
-  if (broken)
-    return <Failed message={/\.(heic|heif)$/i.test(file.name) ? "This browser can't show HEIC photos. Convert it with the Convert image tool, or open it in Safari." : "This image couldn't be shown. It may be damaged."} />;
+  const [state, setState] = useState<"ok" | "decoding" | "broken">("ok");
+  useEffect(() => () => URL.revokeObjectURL(direct), [direct]);
+  useEffect(() => () => void (url !== direct && URL.revokeObjectURL(url)), [url, direct]);
+
+  const onError = () => {
+    if (url !== direct) return setState("broken");
+    setState("decoding");
+    decodedImageUrl(file)
+      .then((u) => (setUrl(u), setState("ok")))
+      .catch(() => setState("broken"));
+  };
+  if (state === "decoding") return <Loading note={/\.(heic|heif)$/i.test(file.name) ? "Decoding the HEIC photo on this device…" : "Decoding the image…"} />;
+  if (state === "broken") return <Failed message="This image couldn't be shown. It may be damaged, or a kind of image this viewer doesn't read." />;
   return (
-    <div className={cn("flex min-h-full p-4", actual ? "items-start justify-start" : "items-center justify-center")}>
+    <div className={cn("relative flex min-h-full p-4", actual ? "items-start justify-start" : "items-center justify-center")}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={url}
         alt={file.name}
-        onError={() => setBroken(true)}
+        onError={onError}
+        onLoad={(e) => setSize({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
         onClick={() => setActual((a) => !a)}
         className={cn("rounded-md bg-[repeating-conic-gradient(#2a2e38_0_25%,#20232b_0_50%)] bg-[length:20px_20px] shadow-lg", actual ? "max-w-none cursor-zoom-out" : "max-h-[calc(100dvh-140px)] max-w-full cursor-zoom-in object-contain")}
         title={actual ? "Click to fit the screen" : "Click for actual size"}
       />
+      {size && size.w > 0 && (
+        <span className="pointer-events-none fixed bottom-4 right-4 rounded-full border border-line bg-surface/90 px-3 py-1 text-[12px] tabular-nums text-fg-muted backdrop-blur">
+          {size.w} × {size.h} px
+        </span>
+      )}
     </div>
   );
 }
@@ -520,34 +552,43 @@ export function SlidesView({ file }: { file: File }) {
 
 /* ── Text and Markdown ─────────────────────────────────────────── */
 
-async function readText(file: File) {
+export async function readText(file: File) {
   if (file.size > MAX_TEXT_BYTES) throw new Error(`This file is too large to show here (over ${MAX_TEXT_BYTES / 1024 / 1024} MB).`);
   return (await file.text()).replace(/^﻿/, "");
 }
 
+const XML_EXT = new Set(["xml", "svg", "plist", "gpx", "kml", "xsd", "xsl", "rss", "atom"]);
+
 export function TextView({ file }: { file: File }) {
-  const text = useLoad(async () => {
-    const t = await readText(file);
-    if (extOf(file.name) === "json" || file.type === "application/json") {
-      try {
-        return JSON.stringify(JSON.parse(t), null, 2);
-      } catch {
-        /* show as written */
-      }
-    }
-    return t;
-  }, [file]);
+  const isXml = XML_EXT.has(extOf(file.name)) || /xml/.test(file.type);
+  const text = useLoad(() => readText(file), [file]);
   const [wrap, setWrap] = useState(true);
+  // Minified XML (few line breaks) is indented by default.
+  const [pretty, setPretty] = useState<boolean | null>(null);
+  const shown = useMemo(() => {
+    if (text.state !== "ready") return "";
+    const t = text.value;
+    const lineCount = t.split("\n").length;
+    const on = pretty ?? (isXml && (lineCount <= 2 || t.length / lineCount > 200));
+    return isXml && on ? formatXml(t) : t;
+  }, [text, pretty, isXml]);
   if (text.state === "loading") return <Loading />;
   if (text.state === "error") return <Failed message={text.message} />;
+  const lines = shown ? shown.split("\n").length : 0;
   return (
-    <div className="mx-auto max-w-[1000px] px-3 py-5">
-      <div className="mb-2 flex justify-end">
-        <label className="flex items-center gap-2 text-[12.5px] text-fg-muted">
+    <div className="mx-auto max-w-[1100px] px-3 py-5">
+      <div className="mb-2 flex flex-wrap items-center justify-end gap-x-4 gap-y-1 text-[12.5px] text-fg-muted">
+        <span className="mr-auto tabular-nums text-fg-subtle">{lines.toLocaleString()} lines</span>
+        {isXml && (
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={pretty ?? shown !== text.value} onChange={(e) => setPretty(e.target.checked)} /> Indent XML
+          </label>
+        )}
+        <label className="flex items-center gap-2">
           <input type="checkbox" checked={wrap} onChange={(e) => setWrap(e.target.checked)} /> Wrap lines
         </label>
       </div>
-      <pre className={cn("overflow-auto rounded-xl border border-line bg-surface p-4 font-mono text-[13px] leading-relaxed text-fg", wrap ? "whitespace-pre-wrap break-words" : "whitespace-pre")}>{text.value || "(This file is empty.)"}</pre>
+      <pre className={cn("overflow-auto rounded-xl border border-line bg-surface p-4 font-mono text-[13px] leading-relaxed text-fg", wrap ? "whitespace-pre-wrap break-words" : "whitespace-pre")}>{shown || "(This file is empty.)"}</pre>
     </div>
   );
 }

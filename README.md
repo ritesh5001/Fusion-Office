@@ -52,7 +52,7 @@ Keyboard shortcuts are listed in the editor under **Help → Keyboard shortcuts*
 
 ## PDF and image tools (`/tools`)
 
-140 single-purpose tools (the iLovePDF-style PDF catalogue, image tools, AI study and business tools, and India-specific document makers) share one upload → options → result flow. Most run **entirely in the browser**, so the file never leaves the device. Plan and details: [docs/TOOLS_PLAN.md](docs/TOOLS_PLAN.md).
+155 single-purpose tools (the iLovePDF-style PDF catalogue, 16 file viewers, image tools, AI study and business tools, and India-specific document makers) share one upload → options → result flow. Most run **entirely in the browser**, so the file never leaves the device. Plan and details: [docs/TOOLS_PLAN.md](docs/TOOLS_PLAN.md).
 
 | Runs | Tools |
 | --- | --- |
@@ -74,10 +74,14 @@ Running the server tools locally: install LibreOffice (`brew install --cask libr
 
 ## Document viewer (`/viewer`)
 
-Anyone can open a document and read it, with no sign-in: PDF (all pages, zoom, password-protected files), Word (.docx; .doc/.odt/.rtf are converted on the server first), Excel (.xlsx, every sheet with number formats; .xls/.ods via the server), CSV/TSV, PowerPoint (.pptx with speaker notes; .ppt/.odp via the server), images, Markdown and text/JSON. Files are read in the browser and never uploaded (except the old Office formats above).
+Anyone can open a document and read it, with no sign-in: PDF (all pages, zoom, password-protected files), Word (.docx; .doc/.odt/.rtf are converted on the server first), Excel (.xlsx, every sheet with number formats; .xls/.ods via the server), CSV/TSV, PowerPoint (.pptx with speaker notes; .ppt/.odp via the server), images (HEIC decoded in the browser, every page of a multi-page TIFF), email (.eml and Outlook .msg, with attachments; remote images blocked), ZIP (list, open or save one entry), EPUB (chapters, text size, light/dark page), JSON (searchable tree, error line/column), XML (indented), Markdown and text/code files. Files are read in the browser and never uploaded (except the old Office formats above). Each format's parser is loaded only when such a file is opened.
 
 - Open by picking or dropping a file, or with a link: `/viewer?url=https://…` (the other site must allow CORS).
+- **Dedicated viewers** (the "Viewers" category): `/tools/pdf-viewer`, `word-viewer`, `excel-viewer`, `csv-viewer`, `powerpoint-viewer`, `image-viewer`, `heic-viewer`, `tiff-viewer`, `json-viewer`, `xml-viewer`, `email-viewer`, `zip-viewer`, `epub-viewer`, `markdown-viewer`, `text-viewer`. Each is its own search page and opens the same viewer as `/viewer?v=<slug>`, which only changes the start screen (heading, picker filter). Presets: `client/src/lib/viewer/presets.ts`.
+- Files inside a ZIP or attached to an email open in the viewer with a back button to the archive or email.
+- Email and EPUB content renders in sandboxed iframes without `allow-scripts`.
 - "Do more" links hand the open file to the matching editor or tool.
+- The mobile app opens every Viewers tool natively (its own picker per type) and shows Office, email, ZIP, EPUB, JSON, XML, HEIC and TIFF files with this viewer in app mode; Android "Open with" covers these types too.
 - Installed as an app (Chrome/Edge), the site registers `file_handlers` in its manifest, so it shows up in the system's "Open with" menu for these files.
 - The tool page is `/tools/document-viewer`. Code: `client/src/components/viewer/`, file-type rules in `client/src/lib/viewer/detect.ts`.
 

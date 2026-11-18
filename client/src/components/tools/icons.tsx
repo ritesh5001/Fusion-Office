@@ -19,6 +19,7 @@ const ICONS: Record<string, LucideIcon> = {
 
 /** One muted accent per category (small inline marks). */
 export const CATEGORY_TINT: Record<Category, string> = {
+  view: "bg-lime-500/10 text-lime-300",
   office: "bg-blue-500/10 text-blue-300",
   organize: "bg-orange-500/10 text-orange-300",
   optimize: "bg-emerald-500/10 text-emerald-300",
@@ -60,7 +61,7 @@ const SWATCH = {
 export type Swatch = keyof typeof SWATCH;
 
 export const CATEGORY_SWATCH: Record<Category, Swatch> = {
-  office: "blue",
+  view: "lime", office: "blue",
   organize: "orange",
   optimize: "emerald",
   "convert-to": "amber",

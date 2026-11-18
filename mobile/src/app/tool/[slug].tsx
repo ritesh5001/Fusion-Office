@@ -25,7 +25,7 @@ export default function ToolScreen() {
         </View>
       </Screen>
     );
-  if (tool.slug === "document-viewer") return <ViewerTool tool={tool} />;
+  if (tool.category === "view") return <ViewerTool tool={tool} />;
   const native = NATIVE[tool.slug];
   return native ? <ToolRunnerScreen tool={tool} native={native} useStaged={staged === "1"} /> : <WebTool tool={tool} />;
 }

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowRight, Download, FolderOpen, Link2, Loader2, PenLine } from "lucide-react";
+import { ArrowLeft, ArrowRight, Download, FolderOpen, Link2, Loader2, PenLine } from "lucide-react";
 import { Logo } from "../Logo";
 import { cn } from "../ui/primitives";
 import { Dropzone } from "../tools/Dropzone";
@@ -13,13 +13,17 @@ import { accepts, appPath, handFiles } from "@/lib/tools/handoff";
 import { pickerAccept } from "@/lib/tools/pickerAccept";
 import { inApp } from "@/lib/embed";
 import { EDITOR_FOR, KIND_LABEL, VIEWER_ACCEPT, extOf, nameFromUrl, safeDocUrl, viewKind, type ViewKind } from "@/lib/viewer/detect";
+import { presetFor } from "@/lib/viewer/presets";
 import { DocView, ImageView, MarkdownView, PdfView, SheetView, SlidesView, TextView } from "./views";
+import { EmailView, EpubView, JsonView, TiffView, ZipView } from "./views-extra";
 
 interface Opened {
   file: File;
   kind: ViewKind;
   /** Set when the document came from a link: offers a download. */
   fromUrl?: string;
+  /** The ZIP or email this file was opened from: a back button returns to it. */
+  parent?: Opened;
 }
 
 /** The PWA "Open with" launch queue (Chrome, Edge), when the site is installed as an app. */
@@ -40,15 +44,19 @@ export default function ViewerApp() {
   const [busy, setBusy] = useState(false);
   const [link, setLink] = useState("");
 
-  const open = useCallback((file: File, fromUrl?: string) => {
+  // Which viewer this is (/viewer?v=excel-viewer): only changes the start screen.
+  const [preset] = useState(() => presetFor(new URLSearchParams(window.location.search).get("v")));
+
+  const open = useCallback((file: File, fromUrl?: string, parent?: Opened) => {
     const kind = viewKind(file.name, file.type);
     if (!kind) {
-      setError(`Fusion Office can't show ${extOf(file.name) ? `.${extOf(file.name)}` : "this kind of"} file yet. Try a PDF, Word, Excel, PowerPoint, image or text file.`);
+      const msg = `Fusion Office can't show ${extOf(file.name) ? `.${extOf(file.name)}` : "this kind of"} file yet. Try a PDF, Word, Excel, PowerPoint, image, ZIP, email, EPUB, JSON or text file.`;
+      if (parent) window.alert(msg);
+      else setError(msg);
       return;
     }
     setError(null);
-    setOpened({ file, kind, fromUrl });
-    document.title = `${file.name} · Viewer | Fusion Office`;
+    setOpened({ file, kind, fromUrl, parent });
   }, []);
 
   const openUrl = useCallback(
@@ -101,6 +109,11 @@ export default function ViewerApp() {
       delete w.__foViewerOpen;
     };
   }, [open]);
+
+  // The tab shows the open file's name (also after going back from a ZIP entry or attachment).
+  useEffect(() => {
+    if (opened) document.title = `${opened.file.name} · Viewer | Fusion Office`;
+  }, [opened]);
 
   // Drop another file anywhere to switch to it.
   useEffect(() => {
@@ -158,6 +171,12 @@ export default function ViewerApp() {
         <Link href="/" className="flex shrink-0 items-center gap-2 rounded-lg px-1.5 py-1 hover:bg-raised" title="Fusion Office home">
           <Logo className="h-6 w-6" />
         </Link>
+        {opened?.parent && (
+          <button type="button" onClick={() => setOpened(opened.parent!)} className="btn btn-secondary h-9 shrink-0 px-2.5 text-[13px]" title={`Back to ${opened.parent.file.name}`}>
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            <span className="hidden max-w-[160px] truncate sm:inline">{opened.parent.file.name}</span>
+          </button>
+        )}
         <div className="min-w-0 flex-1">
           {opened ? (
             <>
@@ -167,7 +186,7 @@ export default function ViewerApp() {
               </p>
             </>
           ) : (
-            <p className="text-[14px] font-semibold text-fg">Document viewer</p>
+            <p className="text-[14px] font-semibold text-fg">{preset ? preset.heading.replace(/^Open (a|an) /, "").replace(/^\w/, (c) => c.toUpperCase()) + " viewer" : "Document viewer"}</p>
           )}
         </div>
         {opened && (
@@ -208,19 +227,27 @@ export default function ViewerApp() {
               ))}
             </nav>
           )}
-          <main id="main" className="min-h-0 flex-1 overflow-auto">
-            <Body key={`${opened.file.name}-${opened.file.size}-${opened.file.lastModified}`} opened={opened} />
+          {embedded && opened.parent && (
+            <button type="button" onClick={() => setOpened(opened.parent!)} className="flex shrink-0 items-center gap-2 border-b border-line bg-surface px-3 py-2.5 text-left text-[13.5px] text-fg">
+              <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span className="truncate">
+                Back to <span className="font-semibold">{opened.parent.file.name}</span>
+              </span>
+            </button>
+          )}
+          <main id="main" className={cn("min-h-0 flex-1", opened.kind === "epub" ? "overflow-hidden" : "overflow-auto")}>
+            <Body key={`${opened.file.name}-${opened.file.size}-${opened.file.lastModified}`} opened={opened} embedded={embedded} onOpen={(f) => open(f, undefined, opened)} />
           </main>
         </>
       ) : (
         <main id="main" className="flex-1 overflow-auto px-4 py-10">
           <div className="mx-auto max-w-[720px]">
-            <h1 className="text-center font-display text-[28px] font-semibold tracking-tight text-fg sm:text-[34px]">Open any document</h1>
+            <h1 className="text-center font-display text-[28px] font-semibold tracking-tight text-fg sm:text-[34px]">{preset?.heading ?? "Open any document"}</h1>
             <p className="mx-auto mt-2 max-w-[520px] text-center text-[15px] leading-relaxed text-fg-muted">
-              View PDF, Word, Excel, PowerPoint, images, Markdown and text files right in your browser. No sign-in, nothing to install, and the file stays on your device.
+              {preset?.blurb ?? "View PDF, Word, Excel, PowerPoint, images, ZIP, email, EPUB, JSON and text files right in your browser. No sign-in, nothing to install, and the file stays on your device."}
             </p>
             <div className="mt-8">
-              <Dropzone accept={VIEWER_ACCEPT} multiple={false} label="Choose a document to view" onFiles={(files) => files[0] && open(files[0])} />
+              <Dropzone accept={preset?.accept ?? VIEWER_ACCEPT} multiple={false} label={preset?.label ?? "Choose a document to view"} onFiles={(files) => files[0] && open(files[0])} />
             </div>
             <form
               className="mt-5 flex flex-col gap-2 sm:flex-row"
@@ -254,12 +281,9 @@ export default function ViewerApp() {
               </p>
             )}
             <ul className="mt-8 grid gap-2 text-[13.5px] text-fg-muted sm:grid-cols-2">
-              <li>• PDF: every page, zoom in and out, password-protected files too.</li>
-              <li>• Word (.docx, .doc, .odt, .rtf): text, headings, lists, tables, images.</li>
-              <li>• Excel (.xlsx, .xls, .ods, .csv): every sheet, with number formats.</li>
-              <li>• PowerPoint (.pptx, .ppt, .odp): every slide with its notes.</li>
-              <li>• Images: JPG, PNG, WEBP, GIF, SVG and more.</li>
-              <li>• Markdown, TXT, JSON, XML and other text files.</li>
+              {(preset?.points ?? ALL_POINTS).map((p) => (
+                <li key={p}>• {p}</li>
+              ))}
             </ul>
           </div>
         </main>
@@ -268,13 +292,34 @@ export default function ViewerApp() {
   );
 }
 
-function Body({ opened }: { opened: Opened }) {
+const ALL_POINTS = [
+  "PDF: every page, zoom in and out, password-protected files too.",
+  "Word (.docx, .doc, .odt, .rtf): text, headings, lists, tables, images.",
+  "Excel (.xlsx, .xls, .ods, .csv): every sheet, with number formats.",
+  "PowerPoint (.pptx, .ppt, .odp): every slide with its notes.",
+  "Images: JPG, PNG, WEBP, GIF, SVG, HEIC and multi-page TIFF.",
+  "Email (.eml, .msg), ZIP archives and EPUB eBooks.",
+  "JSON as a tree you can search, XML indented.",
+  "Markdown, TXT, logs and code files.",
+];
+
+function Body({ opened, embedded, onOpen }: { opened: Opened; embedded: boolean; onOpen: (f: File) => void }) {
   const { file, kind } = opened;
   switch (kind) {
     case "pdf":
       return <PdfView file={file} />;
     case "image":
       return <ImageView file={file} />;
+    case "tiff":
+      return <TiffView file={file} />;
+    case "json":
+      return <JsonView file={file} />;
+    case "email":
+      return <EmailView file={file} onOpen={onOpen} embedded={embedded} />;
+    case "zip":
+      return <ZipView file={file} onOpen={onOpen} embedded={embedded} />;
+    case "epub":
+      return <EpubView file={file} />;
     case "docx":
       return <DocView file={file} />;
     case "xlsx":

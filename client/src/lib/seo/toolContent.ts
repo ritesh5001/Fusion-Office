@@ -7,6 +7,7 @@ import { SECURITY, AI } from "./content/security-ai";
 import { IMAGE, OFFICE } from "./content/image-office";
 import { WAVE3 } from "./content/wave3";
 import { WAVE4 } from "./content/wave4";
+import { VIEWERS } from "./content/viewers";
 
 export type { ToolSeo };
 
@@ -35,6 +36,7 @@ export const TOOL_CONTENT: Record<string, ToolSeo> = {
   ...IMAGE,
   ...WAVE3,
   ...WAVE4,
+  ...VIEWERS,
 };
 
 export function contentFor(tool: Pick<ToolDef, "slug" | "name" | "description">): ToolSeo {

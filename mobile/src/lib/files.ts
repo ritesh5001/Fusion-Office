@@ -133,7 +133,7 @@ export const stem = (name: string) => name.replace(/\.[^.]+$/, "");
  * directly and isn't uploaded; old .doc/.xls/.ppt are converted on the server.
  */
 export function shownBySite(f: Pick<SavedFile, "name">) {
-  return /\.(docx|doc|odt|rtf|xlsx|xlsm|xls|ods|csv|tsv|pptx|ppt|odp|md|markdown)$/i.test(f.name);
+  return /\.(docx|doc|odt|rtf|xlsx|xlsm|xls|ods|csv|tsv|pptx|ppt|odp|md|markdown|json|geojson|xml|gpx|kml|plist|svg|eml|msg|zip|epub|tif|tiff|heic|heif)$/i.test(f.name);
 }
 
 /**

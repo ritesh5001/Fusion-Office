@@ -141,6 +141,11 @@ export const CLUSTERS: Cluster[] = [
     ],
     sections: [
       {
+        category: "view",
+        heading: "File viewers",
+        blurb: "Open and read PDFs, Office files, images, emails, ZIPs, eBooks and JSON without installing anything. Files stay on your device.",
+      },
+      {
         category: "office",
         heading: "Word, Excel and PowerPoint editors",
         blurb: "Full editors for documents, spreadsheets and presentations, with templates to start from.",
@@ -236,6 +241,7 @@ export const CLUSTERS: Cluster[] = [
 
 /** The cluster that is the breadcrumb parent of each registry category. */
 export const CATEGORY_CLUSTER: Record<Category, ClusterId> = {
+  view: "office-tools",
   office: "office-tools",
   organize: "pdf-tools",
   optimize: "pdf-tools",

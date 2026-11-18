@@ -2,7 +2,7 @@
  * The tool catalogue. One entry per tool; pages, the hub, navigation and
  * workflows all read from here.
  */
-export type Category = "office" | "organize" | "optimize" | "convert-to" | "convert-from" | "edit" | "security" | "intelligence" | "image";
+export type Category = "view" | "office" | "organize" | "optimize" | "convert-to" | "convert-from" | "edit" | "security" | "intelligence" | "image";
 export type Runs = "browser" | "server" | "ai";
 
 export interface ToolDef {
@@ -23,6 +23,7 @@ export interface ToolDef {
 }
 
 export const CATEGORIES: { id: Category; label: string }[] = [
+  { id: "view", label: "Viewers" },
   { id: "office", label: "Word, Excel, PowerPoint" },
   { id: "organize", label: "Organize" },
   { id: "optimize", label: "Optimize" },
@@ -41,8 +42,24 @@ const ANY_IMAGE = "image/*,.heic,.heif,.avif,.tif,.tiff";
 const HEIC = ".heic,.heif,image/heic,image/heif";
 
 export const TOOLS: ToolDef[] = [
-  // Viewer (full-screen app): open and read any document, no sign-in
-  { slug: "document-viewer", name: "Document viewer", description: "Open and read PDF, Word, Excel, PowerPoint, image and text files. No sign-in, nothing uploaded.", category: "office", icon: "Eye", accept: "application/pdf,.pdf,.docx,.doc,.odt,.rtf,.xlsx,.xls,.ods,.csv,.tsv,.pptx,.ppt,.odp,.md,.markdown,.txt,.json,.xml,image/*,.heic,.heif,.avif", multiple: false, runs: "browser", href: "/viewer", status: "ready" },
+  // Viewers (one full-screen app at /viewer): open and read a file, no sign-in, nothing uploaded.
+  // Each viewer's start screen is set by ?v=<slug> (lib/viewer/presets.ts).
+  { slug: "document-viewer", name: "Document viewer", description: "Open and read PDF, Word, Excel, PowerPoint, image, ZIP, email and text files. No sign-in, nothing uploaded.", category: "view", icon: "Eye", accept: "application/pdf,.pdf,.docx,.doc,.odt,.rtf,.xlsx,.xls,.ods,.csv,.tsv,.pptx,.ppt,.odp,.md,.markdown,.txt,.json,.xml,.eml,.msg,.zip,.epub,image/*,.heic,.heif,.avif,.tif,.tiff", multiple: false, runs: "browser", href: "/viewer", status: "ready" },
+  { slug: "pdf-viewer", name: "PDF viewer", description: "Read any PDF in your browser: every page, zoom, password-protected files too.", category: "view", icon: "BookOpen", accept: PDF, multiple: false, runs: "browser", href: "/viewer?v=pdf-viewer", status: "ready" },
+  { slug: "word-viewer", name: "Word viewer", description: "Read .docx, .doc, .odt and .rtf documents without Word.", category: "view", icon: "FileText", accept: ".docx,.doc,.odt,.rtf", multiple: false, runs: "browser", href: "/viewer?v=word-viewer", status: "ready" },
+  { slug: "excel-viewer", name: "Excel viewer", description: "See every sheet of an .xlsx, .xls or .ods file with its number formats.", category: "view", icon: "FileSpreadsheet", accept: ".xlsx,.xlsm,.xls,.ods", multiple: false, runs: "browser", href: "/viewer?v=excel-viewer", status: "ready" },
+  { slug: "csv-viewer", name: "CSV viewer", description: "Open a CSV or TSV file as a clean table with columns.", category: "view", icon: "Table", accept: ".csv,.tsv,text/csv", multiple: false, runs: "browser", href: "/viewer?v=csv-viewer", status: "ready" },
+  { slug: "powerpoint-viewer", name: "PowerPoint viewer", description: "Flip through every slide of a .pptx, .ppt or .odp, with speaker notes.", category: "view", icon: "Presentation", accept: ".pptx,.ppt,.odp", multiple: false, runs: "browser", href: "/viewer?v=powerpoint-viewer", status: "ready" },
+  { slug: "image-viewer", name: "Image viewer", description: "View JPG, PNG, WEBP, GIF, SVG, AVIF, HEIC and TIFF images.", category: "view", icon: "Image", accept: "image/*,.heic,.heif,.avif,.tif,.tiff,.svg", multiple: false, runs: "browser", href: "/viewer?v=image-viewer", status: "ready" },
+  { slug: "heic-viewer", name: "HEIC viewer", description: "View iPhone HEIC photos on Windows, Android or any browser.", category: "view", icon: "Smartphone", accept: ".heic,.heif,image/heic,image/heif", multiple: false, runs: "browser", href: "/viewer?v=heic-viewer", status: "ready" },
+  { slug: "tiff-viewer", name: "TIFF viewer", description: "View TIFF images and every page of multi-page scans and faxes.", category: "view", icon: "FileImage", accept: ".tif,.tiff,image/tiff", multiple: false, runs: "browser", href: "/viewer?v=tiff-viewer", status: "ready" },
+  { slug: "json-viewer", name: "JSON viewer", description: "Explore JSON as a collapsible, searchable tree or formatted text.", category: "view", icon: "Braces", accept: ".json,.geojson,application/json", multiple: false, runs: "browser", href: "/viewer?v=json-viewer", status: "ready" },
+  { slug: "xml-viewer", name: "XML viewer", description: "Read XML, SVG source, GPX and KML files, neatly indented.", category: "view", icon: "FileCode2", accept: ".xml,.svg,.plist,.gpx,.kml,application/xml,text/xml", multiple: false, runs: "browser", href: "/viewer?v=xml-viewer", status: "ready" },
+  { slug: "email-viewer", name: "EML & MSG viewer", description: "Read .eml and Outlook .msg emails with their attachments, no email app needed.", category: "view", icon: "Mail", accept: ".eml,.msg,message/rfc822", multiple: false, runs: "browser", href: "/viewer?v=email-viewer", status: "ready" },
+  { slug: "zip-viewer", name: "ZIP viewer", description: "See what's inside a ZIP, open its files, or save just one.", category: "view", icon: "FileArchive", accept: ".zip,application/zip", multiple: false, runs: "browser", href: "/viewer?v=zip-viewer", status: "ready" },
+  { slug: "epub-viewer", name: "EPUB reader", description: "Read EPUB eBooks with a chapter list and adjustable text size.", category: "view", icon: "BookText", accept: ".epub,application/epub+zip", multiple: false, runs: "browser", href: "/viewer?v=epub-viewer", status: "ready" },
+  { slug: "markdown-viewer", name: "Markdown viewer", description: "See a .md file rendered with headings, lists, tables and code.", category: "view", icon: "NotebookText", accept: ".md,.markdown,text/markdown", multiple: false, runs: "browser", href: "/viewer?v=markdown-viewer", status: "ready" },
+  { slug: "text-viewer", name: "Text & code viewer", description: "Read TXT, LOG, code and config files in a clean monospaced view.", category: "view", icon: "FileCode", accept: ".txt,.log,.yaml,.yml,.ini,.toml,.conf,.env,.html,.htm,.css,.js,.ts,.sql,.py,.java,.kt,.c,.cpp,.h,.cs,.go,.rs,.php,.rb,.sh,.srt,.vtt,text/plain", multiple: false, runs: "browser", href: "/viewer?v=text-viewer", status: "ready" },
   // Office editors (full-screen apps)
   { slug: "word-editor", name: "Word editor", description: "Open and edit .docx files: fonts, headings, lists, tables, images. Save as Word or PDF.", category: "office", icon: "FileText", accept: ".docx,.doc,.odt,.rtf", multiple: false, runs: "browser", href: "/write", status: "ready" },
   { slug: "excel-editor", name: "Excel editor", description: "Open and edit .xlsx and CSV: formulas, formatting, sorting, several sheets.", category: "office", icon: "FileSpreadsheet", accept: ".xlsx,.xls,.ods,.csv", multiple: false, runs: "browser", href: "/sheets", status: "ready" },
