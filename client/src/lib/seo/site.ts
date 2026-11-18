@@ -16,7 +16,7 @@ export const SITE_DESCRIPTION =
   `Fusion Office is a free workspace of ${TOOL_COUNT} online tools to edit, convert, compress, merge, split, sign and protect PDFs, edit Word, Excel and PowerPoint files, and resize or compress images. No sign-up, and most tools run in your browser so files stay on your device.`;
 
 /** Date the current editorial content (tool pages, categories, guides) was last reviewed. */
-export const CONTENT_UPDATED = "2026-10-04";
+export const CONTENT_UPDATED = "2026-11-18";
 
 /** Absolute URL in the same form Next.js prints in canonical tags (the homepage has no trailing slash). */
 export const absoluteUrl = (path = "/") => (path === "/" ? SITE_URL : `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`);
