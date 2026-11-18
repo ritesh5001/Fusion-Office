@@ -1,9 +1,11 @@
 import { Logo } from "../Logo";
 
 /**
- * "Mobile apps coming soon" banner at the top of the footer. The store
- * badges are not links yet: they say "Coming soon" until the apps are live.
+ * Mobile app banner at the top of the footer. The Android app is live on
+ * Google Play; the App Store badge says "Coming soon" until the iPhone app is.
  */
+const PLAY_URL = "https://play.google.com/store/apps/details?id=in.nextgenfusion.fusionoffice";
+
 export function AppBanner() {
   return (
     <section aria-labelledby="app-banner-title" className="px-4 pt-12 sm:px-6 lg:px-8">
@@ -22,13 +24,13 @@ export function AppBanner() {
                 <span className="fo-ping absolute inset-0 rounded-full bg-accent" />
                 <span className="relative h-2 w-2 rounded-full bg-accent" />
               </span>
-              Coming soon
+              Now on Android
             </span>
             <h2 id="app-banner-title" className="mt-5 text-balance font-display text-[clamp(1.75rem,3.6vw,2.6rem)] font-extrabold leading-[1.08] tracking-[-0.035em] text-white">
               Fusion Office, <span className="bg-[linear-gradient(90deg,#9d91fb,#cdf564)] bg-clip-text text-transparent">now in your pocket.</span>
             </h2>
             <p className="mt-4 max-w-[48ch] text-[15.5px] leading-relaxed text-white/70">
-              Scan, sign, compress and convert from your phone, with the same private, on-device processing. The iPhone and Android apps are on their way.
+              Scan, sign, compress and convert from your phone, with the same private, on-device processing. Get the Android app on Google Play; the iPhone app is on its way.
             </p>
 
             <ul className="mt-6 flex flex-wrap gap-2 text-[13px] text-white/80">
@@ -57,10 +59,12 @@ export function AppBanner() {
 
 function StoreBadge({ store }: { store: "apple" | "google" }) {
   const apple = store === "apple";
+  const Tag = apple ? "div" : "a";
   return (
-    <div
-      role="img"
-      aria-label={apple ? "App Store: coming soon" : "Google Play: coming soon"}
+    <Tag
+      {...(apple
+        ? { role: "img", "aria-label": "App Store: coming soon" }
+        : { href: PLAY_URL, target: "_blank", rel: "noopener noreferrer", "aria-label": "Get it on Google Play" })}
       className="group relative flex h-[58px] w-full items-center gap-2.5 min-[480px]:w-auto min-[480px]:min-w-[164px] rounded-[14px] bg-black px-3.5 ring-1 ring-white/20 transition-[translate,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_30px_-12px_rgb(139_124_246/0.6)]"
     >
       {apple ? (
@@ -84,11 +88,13 @@ function StoreBadge({ store }: { store: "apple" | "google" }) {
         </svg>
       )}
       <span className="flex flex-col leading-none text-white">
-        <span className="text-[10.5px] font-medium tracking-[0.02em] text-white/70">{apple ? "Coming soon on the" : "Coming soon on"}</span>
+        <span className="text-[10.5px] font-medium tracking-[0.02em] text-white/70">{apple ? "Coming soon on the" : "GET IT ON"}</span>
         <span className="mt-1 text-[18px] font-semibold tracking-[-0.01em]">{apple ? "App Store" : "Google Play"}</span>
       </span>
-      <span className="absolute -right-2 -top-2 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-on-accent shadow-[0_0_12px_rgb(205_245_100/0.5)]">Soon</span>
-    </div>
+      {apple && (
+        <span className="absolute -right-2 -top-2 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-on-accent shadow-[0_0_12px_rgb(205_245_100/0.5)]">Soon</span>
+      )}
+    </Tag>
   );
 }
 
